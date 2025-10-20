@@ -51,6 +51,7 @@ export class EVENTSTREAM {
 
         if (text == "0") {
             this.Kill();
+            
         } else if (text[0] == "{") {
             try {
                 const res = JSON.parse(text) as t_JsonRPCResponse;
