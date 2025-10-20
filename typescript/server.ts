@@ -215,6 +215,7 @@ export class SERVER {
         );
     }
 
+    cursorword = "";
     RequestManifest = (updateSymclass = this.FileManifest.livecursor) => {
         const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
         if (!workspaceFolder || !this.Flag_ExtnActivated) {
@@ -235,17 +236,19 @@ export class SERVER {
         if (!editor) { return; }
 
         const document = editor.document;
-        const wordRange = document.getWordRangeAtPosition(editor.selection.active, this.SymClassRgx);
-        const wordString = document.getText(wordRange);
-        const wordFixed = wordString.startsWith("-$") ? wordString.replace("-$", "$") : wordString;
-
+        if (updateSymclass) {
+            const wordRange = document.getWordRangeAtPosition(editor.selection.active, this.SymClassRgx);
+            const wordString = document.getText(wordRange);
+            this.cursorword = wordString.startsWith("-$") ? wordString.replace("-$", "$") : wordString;
+        }
+        
         this.filePath = path.relative(workpath, editor.document.uri.fsPath);
         this.fileExtn = editor.document.uri.path.split('.').pop() || '';
 
         this.W_EVENTSTREAM.JsonRpc("fileManifest", {
             filepath: this.filePath,
             content: document.getText(),
-            symclass: updateSymclass ? wordFixed : ""
+            symclass: this.cursorword,
         });
     };
 
