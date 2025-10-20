@@ -39,6 +39,13 @@ export class EVENTSTREAM {
             return "";
         })(this.Core.Ed_RootBinTests);
     }
+    
+    showDeathMessage = () => {
+        const message = "💐💐💐 RIP: Process Died!!!";
+        this.OutputChannel.appendLine(message);
+        console.error(message);
+
+    };
 
     receive = (text: string) => {
 
@@ -77,7 +84,6 @@ export class EVENTSTREAM {
                 const message = "VSC: " + (err instanceof Error ? err.message : String(err));
                 console.error(message);
                 console.log(text);
-                console.log("\n");
             }
         }
 
@@ -134,7 +140,6 @@ export class EVENTSTREAM {
         if (this.Process && this.Spawn_IsAlive) {
             return;
         }
-        this.OutputChannel.clear();
 
         this.dopause();
         this.Process = spawn(this.RootBinary, args, {
@@ -158,11 +163,13 @@ export class EVENTSTREAM {
         }
 
         this.Process.on('error', (err) => {
+            this.showDeathMessage();
             this.OutputChannel.appendLine('Spawn error: ' + err.message);
         });
     }
 
     Kill(): void {
+        this.showDeathMessage();
         if (this.Process && !this.Process.killed) {
             this.Process.kill();
             this.Process = null;
