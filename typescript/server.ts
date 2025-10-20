@@ -370,11 +370,15 @@ export class SERVER {
     }
 
     public isCssTargetedFile(): boolean {
-        return this.Flag_ExtnActivated && this.FileManifest.assistfile && this.fileExtn === "css";
+        return this.Flag_ExtnActivated &&
+            (this.FileManifest.assistfile || this.FileManifest.watchfiles.includes(this.filePath))
+            && this.fileExtn === "css";
     }
 
     public isFileTargetedFile(): boolean {
-        return this.Flag_ExtnActivated && this.FileManifest.assistfile && this.fileExtn !== "css";
+        return this.Flag_ExtnActivated
+            && (this.FileManifest.assistfile || this.FileManifest.watchfiles.includes(this.filePath))
+            && this.fileExtn !== "css";
     }
 
     public getAttributes(): string[] {
