@@ -1,0 +1,215 @@
+{
+  "name": "xcss",
+  "displayName": "XCSS Server",
+  "description": "Extension bundle for XCSS",
+  "version": "0.1.0",
+  "publisher": "yshell-dev",
+  "author": {
+    "name": "Vyshnav Prasad",
+    "email": "i@yshell.dev",
+    "url": "http://yshell.dev"
+  },
+  "galleryBanner": {
+    "color": "#171b22",
+    "theme": "dark"
+  },
+  "preview": true,
+  "license": "Public-Beta",
+  "betaLicense": {
+    "summary": "Temporary Public-Beta License for evaluation and testing only. Not for production use or redistribution. Beta period ends when public version is updated to major version 1.0.0. Terms may change after beta."
+  },
+  "icon": "./logo.png",
+  "homepage": "https://yshell.dev/projects/xcss-assistant",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yshell.dev/xcss-assistant"
+  },
+  "bugs": {
+    "url": "https://github.com/yshell.dev/xcss-assistant/issues"
+  },
+  "categories": [
+    "Keymaps",
+    "Snippets",
+    "Language Packs",
+    "Extension Packs",
+    "Other"
+  ],
+  "keywords": [
+    "css",
+    "xcss",
+    "toolkit",
+    "stylesheet",
+    "css toolkit",
+    "css framework",
+    "vscode",
+    "extension",
+    "intellisense",
+    "autocomplete",
+    "syntax highlighting",
+    "formatting",
+    "prettier",
+    "color picker",
+    "folding",
+    "at-rules",
+    "xtyles",
+    "stylemap",
+    "css assistant",
+    "css helper",
+    "css development",
+    "frontend",
+    "web development",
+    "styling",
+    "css properties",
+    "css variables",
+    "css values",
+    "code completion",
+    "snippets",
+    "language support"
+  ],
+  "engines": {
+    "vscode": "^1.51.0"
+  },
+  "scripts": {
+    "init": "npm install && npm install -g @vscode/vsce",
+    "lint": "eslint ./typescript --ext .ts",
+    "test": "jest --coverage",
+    "lintest": "npm run lint && npm run test && tsc --build ./typescript",
+    "es:compile": "node build.js",
+    "ts:compile": "tsc -p ./typescript",
+    "dev:package": "npm run init && npm run es:compile && npm install --omit=dev && vsce package && npm ci",
+    "dev:publish": "vsce publish"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.13.0",
+    "@stylistic/eslint-plugin": "^2.9.0",
+    "@types/node": "^22.18.11",
+    "@types/vscode": "^1.51.0",
+    "@types/ws": "^8.18.1",
+    "esbuild": "^0.25.8",
+    "eslint": "^9.13.0",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.26.0"
+  },
+  "dependencies": {
+    "vscode-css-languageservice": "^6.3.5",
+    "ws": "^8.18.3"
+  },
+  "type": "commonjs",
+  "main": "./extension/activate.js",
+  "activationEvents": [
+    "onStartupFinished",
+    "onLanguage:*"
+  ],
+  "contributes": {
+    "configuration": {
+      "title": "xcss",
+      "properties": {
+        "xcss.color.attribute": {
+          "type": "string",
+          "default": "#f57970",
+          "description": "Color for tag attribute. Restart extension to take effect."
+        },
+        "xcss.color.comment": {
+          "type": "string",
+          "default": "#ffbe88bb",
+          "description": "Color for attribute comment value. Restart extension to take effect."
+        },
+        "xcss.color.property": {
+          "type": "string",
+          "default": "#ffe1a1",
+          "description": "Color for css properties in tag value. Restart extension to take effect."
+        },
+        "xcss.color.value": {
+          "type": "string",
+          "default": "#ffbe88",
+          "description": "Color for tag value. Restart extension to take effect."
+        }
+      }
+    },
+    "languages": [
+      {
+        "id": "markdown",
+        "aliases": [
+          "XCSS"
+        ],
+        "extensions": [
+          ".xcss"
+        ]
+      }
+    ],
+    "commands": [
+      {
+        "command": "xcss.editor.markdown",
+        "title": "Set Prettier as Default Formatter for *.xcss files",
+        "category": "XCSS Editor"
+      },
+      {
+        "command": "xcss.editor.summon",
+        "title": "Summon Structure after Tag",
+        "category": "XCSS Editor"
+      },
+      {
+        "command": "xcss.editor.format",
+        "title": "Format XCSS Attribute Blocks in Active Editor",
+        "category": "XCSS Editor"
+      },
+      {
+        "command": "xcss.editor.preview",
+        "title": "Toggle Preview of Symclass",
+        "category": "XCSS Action"
+      },
+      {
+        "command": "xcss.editor.toggle",
+        "title": "Toggle b/w Source and Target",
+        "category": "XCSS Action"
+      },
+      {
+        "command": "xcss.terminal.command",
+        "title": "Core Actions on Terminal.",
+        "category": "XCSS Action"
+      },
+      {
+        "command": "xcss.server.toggle",
+        "title": "Switch Server Activity",
+        "category": "XCSS Server"
+      },
+      {
+        "command": "xcss.server.restart",
+        "title": "Restart Server Spawn",
+        "category": "XCSS Server"
+      },
+      {
+        "command": "xcss.server.send",
+        "title": "Custom Input to Server",
+        "category": "XCSS Server"
+      }
+    ],
+    "keybindings": [
+      {
+        "key": "alt+x",
+        "command": "xcss.editor.summon",
+        "when": "editorFocus"
+      },
+      {
+        "key": "alt+shift+x",
+        "command": "xcss.editor.format",
+        "when": "editorFocus"
+      },
+      {
+        "key": "alt+ctrl+x",
+        "command": "xcss.editor.preview",
+        "when": "editorFocus"
+      },
+      {
+        "key": "ctrl+alt+shift+x",
+        "command": "xcss.editor.toggle",
+        "when": "editorFocus"
+      }
+    ],
+    "css": {
+      "customData": [
+        "./css.json"
+      ]
+    }
+  }
+}

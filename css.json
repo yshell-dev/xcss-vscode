@@ -1,0 +1,19 @@
+{
+    "$schema": "https://unpkg.com/vscode-css-languageservice/docs/customData.schema.json",
+    "version": 1.1,
+    "atDirectives": [
+        {
+            "name": "@--attach",
+            "description": "Custom attach directive to create symbolic class dependancy.",
+            "status": "nonstandard"
+        },
+        {
+            "name": "@--assign",
+            "description": "Custom assemble directive to compose using existing blocks.",
+            "status": "nonstandard"
+        }
+    ],
+    "properties": [],
+    "pseudoClasses": [],
+    "pseudoElements": []
+}
