@@ -78,6 +78,7 @@ export class SERVER {
     // Ranges Saved on Parse
     public filePath = "";
     public fileExtn = "";
+    private cursorword = "";
     private Rs_TagRanges: t_TagRange[] = [];
     private M_assignable: Record<string, m_Metadata> = {};
     private M_attachables: Record<string, m_Metadata> = {};
@@ -137,6 +138,7 @@ export class SERVER {
 
         this.filePath = "";
         this.fileExtn = "";
+        this.cursorword = "";
 
         this.W_COMPWEBVIEW?.clear();
         this.W_DECORATIONS?.clear();
@@ -215,7 +217,6 @@ export class SERVER {
         );
     }
 
-    cursorword = "";
     RequestManifest = (updateSymclass = this.FileManifest.livecursor) => {
         const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
         if (!workspaceFolder || !this.Flag_ExtnActivated) {
@@ -241,7 +242,7 @@ export class SERVER {
             const wordString = document.getText(wordRange);
             this.cursorword = wordString.startsWith("-$") ? wordString.replace("-$", "$") : wordString;
         }
-        
+
         this.filePath = path.relative(workpath, editor.document.uri.fsPath);
         this.fileExtn = editor.document.uri.path.split('.').pop() || '';
 
