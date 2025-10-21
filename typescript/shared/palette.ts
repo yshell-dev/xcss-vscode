@@ -6,7 +6,7 @@ import { SwitchRGB } from "../helpers/color-swap";
 import { SERVER } from '../server';
 import { t_TrackRange } from '../types';
 
-export class Palette {
+export class PALETTE {
     private Core: SERVER;
 
     constructor(core: SERVER) {

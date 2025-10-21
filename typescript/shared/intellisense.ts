@@ -6,7 +6,7 @@ import { SERVER } from "../server";
 import { metadataFormat } from '../helpers/metadata';
 import { m_Metadata, t_CursorSnippet, t_SnippetType } from '../types';
 
-export class Intellisense {
+export class INTELLISENSE {
     private Core: SERVER;
     readonly triggers = ['@', ' ', '=', '#', '~', '&', '$', '\t', '\n', '/', '_', '(', ')', ':', '{', '}'];
 

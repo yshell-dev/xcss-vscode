@@ -3,7 +3,7 @@ import path from 'path';
 import vscode from 'vscode';
 import fileScanner from './helpers/file-scanner';
 import { metadataFormat } from './helpers/metadata';
-import { COPWEBVIEW as COMPWEBVIEW } from './shared/preview';
+import { COMPVIEW as COMPWEBVIEW } from './shared/compview';
 import { DIAGNOSTICS } from './internal/diagnostics';
 import { DECORATIONS } from './internal/decorations';
 import { getDefaultCSSDataProvider, IPropertyData } from 'vscode-css-languageservice';
@@ -226,15 +226,17 @@ export class SERVER {
         this.Ed_WorkspaceFolder = workspaceFolder;
         const workpath = workspaceFolder.uri.fsPath;
 
-        this.spawn();
-        this.RefreshEditor();
-        if (!(this.W_EVENTSTREAM.Spawn_IsAlive && vscode.window.activeTextEditor)) {
-            return;
-        }
-
         const editor = vscode.window.activeTextEditor;
         this.Ed_Editor = editor || undefined;
         if (!editor) { return; }
+
+        this.spawn();
+        if (!this.W_EVENTSTREAM.Spawn_IsAlive) {
+            this.reset();
+            return;
+        }
+        this.RefreshEditor();
+
 
         const document = editor.document;
         if (updateSymclass) {
@@ -307,7 +309,6 @@ export class SERVER {
         const content = this.Ed_Editor.document.getText();
         const cursorOffset = this.Ed_Editor.document.offsetAt(this.Ed_Editor.selection.active);
         this.Rs_TagRanges = fileScanner(content, this.FileManifest.attributes, cursorOffset).TagRanges || [];
-
         this.W_DECORATIONS.refresh();
         this.W_DIAGNOSTICS.refresh();
         this.W_STATEWIDGET.refresh();

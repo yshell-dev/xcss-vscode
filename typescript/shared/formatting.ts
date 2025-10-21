@@ -3,7 +3,7 @@ import formatBlock from '../helpers/formatter';
 import { SERVER } from '../server';
 import { t_TrackRange } from '../types';
 
-export class Formatter {
+export class FORMATTING {
     private Core: SERVER;
 
     constructor(Core: SERVER) {

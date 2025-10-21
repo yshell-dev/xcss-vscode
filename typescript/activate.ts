@@ -3,11 +3,11 @@ import path from 'path';
 import vscode from 'vscode';
 
 import { SERVER } from './server';
-import { Palette } from './shared/palette';
-import { Formatter } from './shared/formatting';
-import { BlockSummon } from './shared/summon';
+import { PALETTE } from './shared/palette';
+import { FORMATTING } from './shared/formatting';
+import { SUMMON } from './shared/summon';
 import { Definitions } from './shared/definition';
-import { Intellisense } from './shared/intellisense';
+import { INTELLISENSE } from './shared/intellisense';
 
 const ID = "xcss";
 const BIN = [
@@ -22,10 +22,10 @@ class ExtensionManager {
 
 	private Core: SERVER | undefined;
 	private Definitions: Definitions | undefined;
-	private Formatter: Formatter | undefined;
-	private Intellisense: Intellisense | undefined;
-	private Palette: Palette | undefined;
-	private BlockSummon: BlockSummon | undefined;
+	private Formatter: FORMATTING | undefined;
+	private Intellisense: INTELLISENSE | undefined;
+	private Palette: PALETTE | undefined;
+	private BlockSummon: SUMMON | undefined;
 	private Context: vscode.ExtensionContext | undefined;
 	private Disposable: vscode.Disposable[] = [];
 
@@ -37,12 +37,12 @@ class ExtensionManager {
 
 		this.Core = new SERVER(this.Context, this.extensionId, this.rootBinary);
 		this.Definitions = new Definitions(this.Core);
-		this.Formatter = new Formatter(this.Core);
-		this.Intellisense = new Intellisense(this.Core);
-		this.Palette = new Palette(this.Core);
-		this.BlockSummon = new BlockSummon(this.Core);
+		this.Formatter = new FORMATTING(this.Core);
+		this.Intellisense = new INTELLISENSE(this.Core);
+		this.Palette = new PALETTE(this.Core);
+		this.BlockSummon = new SUMMON(this.Core);
 
-		const ColorPicks = vscode.languages.registerColorProvider(['*'], new Palette(this.Core));
+		const ColorPicks = vscode.languages.registerColorProvider(['*'], new PALETTE(this.Core));
 		const FoldRanges = vscode.languages.registerFoldingRangeProvider(['*'], this.Core);
 		const Definition = vscode.languages.registerDefinitionProvider({ language: '*', scheme: 'file' }, new Definitions(this.Core));
 		const Assistance = vscode.languages.registerCompletionItemProvider(['*'], this.Intellisense, ...this.Intellisense.triggers);

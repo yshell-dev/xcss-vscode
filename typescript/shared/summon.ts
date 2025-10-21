@@ -1,6 +1,6 @@
 import { SERVER } from '../server';
 
-export class BlockSummon {
+export class SUMMON {
     private Core: SERVER;
 
     constructor(core: SERVER) {
