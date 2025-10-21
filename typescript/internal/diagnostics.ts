@@ -60,9 +60,9 @@ export class DIAGNOSTICS {
                 if (!parsed) { continue; }
                 const range = new vscode.Range(parsed.row, parsed.col, parsed.row, parsed.col + 1);
                 if (dmap[parsed.filepath]) {
-                    dmap[parsed.filepath].push(new vscode.Diagnostic(range, diagnostic.message, vscode.DiagnosticSeverity.Error));
+                    dmap[parsed.filepath].push(this.createError(range, diagnostic.message));
                 } else {
-                    dmap[parsed.filepath] = [new vscode.Diagnostic(range, diagnostic.message, vscode.DiagnosticSeverity.Error)];
+                    dmap[parsed.filepath] = [this.createError(range, diagnostic.message)];
                 }
             };
         };
@@ -112,9 +112,13 @@ export class DIAGNOSTICS {
                 };
             });
 
-            Object.entries(this.lspDiagnostic()).forEach(([p, d]) => {
-                this.diagnosticCollection.set(vscode.Uri.file(p), d);
-            });
+            if (this.Core.Ed_WorkspaceFolder) {
+                const workspace_uri = this.Core.Ed_WorkspaceFolder.uri;
+                Object.entries(this.lspDiagnostic()).forEach(([p, d]) => {
+                    const fileuri = vscode.Uri.joinPath(workspace_uri, (p));
+                    this.diagnosticCollection.set(fileuri, d);
+                });
+            }
             this.diagnosticCollection.set(documentUri, finalDiagnostics);
         } catch (error) {
             vscode.window.showErrorMessage(`unexpected Error: ${error}`);
