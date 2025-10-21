@@ -72,15 +72,28 @@ export class DIAGNOSTICS {
     // Diagnostics
     refresh() {
         try {
-            if (!(this.Core.Ed_Editor && (this.Core.isFileTargetedFile() || this.Core.isCssTargetedFile()))) { return; }
-            const documentUri = this.Core.Ed_Editor.document.uri;
-            const finalDiagnostics: vscode.Diagnostic[] = [];
+            if (!(
+                this.Core.Ed_Editor &&
+                this.Core.Ed_WorkspaceFolder && (
+                    this.Core.isFileTargetedFile() ||
+                    this.Core.isCssTargetedFile()
+                )
+            )) {
+                return;
+            }
+
+            const diagnosticMap = this.lspDiagnostic();
+            if (!diagnosticMap[this.Core.filePath]) {
+                diagnosticMap[this.Core.filePath] = [];
+            }
+            
+            const thisDiags: vscode.Diagnostic[] = diagnosticMap[this.Core.filePath];
             const assignables = this.Core.getAssignables();
             const attachables = this.Core.getAttachables();
             this.Core.getTagRanges().forEach(tag => {
                 tag.cache.hashrules.forEach(i => {
                     if (!this.Core.FileManifest.hashrules[i.attr]) {
-                        finalDiagnostics.push(this.createError(i.attrRange, "Invalid Hashrule."));
+                        thisDiags.push(this.createError(i.attrRange, "Invalid Hashrule."));
                     }
                 });
                 const symclasses = tag.cache.composes.reduce((a, i) => {
@@ -93,33 +106,30 @@ export class DIAGNOSTICS {
                 symclasses.forEach(i => {
                     const declarations = attachables[i.attr]?.declarations;
                     if (declarations && declarations.length > 1) {
-                        finalDiagnostics.push(this.createError(i.attrRange, "Definitions in multiple locations."));
+                        thisDiags.push(this.createError(i.attrRange, "Definitions in multiple locations."));
                     }
                     if (assignables[i.attr]) {
-                        finalDiagnostics.push(this.createError(i.attrRange, "Assignable rule cannot be reused for declaration."));
+                        thisDiags.push(this.createError(i.attrRange, "Assignable rule cannot be reused for declaration."));
                     }
                     if (i.attr.includes("$---")) {
-                        finalDiagnostics.push(this.createWaring(i.attrRange, "Symclass identifier shoundn't start with '---'."));
+                        thisDiags.push(this.createWaring(i.attrRange, "Symclass identifier shoundn't start with '---'."));
                     }
                 });
 
                 if (symclasses.length === 0 && tag.cache.composes.length) {
-                    finalDiagnostics.push(this.createError(tag.range, "Symclass missing in declaration scope."));
+                    thisDiags.push(this.createError(tag.range, "Symclass missing in declaration scope."));
                 } else if (symclasses.length > 1) {
                     symclasses.forEach(i => {
-                        finalDiagnostics.push(this.createError(i.attrRange, "Multiple Symclasses found in declaration scope."));
+                        thisDiags.push(this.createError(i.attrRange, "Multiple Symclasses found in declaration scope."));
                     });
                 };
             });
 
-            if (this.Core.Ed_WorkspaceFolder) {
-                const workspace_uri = this.Core.Ed_WorkspaceFolder.uri;
-                Object.entries(this.lspDiagnostic()).forEach(([p, d]) => {
-                    const fileuri = vscode.Uri.joinPath(workspace_uri, (p));
-                    this.diagnosticCollection.set(fileuri, d);
-                });
-            }
-            this.diagnosticCollection.set(documentUri, finalDiagnostics);
+            const workspace_uri = this.Core.Ed_WorkspaceFolder.uri;
+            Object.entries(diagnosticMap).forEach(([p, d]) => {
+                const fileuri = vscode.Uri.joinPath(workspace_uri, p);
+                this.diagnosticCollection.set(fileuri, d);
+            });
         } catch (error) {
             vscode.window.showErrorMessage(`unexpected Error: ${error}`);
         }

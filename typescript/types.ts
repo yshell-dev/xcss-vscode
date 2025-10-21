@@ -95,7 +95,7 @@ export interface t_FileManifest {
 }
 
 export interface t_StyleManifest {
-    locales: string[],
+    lodashes: string[],
     assignable: string[],
     symclasses: Record<string, number>,
     symclassData: Record<number, m_Metadata>,

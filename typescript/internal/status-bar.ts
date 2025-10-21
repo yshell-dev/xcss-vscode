@@ -51,7 +51,6 @@ export class STATUSBAR {
         );
     }
 
-    bg_error = new vscode.ThemeColor("#b93d3dff");
 
     refresh() {
         if (!this.Core) {
@@ -65,7 +64,7 @@ export class STATUSBAR {
 
         const errlen = this.Core.StyleManifest.diagnostics.length;
         this.statusBar.text = `$(${this.statusIcon}) ${this.identifier} $(warning) ${errlen}`;
-        this.statusBar.backgroundColor = errlen ? this.bg_error : undefined;
+        this.statusBar.backgroundColor = errlen ? new vscode.ThemeColor('statusBarItem.errorBackground') : undefined;
         this.statusBar.tooltip = this.Core.FileManifest.webviewurl;
         this.statusBar.show();
     };

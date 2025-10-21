@@ -100,7 +100,7 @@ export class SERVER {
 
     public StyleManifest: t_StyleManifest = {
         diagnostics: [],
-        locales: [],
+        lodashes: [],
         symclassData: {},
         symclasses: {},
         assignable: [],
@@ -126,7 +126,7 @@ export class SERVER {
         };
         this.StyleManifest = {
             diagnostics: [],
-            locales: [],
+            lodashes: [],
             symclassData: {},
             symclasses: {},
             assignable: [],
