@@ -39,7 +39,7 @@ export class EVENTSTREAM {
             return "";
         })(this.Core.Ed_RootBinTests);
     }
-    
+
     showDeathMessage = () => {
         const message = "💐💐💐 RIP: Process Died!!!";
         this.OutputChannel.appendLine(message);
@@ -51,7 +51,7 @@ export class EVENTSTREAM {
 
         if (text == "0") {
             this.Kill();
-            
+
         } else if (text[0] == "{") {
             try {
                 const res = JSON.parse(text) as t_JsonRPCResponse;
@@ -172,6 +172,9 @@ export class EVENTSTREAM {
     Kill(): void {
         this.showDeathMessage();
         if (this.Process && !this.Process.killed) {
+            if (!this.Process.stdin.destroyed) {
+                this.StdIoRpc("$ exit");
+            }
             this.Process.kill();
             this.Process = null;
         }
@@ -184,7 +187,7 @@ export class EVENTSTREAM {
         this.transmit(JSON.stringify(request));
     }
 
-    StdRpc(cmd: string, ...args: string[]): void {
+    StdIoRpc(cmd: string, ...args: string[]): void {
         if (this.Paused) { return; }
         const request = `> ${cmd} ${args.join(" ")}`;
         this.transmit(request);

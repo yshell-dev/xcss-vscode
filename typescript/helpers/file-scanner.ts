@@ -246,7 +246,7 @@ function tagScanner(
                         multiLine
                     });
                 }
-                else if (attr.endsWith("&") || /^[\w-]+\$+[\w-]+$/i.test(attr)) {
+                else if (attr.endsWith("&") || /^[\w-_]+\$+[\w-]+$/i.test(attr)) {
                     hashScanner(content, attrStart, attrEnd + 1, attrStartPos.line, attrStartPos.character, tagCache);
                     const fragments = valScanner(content, valStart, fileCursor.active.marker, valStartPos.line, valStartPos.character, tagCache);
                     tagCache.composes.push({
@@ -366,7 +366,7 @@ export default function scanner(content: string, classProps: string[] = [], curs
             if (
                 (content[fileCursor.active.marker - 1] !== "\\")
                 && (char === "<")
-                && (/[!/\d\w-]/i.test(content[fileCursor.active.marker + 1]))
+                && (/[/\d\w-]/i.test(content[fileCursor.active.marker + 1]))
             ) {
                 const tagStartPos = new vscode.Position(fileCursor.active.rowMarker, fileCursor.active.colMarker);
                 const response = tagScanner(cursor, content, fileCursor, classProps);
