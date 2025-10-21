@@ -33,7 +33,7 @@ export class Palette {
         for (const range of blockRanges) {
             if (!range.val) { continue; }
             const colorResults = colorSense(range.val, 0, range.valRange.start);
-            for (const type in Object.keys(colorResults)) {
+            for (const type of Object.keys(colorResults)) {
                 const colorDatas = colorResults[type];
                 for (const colorData of colorDatas) {
                     let r = 0, g = 0, b = 0, alpha = 1;

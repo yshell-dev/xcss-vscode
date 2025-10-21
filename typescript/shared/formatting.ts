@@ -33,10 +33,13 @@ export class Formatter {
             const preAtrribute = document.getText(new vscode.Range(new vscode.Position(track.attrRange.start.line, 0), track.attrRange.start));
             const postRange = new vscode.Range(track.valRange.end, document.lineAt(track.valRange.end.line).range.end);
             const postValue = document.getText(postRange);
-            const collitions = atValPairs.reduce((s, t) => { if (postRange.intersection(t.blockRange)) { s++; } return s; }, 0);
             const valIntent = `${preAtrribute.match(/^[\t\s]*/)}`;
             const valBreak = `\n${valIntent}`;
             const valFormatted = formatBlock(track.val.slice(1, -1) || '', valBreak);
+            let collitions = 0;
+            for (const t of atValPairs) {
+                if (postRange.intersection(t.blockRange)) { collitions++; }
+            }
 
             const begin = /^[\t\s]*$/.test(preAtrribute) ? "" : valBreak;
             const end = (/^[\t\s]*$/.test(postValue) || !(collitions < 2)) ? "" : valBreak;

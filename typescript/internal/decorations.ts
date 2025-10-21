@@ -146,14 +146,14 @@ export class DECORATIONS {
             for (const track of tagRange.cache.watchtracks) {
                 try {
                     if (track.attrRange && track.valRange) {
-                        const Metadatas = (track.fragments ?? []).reduce<m_Metadata[]>((acc, frag) => {
+                        const Metadatas: m_Metadata[] = [];
+                        for (const frag of (track.fragments ?? [])) {
                             const fragx = frag.slice(1);
                             if (attachables[fragx]) {
-                                acc.push(attachables[fragx]);
+                                Metadatas.push(attachables[fragx]);
                                 Object.assign(tagRange.variables, attachables[fragx].variables);
                             }
-                            return acc;
-                        }, []);
+                        }
                         const MetadataMerged = metamergeFormat(track.attr, this.Core.filePath, Metadatas);
                         attrs_Decos.push({ range: track.attrRange, hoverMessage: MetadataMerged.toolTip });
                         value_Decos.push({ range: track.valRange });

@@ -75,10 +75,10 @@ export class Definitions {
                         `\t${searchWord}{`,
                         `\t${searchWord} `,
                     ];
-                    const indexOfWord = wordVarients.reduce((a, v) => {
-                        if (a === -1 && (fileContent.indexOf(v) !== -1)) { a = fileContent.indexOf(v) + 1; }
-                        return a;
-                    }, -1);
+                    let indexOfWord = -1;
+                    for (const v of wordVarients) {
+                        if (indexOfWord === -1 && (fileContent.indexOf(v) !== -1)) { indexOfWord = fileContent.indexOf(v) + 1; }
+                    }
 
                     if (indexOfWord !== -1) {
                         const textBeforeWord = fileContent.substring(0, indexOfWord);

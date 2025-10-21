@@ -153,7 +153,7 @@ export class Intellisense {
     SimpleSymClassFilter(prefix: string, iconKind: vscode.CompletionItemKind, stashmap: Record<string, m_Metadata>): vscode.CompletionItem[] {
         const completions: vscode.CompletionItem[] = [];
 
-        for (const key in stashmap) {
+        for (const key of Object.keys(stashmap)) {
             if (key.startsWith(prefix)) {
                 completions.push(this.createCompletionItem(
                     key,

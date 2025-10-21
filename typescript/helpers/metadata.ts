@@ -76,8 +76,9 @@ function mergeObjects(objects: Record<string, unknown>[]): Record<string, unknow
         return item !== null && typeof item === 'object' && !Array.isArray(item);
     }
 
-    return objects.reduce((acc, obj) => {
-        for (const key in obj) {
+    const acc: Record<string, unknown> = {};
+    for (const obj of objects) {
+        for (const key of Object.keys(obj)) {
             const accVal = acc[key];
             const objVal = obj[key];
 
@@ -91,8 +92,8 @@ function mergeObjects(objects: Record<string, unknown>[]): Record<string, unknow
                 acc[key] = objVal;
             }
         }
-        return acc;
-    }, {} as Record<string, unknown>);
+    }
+    return acc;
 }
 
 export function metamergeFormat(heading: string, declaration: string, objects: m_Metadata[]) {

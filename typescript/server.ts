@@ -265,7 +265,7 @@ export class SERVER {
         const assignable: Record<string, m_Metadata> = {};
 
         try {
-            for (const k in Object.keys(manifest.symclasses)) {
+            for (const k of Object.keys(manifest.symclasses)) {
                 const i = manifest.symclasses[k];
                 const v = manifest.symclassData[i];
                 if (!v.markdown && k.startsWith('/')) {
@@ -317,7 +317,8 @@ export class SERVER {
     // Folding Range Provider
 
     public provideFoldingRanges(): vscode.FoldingRange[] {
-        return this.Rs_TagRanges.reduce((A, I) => {
+        const A: vscode.FoldingRange[] = [];
+        for (const I of this.Rs_TagRanges) {
             for (const i of I.cache.composes) {
                 if (i.multiLine) {
                     A.push(new vscode.FoldingRange(i.valRange.start.line, i.valRange.end.line, vscode.FoldingRangeKind.Region));
@@ -333,23 +334,24 @@ export class SERVER {
                     A.push(new vscode.FoldingRange(i.valRange.start.line, i.valRange.end.line, vscode.FoldingRangeKind.Region));
                 }
             }
-            return A;
-        }, [] as vscode.FoldingRange[]);
+        }
+        return A;
     }
 
     public getTagAtValPairRanges(tracks = true, comments = true, compose = true): t_TrackRange[] {
-        return this.Rs_TagRanges.reduce((A, I) => {
+        const acc: t_TrackRange[] = [];
+        for (const I of this.Rs_TagRanges) {
             if (tracks) {
-                for (const i of I.cache.watchtracks) { A.push(i); }
+                for (const i of I.cache.watchtracks) { acc.push(i); }
             }
             if (comments) {
-                for (const i of I.cache.comments) { A.push(i); }
+                for (const i of I.cache.comments) { acc.push(i); }
             }
             if (compose) {
-                for (const i of I.cache.composes) { A.push(i); }
+                for (const i of I.cache.composes) { acc.push(i); }
             }
-            return A;
-        }, [] as t_TrackRange[]);
+        }
+        return acc;
     }
 
     public filterVariables(snippet: string, additionals: Record<string, string> = {}): Record<string, string> {

@@ -71,8 +71,6 @@ class ExtensionManager {
 		);
 	};
 
-
-
 	CommandFileToggle = async () => {
 
 		async function fileExists(filePath: string): Promise<boolean> {
