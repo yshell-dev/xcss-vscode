@@ -42,6 +42,33 @@ export class DIAGNOSTICS {
         return d;
     }
 
+    parseSource(source: string) {
+        // Match: filepath[:row][:col]
+        const match = source.match(/^(.*?)(?::(\d+))?(?::(\d+))?$/);
+        if (!match) { return null; };
+        const filepath = match[1];
+        const row = match[2] ? parseInt(match[2], 10) - 1 : 0;
+        const col = match[3] ? parseInt(match[3], 10) - 1 : 0;
+        return { filepath, row, col };
+    }
+
+    lspDiagnostic(): Record<string, vscode.Diagnostic[]> {
+        const dmap: Record<string, vscode.Diagnostic[]> = {};
+        for (const diagnostic of this.Core.StyleManifest.diagnostics) {
+            for (const source of diagnostic.sources) {
+                const parsed = this.parseSource(source);
+                if (!parsed) { continue; }
+                const range = new vscode.Range(parsed.row, parsed.col, parsed.row, parsed.col + 1);
+                if (dmap[parsed.filepath]) {
+                    dmap[parsed.filepath].push(new vscode.Diagnostic(range, diagnostic.message, vscode.DiagnosticSeverity.Error));
+                } else {
+                    dmap[parsed.filepath] = [new vscode.Diagnostic(range, diagnostic.message, vscode.DiagnosticSeverity.Error)];
+                }
+            };
+        };
+        return dmap;
+    }
+
     // Diagnostics
     refresh() {
         try {
@@ -85,6 +112,9 @@ export class DIAGNOSTICS {
                 };
             });
 
+            Object.entries(this.lspDiagnostic()).forEach(([p, d]) => {
+                this.diagnosticCollection.set(vscode.Uri.file(p), d);
+            });
             this.diagnosticCollection.set(documentUri, finalDiagnostics);
         } catch (error) {
             vscode.window.showErrorMessage(`unexpected Error: ${error}`);

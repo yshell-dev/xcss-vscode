@@ -283,6 +283,7 @@ export class SERVER {
                 assignable[k] = v;
             });
 
+            this.StyleManifest = manifest;
         } catch (err) {
             this.reset();
             vscode.window.showErrorMessage(`Error updating manifest: ${err instanceof Error ? err.message : String(err)}`);
