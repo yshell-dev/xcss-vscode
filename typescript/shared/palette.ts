@@ -23,15 +23,18 @@ export class Palette {
         if (!(this.Core.isFileTargetedFile() && document)) { return []; };
         const colors: vscode.ColorInformation[] = [];
         const scanned = fileScanner(document.getText());
-        const blockRanges = scanned.TagRanges ? scanned.TagRanges.reduce((a: t_TrackRange[], range) => {
-            a.push(...range.cache.composes);
-            return a;
-        }, []) : [];
+        const blockRanges: t_TrackRange[] = [];
+        if (scanned.TagRanges) {
+            for (const range of scanned.TagRanges) {
+                blockRanges.push(...range.cache.composes);
+            }
+        }
 
         for (const range of blockRanges) {
             if (!range.val) { continue; }
             const colorResults = colorSense(range.val, 0, range.valRange.start);
-            for (const [type, colorDatas] of Object.entries(colorResults)) {
+            for (const type in Object.keys(colorResults)) {
+                const colorDatas = colorResults[type];
                 for (const colorData of colorDatas) {
                     let r = 0, g = 0, b = 0, alpha = 1;
                     switch (type) {

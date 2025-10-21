@@ -86,24 +86,24 @@ export class DIAGNOSTICS {
             if (!diagnosticMap[this.Core.filePath]) {
                 diagnosticMap[this.Core.filePath] = [];
             }
-            
+
             const thisDiags: vscode.Diagnostic[] = diagnosticMap[this.Core.filePath];
             const assignables = this.Core.getAssignables();
             const attachables = this.Core.getAttachables();
-            this.Core.getTagRanges().forEach(tag => {
-                tag.cache.hashrules.forEach(i => {
+            for (const tag of this.Core.getTagRanges()) {
+                for (const i of tag.cache.hashrules) {
                     if (!this.Core.FileManifest.hashrules[i.attr]) {
                         thisDiags.push(this.createError(i.attrRange, "Invalid Hashrule."));
                     }
-                });
-                const symclasses = tag.cache.composes.reduce((a, i) => {
+                }
+                const symclasses: t_TrackRange[] = [];
+                for (const i of tag.cache.composes) {
                     if (!i.attr.endsWith('&')) {
-                        a.push(i);
+                        symclasses.push(i);
                     }
-                    return a;
-                }, [] as t_TrackRange[]);
+                }
 
-                symclasses.forEach(i => {
+                for (const i of symclasses) {
                     const declarations = attachables[i.attr]?.declarations;
                     if (declarations && declarations.length > 1) {
                         thisDiags.push(this.createError(i.attrRange, "Definitions in multiple locations."));
@@ -114,22 +114,22 @@ export class DIAGNOSTICS {
                     if (i.attr.includes("$---")) {
                         thisDiags.push(this.createWaring(i.attrRange, "Symclass identifier shoundn't start with '---'."));
                     }
-                });
+                }
 
                 if (symclasses.length === 0 && tag.cache.composes.length) {
                     thisDiags.push(this.createError(tag.range, "Symclass missing in declaration scope."));
                 } else if (symclasses.length > 1) {
-                    symclasses.forEach(i => {
+                    for (const i of symclasses) {
                         thisDiags.push(this.createError(i.attrRange, "Multiple Symclasses found in declaration scope."));
-                    });
+                    }
                 };
-            });
+            }
 
             const workspace_uri = this.Core.Ed_WorkspaceFolder.uri;
-            Object.entries(diagnosticMap).forEach(([p, d]) => {
+            for (const p of Object.keys(diagnosticMap)) {
                 const fileuri = vscode.Uri.joinPath(workspace_uri, p);
-                this.diagnosticCollection.set(fileuri, d);
-            });
+                this.diagnosticCollection.set(fileuri, diagnosticMap[p]);
+            }
         } catch (error) {
             vscode.window.showErrorMessage(`unexpected Error: ${error}`);
         }

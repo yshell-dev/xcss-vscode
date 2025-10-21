@@ -10,7 +10,8 @@ function formatObject(oldobj: Record<string, unknown>) {
     const newobj: t_formatting = { "": [] };
     const variables: Record<string, string> = {};
 
-    Object.entries(oldobj).forEach(([k, v]) => {
+    for (const k of Object.keys(oldobj)) {
+        const v = oldobj[k];
         if (typeof v === "string") {
             newobj[k] = v;
             variables[k] = v;
@@ -25,7 +26,7 @@ function formatObject(oldobj: Record<string, unknown>) {
                 newobj[""].push(`${k}`);
             }
         }
-    });
+    }
 
     return { newobj, variables };
 }
@@ -33,9 +34,10 @@ function formatObject(oldobj: Record<string, unknown>) {
 function objectTreeMd(obj: t_formatting): string[] {
     const lines: string[] = [];
 
-    Object.entries(obj).forEach(([k, v]) => {
+    for (const k of Object.keys(obj)) {
         const key = `\`${k}\``;
         if (k !== "") {
+            const v = obj[k];
             if (v && typeof v === "object" && !Array.isArray(v)) {
                 const nativeList = Array.isArray(v[""]) ? v[""].map(i => `\`${i}\``).join(' ') : String(v[""]);
                 lines.push(`- ${key} : ${nativeList}`);
@@ -44,7 +46,7 @@ function objectTreeMd(obj: t_formatting): string[] {
                 lines.push(`- *${key}*: *\`${v}\`*`);
             }
         }
-    });
+    }
 
     return lines;
 }
@@ -56,10 +58,13 @@ export function metadataFormat(selector: string, data: m_Metadata, subhead = "")
     for (const item of data.info || []) { lines.push(`- ${item}`); }
     lines.push('\n- **Skeleton:**');
 
-    Object.entries(data.skeleton || {}).forEach(([K, V]) => {
-        const formatted = formatObject({ [K === "" ? "[]" : K]: V }).newobj;
-        lines.push(...objectTreeMd(formatted));
-    });
+    if (data.skeleton) {
+        for (const K of Object.keys(data.skeleton)) {
+            const V = data.skeleton[K];
+            const formatted = formatObject({ "[]": V }).newobj;
+            lines.push(...objectTreeMd(formatted));
+        }
+    }
 
     lines.push(`---`);
     lines.push(...(data.declarations || []).map(declaration => `- ${declaration}`));
@@ -99,11 +104,11 @@ export function metamergeFormat(heading: string, declaration: string, objects: m
         variables: {}
     };
 
-    objects.forEach(object => {
+    for (const object of objects) {
         merged.info?.push(...(object.info || []));
         Object.assign((merged.variables || {}), (object.variables || {}));
         merged.skeleton = mergeObjects([(merged.skeleton || {}), (object.skeleton || {})]) as Record<string, object>;
-    });
+    }
 
     return { toolTip: metadataFormat(heading, merged), effectiveXtyle: merged };
 }

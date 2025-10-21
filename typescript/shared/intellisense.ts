@@ -4,7 +4,7 @@ import styleScanner from '../helpers/style-scanner';
 
 import { SERVER } from "../server";
 import { metadataFormat } from '../helpers/metadata';
-import { t_CursorSnippet, t_SnippetType } from '../types';
+import { m_Metadata, t_CursorSnippet, t_SnippetType } from '../types';
 
 export class Intellisense {
     private Core: SERVER;
@@ -40,9 +40,9 @@ export class Intellisense {
 
 
 
-    public SymbolicClassFilter(prefix: string, iconKind: vscode.CompletionItemKind, attach_1__assign_0: boolean) {
-        const stash = Object.entries(attach_1__assign_0 ? this.Core.getAttachables() : this.Core.getAssignables);
+    public SmartSymClassFilter(prefix: string, iconKind: vscode.CompletionItemKind, stashmap: Record<string, m_Metadata>) {
 
+        const stashKeys = Object.keys(stashmap);
         const slash_end = prefix.lastIndexOf('/');
         const dollar_end = prefix.lastIndexOf('$');
         const sliceIndex = Math.max(slash_end, dollar_end);
@@ -53,21 +53,22 @@ export class Intellisense {
 
         if (slash_end > -1) {
             if (slash_end === 0) {
-                stash.forEach(([key]) => {
+                for (const key of stashKeys) {
                     if (key[0] === "/") {
                         collections.add(key.slice(1, key.lastIndexOf("/")));
                     }
-                });
-                collections.forEach(lib => {
+                }
+                for (const lib of collections) {
                     completions.push(this.createCompletionItem(
                         `[/${lib}/]`,
                         lib,
                         iconKind,
                         `External Artifact`,
                     ));
-                });
+                }
             } else if (slash_end < dollar_end) {
-                stash.forEach(([key, data]) => {
+                for (const key of stashKeys) {
+                    const data = stashmap[key];
                     if (key.startsWith(prefix)) {
                         completions.push(this.createCompletionItem(
                             key.slice(sliceIndex + 1),
@@ -76,9 +77,10 @@ export class Intellisense {
                             metadataFormat(key, data),
                         ));
                     };
-                });
+                }
             } else if (slash_end > dollar_end) {
-                stash.forEach(([key, data]) => {
+                for (const key of stashKeys) {
+                    const data = stashmap[key];
                     if (key[0] === "/") {
                         const key_dollar_last = key.lastIndexOf("$");
                         const key_slash_last = key.lastIndexOf("/");
@@ -93,19 +95,21 @@ export class Intellisense {
                             ));
                         }
                     };
-                });
-                collections.forEach(lib => {
+                }
+
+                for (const lib of collections) {
                     completions.push(this.createCompletionItem(
                         `[${lib}$]`,
                         lib,
                         iconKind,
                         `External Cluster`,
                     ));
-                });
+                }
             }
         } else {
             if (dollar_end > -1) {
-                stash.forEach(([key, data]) => {
+                for (const key of stashKeys) {
+                    const data = stashmap[key];
                     if (!key.includes("/") && key.startsWith(prefix)) {
                         completions.push(this.createCompletionItem(
                             key.slice(dollar_end + 1),
@@ -114,9 +118,10 @@ export class Intellisense {
                             metadataFormat(key, data),
                         ));
                     };
-                });
+                }
             } else {
-                stash.forEach(([key, data]) => {
+                for (const key of stashKeys) {
+                    const data = stashmap[key];
                     if (!key.includes("/")) {
                         if (key.includes("$")) {
                             collections.add(key.slice(0, key.lastIndexOf("$")));
@@ -129,15 +134,33 @@ export class Intellisense {
                             ));
                         }
                     };
-                });
-                collections.forEach(lib => {
+                }
+
+                for (const lib of collections) {
                     completions.push(this.createCompletionItem(
                         `[${lib}$]`,
                         lib,
                         iconKind,
                         `Native Cluster`,
                     ));
-                });
+                }
+            }
+        }
+
+        return completions;
+    }
+
+    SimpleSymClassFilter(prefix: string, iconKind: vscode.CompletionItemKind, stashmap: Record<string, m_Metadata>): vscode.CompletionItem[] {
+        const completions: vscode.CompletionItem[] = [];
+
+        for (const key in stashmap) {
+            if (key.startsWith(prefix)) {
+                completions.push(this.createCompletionItem(
+                    key,
+                    key,
+                    iconKind,
+                    `External Cluster`,
+                ));
             }
         }
 
@@ -145,11 +168,17 @@ export class Intellisense {
     }
 
     public AttachableFilter(prefix: string, iconKind: vscode.CompletionItemKind): vscode.CompletionItem[] {
-        return this.SymbolicClassFilter(prefix, iconKind, true);
+        if (this.Core.config.get<boolean>("intellisense.mode")) {
+            return this.SmartSymClassFilter(prefix, iconKind, this.Core.getAttachables());
+        }
+        return this.SimpleSymClassFilter(prefix, iconKind, this.Core.getAttachables());
     }
 
     public AssignableFilter(prefix: string, iconKind: vscode.CompletionItemKind): vscode.CompletionItem[] {
-        return this.SymbolicClassFilter(prefix, iconKind, false);
+        if (this.Core.config.get<boolean>("intellisense.mode")) {
+            return this.SmartSymClassFilter(prefix, iconKind, this.Core.getAssignables());
+        }
+        return this.SimpleSymClassFilter(prefix, iconKind, this.Core.getAssignables());
     }
 
     provideCompletionItems(document: vscode.TextDocument, position: vscode.Position): vscode.CompletionItem[] | undefined {
@@ -237,7 +266,8 @@ export class Intellisense {
 
         if (attributeFragment.endsWith("&")) {
             const hashrules = this.Core.getHashrules();
-            for (const [key, value] of Object.entries(hashrules)) {
+            for (const key of Object.keys(hashrules)) {
+                const value = hashrules[key];
                 completions.push(this.createCompletionItem(
                     key,
                     `#{${key}}&`,
@@ -248,7 +278,8 @@ export class Intellisense {
             }
         } else if (attributeFragment.endsWith("#")) {
             const hashrules = this.Core.getHashrules();
-            for (const [key, value] of Object.entries(hashrules)) {
+            for (const key of Object.keys(hashrules)) {
+                const value = hashrules[key];
                 completions.push(this.createCompletionItem(
                     key,
                     `{${key}}&`,
@@ -259,7 +290,8 @@ export class Intellisense {
             }
         } else if (attributeFragment.endsWith("#{")) {
             const hashrules = this.Core.getHashrules();
-            for (const [key, value] of Object.entries(hashrules)) {
+            for (const key of Object.keys(hashrules)) {
+                const value = hashrules[key];
                 completions.push(this.createCompletionItem(
                     key,
                     `${key}`,
@@ -284,7 +316,7 @@ export class Intellisense {
                 completions.push(...this.AttachableFilter(valuePrefix.slice(1), iconKind));
             }
         } else if (
-            (attributeMatch.endsWith("&") || /^[\w-]+\$+[\w-]+$/i.test(attributeMatch)) && 
+            (attributeMatch.endsWith("&") || /^[\w-]+\$+[\w-]+$/i.test(attributeMatch)) &&
             (!valueMatch.endsWith("~") && !valueMatch.endsWith("="))
         ) {
             const result = styleScanner(valueMatch);
@@ -343,15 +375,18 @@ export class Intellisense {
                     break;
 
                 case t_SnippetType.property:
-                    Object.entries({ ...tagScopeVars, ...this.Core.getAttachables()[attributeMatch]?.variables || {} })
-                        .forEach(([key, value]) => {
+                    {
+                        const temp = { ...tagScopeVars, ...this.Core.getAttachables()[attributeMatch]?.variables || {} };
+                        for (const key of Object.keys(temp)) {
+                            const value = temp[key];
                             completions.push(this.createCompletionItem(
                                 key,
                                 key,
                                 vscode.CompletionItemKind.Color,
                                 `\`${key}: ${value}\``
                             ));
-                        });
+                        }
+                    }
 
                     for (const prop of this.Core.CSS_Properties) {
                         if (result.fragment.startsWith("-") === prop.name.startsWith("-")) {
@@ -404,15 +439,19 @@ export class Intellisense {
 
                 case t_SnippetType.varfetch:
                 case t_SnippetType.variable:
-                    Object.entries({ ...tagScopeVars, ...this.Core.getAttachables()[attributeMatch]?.variables || {} })
-                        .forEach(([key, value]) => {
+                    {
+                        const temp = { ...tagScopeVars, ...this.Core.getAttachables()[attributeMatch]?.variables || {} };
+
+                        for (const key of Object.keys(temp)) {
+                            const value = temp[key];
                             completions.push(this.createCompletionItem(
                                 key,
                                 key,
                                 vscode.CompletionItemKind.Color,
                                 `\`${key}: ${value}\``
                             ));
-                        });
+                        }
+                    }
                     break;
 
                 case t_SnippetType.constant:

@@ -1,6 +1,7 @@
 import vscode from 'vscode';
 import formatBlock from '../helpers/formatter';
 import { SERVER } from '../server';
+import { t_TrackRange } from '../types';
 
 export class Formatter {
     private Core: SERVER;
@@ -21,7 +22,12 @@ export class Formatter {
 
     provideDocEdits(document: vscode.TextDocument): vscode.TextEdit[] {
         const edits: vscode.TextEdit[] = [];
-        const atValPairs = this.Core.getTagAtValPairRanges().filter(i => !i.attrRange.intersection(i.valRange));
+        const atValPairs: t_TrackRange[] = [];
+        for (const i of this.Core.getTagAtValPairRanges()) {
+            if (!i.attrRange.intersection(i.valRange)) {
+                atValPairs.push(i);
+            }
+        }
 
         for (const track of atValPairs) {
             const preAtrribute = document.getText(new vscode.Range(new vscode.Position(track.attrRange.start.line, 0), track.attrRange.start));

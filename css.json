@@ -5,12 +5,12 @@
         {
             "name": "@--attach",
             "description": "Custom attach directive to create symbolic class dependancy.",
-            "status": "nonstandard"
+            "status": "experimental"
         },
         {
             "name": "@--assign",
             "description": "Custom assemble directive to compose using existing blocks.",
-            "status": "nonstandard"
+            "status": "experimental"
         }
     ],
     "properties": [],

@@ -113,9 +113,9 @@ export class DECORATIONS {
         const symclass_Decos: vscode.DecorationOptions[] = [];
         const comProp_Decos: vscode.DecorationOptions[] = [];
 
-        this.Core.getTagRanges().forEach(tagRange => {
+        for (const tagRange of this.Core.getTagRanges()) {
 
-            tagRange.cache.comments.forEach(track => {
+            for (const track of tagRange.cache.comments) {
                 try {
                     if (track.attrRange && track.valRange) {
                         attrs_Decos.push({ range: track.attrRange });
@@ -124,9 +124,9 @@ export class DECORATIONS {
                 } catch (error) {
                     console.error('Error processing Ranges:', error);
                 }
-            });
+            }
 
-            tagRange.cache.composes.forEach(track => {
+            for (const track of tagRange.cache.composes) {
                 try {
                     if (track.attrRange && track.valRange) {
                         const metadata = attachables[track.attr];
@@ -140,10 +140,10 @@ export class DECORATIONS {
                 } catch (error) {
                     console.error('Error processing Ranges:', error);
                 }
-            });
+            }
 
             // Class Properties
-            tagRange.cache.watchtracks.forEach(track => {
+            for (const track of tagRange.cache.watchtracks) {
                 try {
                     if (track.attrRange && track.valRange) {
                         const Metadatas = (track.fragments ?? []).reduce<m_Metadata[]>((acc, frag) => {
@@ -161,9 +161,9 @@ export class DECORATIONS {
                 } catch (error) {
                     console.error('Error processing Ranges:', error);
                 }
-            });
+            }
 
-            tagRange.cache.valuefrags.forEach(track => {
+            for (const track of tagRange.cache.valuefrags) {
                 try {
                     if (track.val.endsWith(":")) {
                         const tr_val = track.val.slice(0, -1);
@@ -188,9 +188,9 @@ export class DECORATIONS {
                 } catch (error) {
                     console.error('Error processing Ranges:', error);
                 }
-            });
+            }
 
-            tagRange.cache.hashrules.forEach(track => {
+            for (const track of tagRange.cache.hashrules) {
                 try {
                     if (track.valRange) {
                         if (this.Core.FileManifest.hashrules[track.val]) {
@@ -203,9 +203,8 @@ export class DECORATIONS {
                 } catch (error) {
                     console.error('Error processing Ranges:', error);
                 }
-            });
-
-        });
+            }
+        }
 
 
         // Apply decorations

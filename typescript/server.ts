@@ -265,15 +265,16 @@ export class SERVER {
         const assignable: Record<string, m_Metadata> = {};
 
         try {
-            Object.entries(manifest.symclasses).forEach(([k, i]) => {
+            for (const k in Object.keys(manifest.symclasses)) {
+                const i = manifest.symclasses[k];
                 const v = manifest.symclassData[i];
                 if (!v.markdown && k.startsWith('/')) {
                     v.markdown = metadataFormat(k, v, `Attachable`);
                 }
                 attachable[k] = v;
-            });
+            }
 
-            manifest.assignable.forEach((k) => {
+            for (const k of manifest.assignable) {
                 const v = manifest.symclassData[manifest.symclasses[k]];
                 if (v.markdown) {
                     v.markdown = `Assignable & ` + v.markdown;
@@ -281,7 +282,7 @@ export class SERVER {
                     v.markdown = metadataFormat(k, v, `Attachable`);
                 }
                 assignable[k] = v;
-            });
+            }
 
             this.StyleManifest = manifest;
         } catch (err) {
@@ -317,38 +318,48 @@ export class SERVER {
 
     public provideFoldingRanges(): vscode.FoldingRange[] {
         return this.Rs_TagRanges.reduce((A, I) => {
-            I.cache.composes.forEach(i => {
+            for (const i of I.cache.composes) {
                 if (i.multiLine) {
                     A.push(new vscode.FoldingRange(i.valRange.start.line, i.valRange.end.line, vscode.FoldingRangeKind.Region));
                 }
-            });
-            I.cache.watchtracks.forEach(i => {
+            }
+            for (const i of I.cache.watchtracks) {
                 if (i.multiLine) {
                     A.push(new vscode.FoldingRange(i.valRange.start.line, i.valRange.end.line, vscode.FoldingRangeKind.Region));
                 }
-            });
-            I.cache.comments.forEach(i => {
+            }
+            for (const i of I.cache.comments) {
                 if (i.multiLine) {
                     A.push(new vscode.FoldingRange(i.valRange.start.line, i.valRange.end.line, vscode.FoldingRangeKind.Region));
                 }
-            });
+            }
             return A;
         }, [] as vscode.FoldingRange[]);
     }
 
     public getTagAtValPairRanges(tracks = true, comments = true, compose = true): t_TrackRange[] {
         return this.Rs_TagRanges.reduce((A, I) => {
-            if (tracks) { I.cache.watchtracks.forEach(i => { A.push(i); }); }
-            if (comments) { I.cache.comments.forEach(i => { A.push(i); }); }
-            if (compose) { I.cache.composes.forEach(i => { A.push(i); }); }
+            if (tracks) {
+                for (const i of I.cache.watchtracks) { A.push(i); }
+            }
+            if (comments) {
+                for (const i of I.cache.comments) { A.push(i); }
+            }
+            if (compose) {
+                for (const i of I.cache.composes) { A.push(i); }
+            }
             return A;
         }, [] as t_TrackRange[]);
     }
 
     public filterVariables(snippet: string, additionals: Record<string, string> = {}): Record<string, string> {
         const vars: Record<string, string> = {};
-        Object.entries(this.FileManifest.constants).forEach(([k, v]) => { if (k.startsWith(snippet)) { vars[k] = v; } });
-        Object.entries(additionals).forEach(([k, v]) => { if (k.startsWith(snippet)) { vars[k] = v; } });
+        for (const k of Object.keys(this.FileManifest.constants)) {
+            if (k.startsWith(snippet)) { vars[k] = this.FileManifest.constants[k]; }
+        }
+        for (const k of Object.keys(additionals)) {
+            if (k.startsWith(snippet)) { vars[k] = additionals[k]; }
+        }
         return vars;
     }
 
@@ -356,9 +367,9 @@ export class SERVER {
         let switchpath = this.filePath;
 
         if (this.filePath !== "") {
-            for (const [k, v] of Object.entries(this.FileManifest.switchmap)) {
+            for (const k of Object.keys(this.FileManifest.switchmap)) {
                 if (this.filePath.startsWith(k)) {
-                    switchpath = this.filePath.replace(k, v);
+                    switchpath = this.filePath.replace(k, this.FileManifest.switchmap[k]);
                 }
             }
         }

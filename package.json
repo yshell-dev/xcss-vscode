@@ -109,6 +109,11 @@
           "default": "#f57970",
           "description": "Color for tag attribute. Restart extension to take effect."
         },
+        "xcss.intellisense.mode": {
+          "type": "bool",
+          "default": true,
+          "description": "Symclass suggestions can smart(true) or simple(false)"
+        },
         "xcss.color.comment": {
           "type": "string",
           "default": "#ffbe88bb",
