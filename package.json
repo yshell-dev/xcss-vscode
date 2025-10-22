@@ -34,6 +34,9 @@
     "Extension Packs",
     "Other"
   ],
+  "extensionKind": [
+    "workspace"
+  ],
   "keywords": [
     "css",
     "xcss",
@@ -113,6 +116,11 @@
           "type": "bool",
           "default": true,
           "description": "Symclass suggestions can smart(true) or simple(false)"
+        },
+        "xcss.development.autostart": {
+          "type": "bool",
+          "default": true,
+          "description": "Incase of server faliure, auto-start another instance."
         },
         "xcss.color.comment": {
           "type": "string",

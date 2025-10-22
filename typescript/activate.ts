@@ -11,8 +11,9 @@ import { INTELLISENSE } from './shared/intellisense';
 
 const ID = "xcss";
 const BIN = [
+	["core", "bin", "run"],
+	["core", "execute.js"],
 	["core", "source", "scripts", 'live.sh'],
-	["core", "run", "script.js"],
 ];
 
 class ExtensionManager {

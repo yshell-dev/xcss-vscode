@@ -134,13 +134,14 @@ export class EVENTSTREAM {
 
         setTimeout(() => { this.unpause(); }, 1000);
     };
-
+  
 
     buffer = Buffer.alloc(0);
-    Start(spawnPath: string, args: string[]) {
-        if (this.Process && this.Spawn_IsAlive) {
-            return;
-        }
+    Start(spawnPath: string, args: string[], overide_config = false) {
+
+        if (this.Process && this.Spawn_IsAlive) { return; }
+        const autostartflag = this.Server.config.get<boolean>("development.autostart");
+        if (!(autostartflag || overide_config)) { return; }
 
         this.dopause();
         this.Process = spawn(this.RootBinary, args, {

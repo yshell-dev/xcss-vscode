@@ -12,7 +12,7 @@ export default tseslint.config(
 	{
 		ignores: [
 			'.vscode-test',
-			'core/webview',
+			'core/',
 			'build.js',
 			'extension'
 		]
