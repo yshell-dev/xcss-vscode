@@ -34,11 +34,11 @@ class ExtensionManager {
 		this.Definitions = new DEFINITION(this.Server);
 		this.Formatter = new FORMATTING(this.Server);
 		this.Intellisense = new INTELLISENSE(this.Server);
-		this.Palette = new PALETTE(this.Server);
+		this.Palette = new PALETTE();
 
-		const ColorPicks = vscode.languages.registerColorProvider(['*'], new PALETTE(this.Server));
+		const ColorPicks = vscode.languages.registerColorProvider(['*'], this.Palette);
 		const FoldRanges = vscode.languages.registerFoldingRangeProvider(['*'], this.Server);
-		const Definition = vscode.languages.registerDefinitionProvider({ language: '*', scheme: 'file' }, new DEFINITION(this.Server));
+		const Definition = vscode.languages.registerDefinitionProvider({ language: '*', scheme: 'file' }, this.Definitions);
 		const Assistance = vscode.languages.registerCompletionItemProvider(['*'], this.Intellisense, ...this.Intellisense.triggers);
 		const StructHere = vscode.commands.registerCommand(`${this.extensionId}.editor.summon`, this.SummonStructure);
 		const FileSwitch = vscode.commands.registerCommand(`${this.extensionId}.action.toggle`, this.CommandFileToggle);

@@ -3,14 +3,11 @@ import colorSense from '../helpers/color-sense';
 import fileScanner from '../helpers/file-scanner';
 
 import { SwitchRGB } from "../helpers/color-swap";
-import { SERVER } from '../server';
 import { t_TrackRange } from '../types';
 
 export class PALETTE {
-    private Server: SERVER;
 
-    constructor(core: SERVER) {
-        this.Server = core;
+    constructor() {
     }
 
     dispose() {
