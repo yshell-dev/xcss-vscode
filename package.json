@@ -144,11 +144,6 @@
     ],
     "commands": [
       {
-        "command": "xcss.editor.markdown",
-        "title": "Set Prettier as Default Formatter for *.xcss files",
-        "category": "XCSS Editor"
-      },
-      {
         "command": "xcss.editor.summon",
         "title": "Summon Structure after Tag",
         "category": "XCSS Editor"
@@ -159,33 +154,33 @@
         "category": "XCSS Editor"
       },
       {
-        "command": "xcss.editor.preview",
+        "command": "xcss.action.compview",
         "title": "Toggle Preview of Symclass",
         "category": "XCSS Action"
       },
       {
-        "command": "xcss.editor.toggle",
-        "title": "Toggle b/w Source and Target",
+        "command": "xcss.action.toggle",
+        "title": "Toggle b/w Source and Target Files",
         "category": "XCSS Action"
       },
       {
-        "command": "xcss.terminal.command",
-        "title": "Core Actions on Terminal.",
+        "command": "xcss.action.command",
+        "title": "Core Commands on Terminal.",
         "category": "XCSS Action"
       },
       {
         "command": "xcss.server.toggle",
-        "title": "Switch Server Activity",
+        "title": "Toggle Activity",
         "category": "XCSS Server"
       },
       {
         "command": "xcss.server.restart",
-        "title": "Restart Server Spawn",
+        "title": "Restart",
         "category": "XCSS Server"
       },
       {
         "command": "xcss.server.send",
-        "title": "Custom Input to Server",
+        "title": "Interactive Debugging",
         "category": "XCSS Server"
       }
     ],
@@ -202,12 +197,12 @@
       },
       {
         "key": "alt+ctrl+x",
-        "command": "xcss.editor.preview",
+        "command": "xcss.action.compview",
         "when": "editorFocus"
       },
       {
         "key": "ctrl+alt+shift+x",
-        "command": "xcss.editor.toggle",
+        "command": "xcss.action.toggle",
         "when": "editorFocus"
       }
     ],

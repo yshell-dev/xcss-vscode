@@ -46,11 +46,10 @@ class ExtensionManager {
 		const FoldRanges = vscode.languages.registerFoldingRangeProvider(['*'], this.Core);
 		const Definition = vscode.languages.registerDefinitionProvider({ language: '*', scheme: 'file' }, new Definitions(this.Core));
 		const Assistance = vscode.languages.registerCompletionItemProvider(['*'], this.Intellisense, ...this.Intellisense.triggers);
-		const FileSwitch = vscode.commands.registerCommand(`${this.extensionId}.editor.toggle`, this.CommandFileToggle);
-		const FileFormat = vscode.commands.registerCommand(`${this.extensionId}.editor.markdown`, this.CommandFileFormat);
+		const FileSwitch = vscode.commands.registerCommand(`${this.extensionId}.action.toggle`, this.CommandFileToggle);
 		const Formatting = vscode.commands.registerCommand(`${this.extensionId}.editor.format`, this.Formatter.formatFile);
 		const StructHere = vscode.commands.registerCommand(`${this.extensionId}.editor.summon`, this.BlockSummon.summonStructure);
-		const PreviewNow = vscode.commands.registerCommand(`${this.extensionId}.editor.preview`, this.Core.W_COMPWEBVIEW.open);
+		const PreviewNow = vscode.commands.registerCommand(`${this.extensionId}.action.compview`, this.Core.W_COMPWEBVIEW.open);
 
 		this.Disposable.push(
 			this.Core,
@@ -64,7 +63,6 @@ class ExtensionManager {
 			StructHere,
 			Definition,
 			Assistance,
-			FileFormat,
 			FileSwitch,
 			Formatting,
 			FoldRanges,
@@ -103,19 +101,6 @@ class ExtensionManager {
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : String(error);
 			vscode.window.showErrorMessage(`Failed to switch: ${errorMessage}`);
-		}
-	};
-
-	CommandFileFormat = async () => {
-		const result = await vscode.window.showInformationMessage(
-			`Do you want to set Prettier as the default formatter for Markdown (and .${this.extensionId}) files?`,
-			'Yes', 'No'
-		);
-
-		if (result === 'Yes') {
-			const config = vscode.workspace.getConfiguration('editor');
-			await config.update('defaultFormatter', 'esbenp.prettier-vscode', vscode.ConfigurationTarget.Global);
-			vscode.window.showInformationMessage('Prettier has been set as the default formatter (check your settings for confirmation). Please also consider enabling "editor.formatOnSave".');
 		}
 	};
 

@@ -16,7 +16,7 @@ export class STATUSBAR {
         this.Core = core;
         this.identifier = this.Core.Ed_IdCap;
         this.statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-        this.statusBar.command = `${this.Core.Ed_Id}.terminal.command`;
+        this.statusBar.command = `${this.Core.Ed_Id}.action.command`;
 
         this.bin = this.Core.W_EVENTSTREAM.RootBinary;
         this.options = [
