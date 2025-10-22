@@ -4,10 +4,10 @@ import { SERVER } from '../server';
 import { t_TrackRange } from '../types';
 
 export class FORMATTING {
-    private Core: SERVER;
+    private Server: SERVER;
 
-    constructor(Core: SERVER) {
-        this.Core = Core;
+    constructor(Server: SERVER) {
+        this.Server = Server;
     }
 
     dispose() {
@@ -23,7 +23,7 @@ export class FORMATTING {
     provideDocEdits(document: vscode.TextDocument): vscode.TextEdit[] {
         const edits: vscode.TextEdit[] = [];
         const atValPairs: t_TrackRange[] = [];
-        for (const i of this.Core.getTagAtValPairRanges()) {
+        for (const i of this.Server.getTagAtValPairRanges()) {
             if (!i.attrRange.intersection(i.valRange)) {
                 atValPairs.push(i);
             }
@@ -53,15 +53,15 @@ export class FORMATTING {
     }
 
     formatFile = async (): Promise<void> => {
-        if (!this.Core.Ed_Editor) { return; }
+        if (!this.Server.Ed_Editor) { return; }
         try {
             if (this.reactByFold_flag) {
                 await (this.fold_1__unfold_0 ? this.foldRanges : this.unfoldRanges)();
                 this.switchToFoldingTrigger(false);
             } else {
-                const edits = this.provideDocEdits(this.Core.Ed_Editor.document);
+                const edits = this.provideDocEdits(this.Server.Ed_Editor.document);
                 if (edits.length > 0) {
-                    await this.Core.Ed_Editor.edit(editBuilder => { for (const e of edits) { editBuilder.replace(e.range, e.newText); } },
+                    await this.Server.Ed_Editor.edit(editBuilder => { for (const e of edits) { editBuilder.replace(e.range, e.newText); } },
                         { undoStopBefore: true, undoStopAfter: true }
                     );
                 }
@@ -90,7 +90,7 @@ export class FORMATTING {
         if (vscode.window.activeTextEditor) {
             try {
                 await vscode.commands.executeCommand('editor.fold', {
-                    ranges: this.Core.provideFoldingRanges(),
+                    ranges: this.Server.provideFoldingRanges(),
                     direction: 'all'
                 });
             } catch (error) {
@@ -106,7 +106,7 @@ export class FORMATTING {
         if (vscode.window.activeTextEditor) {
             try {
                 await vscode.commands.executeCommand('editor.unfold', {
-                    ranges: this.Core.provideFoldingRanges(),
+                    ranges: this.Server.provideFoldingRanges(),
                     direction: 'all'
                 });
             } catch (error) {

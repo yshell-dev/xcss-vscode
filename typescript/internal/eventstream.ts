@@ -7,7 +7,7 @@ import path from 'path';
 import { WebSocket } from 'ws';
 
 export class EVENTSTREAM {
-    private Core: SERVER;
+    private Server: SERVER;
     private Paused: boolean;
     private OutputChannel: vscode.OutputChannel;
     private Process: ChildProcessWithoutNullStreams | null = null;
@@ -19,9 +19,9 @@ export class EVENTSTREAM {
     }
 
     constructor(core: SERVER) {
-        this.Core = core;
+        this.Server = core;
         this.Paused = false;
-        this.OutputChannel = vscode.window.createOutputChannel(this.Core.Ed_IdCap + ' Server');
+        this.OutputChannel = vscode.window.createOutputChannel(this.Server.Ed_IdCap + ' Server');
         this.RootBinary = ((tests: string[][]): string => {
             for (const test of tests) {
                 if (test.length === 1) {
@@ -30,14 +30,14 @@ export class EVENTSTREAM {
                         return test[0];
                     }
                 } else {
-                    const resolvedpath = path.resolve(this.Core.Ed_Uri.fsPath, ...test);
+                    const resolvedpath = path.resolve(this.Server.Ed_Uri.fsPath, ...test);
                     if (fs.statSync(resolvedpath).isFile()) {
                         return resolvedpath;
                     }
                 }
             }
             return "";
-        })(this.Core.Ed_RootBinTests);
+        })(this.Server.Ed_RootBinTests);
     }
 
     showDeathMessage = () => {
@@ -60,7 +60,7 @@ export class EVENTSTREAM {
 
                         case "fileManifest": {
                             const r = res.result as t_FileManifest;
-                            this.Core.UpdateFileManifest(r);
+                            this.Server.UpdateFileManifest(r);
                             if (this.WS) {
                                 this.WS.close();
                             }
@@ -73,7 +73,7 @@ export class EVENTSTREAM {
                         }
 
                         case "styleManifest": {
-                            this.Core.UpdateStyleManifest(res.result as t_StyleManifest);
+                            this.Server.UpdateStyleManifest(res.result as t_StyleManifest);
                             break;
                         }
 
@@ -123,7 +123,7 @@ export class EVENTSTREAM {
         this.dopause();
 
         const request = await vscode.window.showInputBox({
-            prompt: this.Core.Ed_IdCap + ': Server stream',
+            prompt: this.Server.Ed_IdCap + ': Server stream',
             placeHolder: 'iRpc:[> ...], iTerm:[$ ...], JsonRpc:[...]'
         });
 
@@ -178,7 +178,7 @@ export class EVENTSTREAM {
             this.Process.kill();
             this.Process = null;
         }
-        this.Core.reset();
+        this.Server.reset();
     }
 
     JsonRpc(method: string, params: object = {}, id: number = Date.now()): void {

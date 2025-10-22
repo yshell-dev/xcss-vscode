@@ -7,10 +7,10 @@ import { SERVER } from '../server';
 import { t_TrackRange } from '../types';
 
 export class PALETTE {
-    private Core: SERVER;
+    private Server: SERVER;
 
     constructor(core: SERVER) {
-        this.Core = core;
+        this.Server = core;
     }
 
     dispose() {
@@ -20,7 +20,7 @@ export class PALETTE {
     // Color Provider
 
     provideDocumentColors(document: vscode.TextDocument): vscode.ColorInformation[] {
-        if (!(this.Core.isFileTargetedFile() && document)) { return []; };
+        if (!(this.Server.isFileTargetedFile() && document)) { return []; };
         const colors: vscode.ColorInformation[] = [];
         const scanned = fileScanner(document.getText());
         const blockRanges: t_TrackRange[] = [];

@@ -2,7 +2,7 @@ import vscode from 'vscode';
 import { SERVER } from '../server';
 
 export class STATUSBAR {
-    private Core: SERVER | undefined;
+    private Server: SERVER | undefined;
     private statusBar: vscode.StatusBarItem;
     private statusIcon: 'debug-stop' | 'debug-pause' | 'eye-watch' | 'eye-closed' | 'warning' = 'debug-stop';
     private identifier: string;
@@ -13,12 +13,12 @@ export class STATUSBAR {
     private bin: string;
 
     constructor(core: SERVER) {
-        this.Core = core;
-        this.identifier = this.Core.Ed_IdCap;
+        this.Server = core;
+        this.identifier = this.Server.Ed_IdCap;
         this.statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-        this.statusBar.command = `${this.Core.Ed_Id}.action.command`;
+        this.statusBar.command = `${this.Server.Ed_Id}.action.command`;
 
-        this.bin = this.Core.W_EVENTSTREAM.RootBinary;
+        this.bin = this.Server.W_EVENTSTREAM.RootBinary;
         this.options = [
             { label: 'Docs', script: "" },
             { label: 'Init/Verify', script: 'init' },
@@ -31,13 +31,13 @@ export class STATUSBAR {
             s.script = `${this.bin} ${s.script}`;
         });
 
-        this.Core.Ed_Context.subscriptions.push(
+        this.Server.Ed_Context.subscriptions.push(
             vscode.window.onDidChangeActiveTextEditor(() => { this.refresh(); }),
             vscode.workspace.onDidChangeWorkspaceFolders(() => { this.refresh(); }),
             vscode.workspace.onDidOpenTextDocument(() => { this.refresh(); }),
             vscode.commands.registerCommand(this.statusBar.command, async () => {
                 const picked = await vscode.window.showQuickPick(this.options.map((o) => `${o.label}`), {
-                    placeHolder: this.identifier + ': Core Command Palette.'
+                    placeHolder: this.identifier + ': Server Command Palette.'
                 });
                 if (!picked) { return; }
 
@@ -53,19 +53,19 @@ export class STATUSBAR {
 
 
     refresh() {
-        if (!this.Core) {
+        if (!this.Server) {
             return;
         }
-        if (this.Core.isExtenActivated()) {
-            this.statusIcon = (this.Core.FileManifest.assistfile) ? "eye-watch" : "eye-closed";
+        if (this.Server.isExtenActivated()) {
+            this.statusIcon = (this.Server.FileManifest.assistfile) ? "eye-watch" : "eye-closed";
         } else {
-            this.statusIcon = this.Core.W_EVENTSTREAM.Spawn_IsAlive ? "debug-pause" : "debug-stop";
+            this.statusIcon = this.Server.W_EVENTSTREAM.Spawn_IsAlive ? "debug-pause" : "debug-stop";
         };
 
-        const errlen = this.Core.StyleManifest.diagnostics.length;
+        const errlen = this.Server.StyleManifest.diagnostics.length;
         this.statusBar.text = `$(${this.statusIcon}) ${this.identifier} $(warning) ${errlen}`;
         this.statusBar.backgroundColor = errlen ? new vscode.ThemeColor('statusBarItem.errorBackground') : undefined;
-        this.statusBar.tooltip = this.Core.FileManifest.webviewurl;
+        this.statusBar.tooltip = this.Server.FileManifest.webviewurl;
         this.statusBar.show();
     };
 

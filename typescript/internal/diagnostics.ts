@@ -3,14 +3,14 @@ import { SERVER } from '../server';
 import { t_TrackRange } from '../types';
 
 export class DIAGNOSTICS {
-    private Core: SERVER;
+    private Server: SERVER;
     public diagnosticCollection: vscode.DiagnosticCollection;
 
 
     constructor(core: SERVER) {
-        this.Core = core;
+        this.Server = core;
         this.diagnosticCollection = vscode.languages.createDiagnosticCollection(core.Ed_Id);
-        this.Core.Ed_Context.subscriptions.push(this.diagnosticCollection);
+        this.Server.Ed_Context.subscriptions.push(this.diagnosticCollection);
     }
 
     dispose() {
@@ -28,7 +28,7 @@ export class DIAGNOSTICS {
             message,
             vscode.DiagnosticSeverity.Error
         );
-        d.source = this.Core.Ed_Id;
+        d.source = this.Server.Ed_Id;
         return d;
     }
 
@@ -38,7 +38,7 @@ export class DIAGNOSTICS {
             message,
             vscode.DiagnosticSeverity.Warning
         );
-        d.source = this.Core.Ed_Id;
+        d.source = this.Server.Ed_Id;
         return d;
     }
 
@@ -54,7 +54,7 @@ export class DIAGNOSTICS {
 
     lspDiagnostic(): Record<string, vscode.Diagnostic[]> {
         const dmap: Record<string, vscode.Diagnostic[]> = {};
-        for (const diagnostic of this.Core.StyleManifest.diagnostics) {
+        for (const diagnostic of this.Server.StyleManifest.diagnostics) {
             for (const source of diagnostic.sources) {
                 const parsed = this.parseSource(source);
                 if (!parsed) { continue; }
@@ -73,26 +73,26 @@ export class DIAGNOSTICS {
     refresh() {
         try {
             if (!(
-                this.Core.Ed_Editor &&
-                this.Core.Ed_WorkspaceFolder && (
-                    this.Core.isFileTargetedFile() ||
-                    this.Core.isCssTargetedFile()
+                this.Server.Ed_Editor &&
+                this.Server.Ed_WorkspaceFolder && (
+                    this.Server.isFileTargetedFile() ||
+                    this.Server.isCssTargetedFile()
                 )
             )) {
                 return;
             }
 
             const diagnosticMap = this.lspDiagnostic();
-            if (!diagnosticMap[this.Core.filePath]) {
-                diagnosticMap[this.Core.filePath] = [];
+            if (!diagnosticMap[this.Server.filePath]) {
+                diagnosticMap[this.Server.filePath] = [];
             }
 
-            const thisDiags: vscode.Diagnostic[] = diagnosticMap[this.Core.filePath];
-            const assignables = this.Core.getAssignables();
-            const attachables = this.Core.getAttachables();
-            for (const tag of this.Core.getTagRanges()) {
+            const thisDiags: vscode.Diagnostic[] = diagnosticMap[this.Server.filePath];
+            const assignables = this.Server.getAssignables();
+            const attachables = this.Server.getAttachables();
+            for (const tag of this.Server.getTagRanges()) {
                 for (const i of tag.cache.hashrules) {
-                    if (!this.Core.FileManifest.hashrules[i.attr]) {
+                    if (!this.Server.FileManifest.hashrules[i.attr]) {
                         thisDiags.push(this.createError(i.attrRange, "Invalid Hashrule."));
                     }
                 }
@@ -125,7 +125,7 @@ export class DIAGNOSTICS {
                 };
             }
 
-            const workspace_uri = this.Core.Ed_WorkspaceFolder.uri;
+            const workspace_uri = this.Server.Ed_WorkspaceFolder.uri;
             for (const p of Object.keys(diagnosticMap)) {
                 const fileuri = vscode.Uri.joinPath(workspace_uri, p);
                 this.diagnosticCollection.set(fileuri, diagnosticMap[p]);

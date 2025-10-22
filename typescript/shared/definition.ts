@@ -4,10 +4,10 @@ import { SERVER } from '../server';
 const DECLARATION_PATH_REGEX = /^(.*?):(\d+):(\d+)$/;
 
 export class Definitions {
-    private Core: SERVER;
+    private Server: SERVER;
 
     constructor(core: SERVER) {
-        this.Core = core;
+        this.Server = core;
     }
 
     dispose() {
@@ -20,13 +20,13 @@ export class Definitions {
         document: vscode.TextDocument,
         position: vscode.Position
     ): Promise<vscode.Definition | vscode.LocationLink[] | undefined> {
-        if (!this.Core.Ed_WorkspaceFolder || !(this.Core.isFileTargetedFile() || this.Core.isCssTargetedFile())) { return undefined; }
+        if (!this.Server.Ed_WorkspaceFolder || !(this.Server.isFileTargetedFile() || this.Server.isCssTargetedFile())) { return undefined; }
 
-        const attachables = this.Core.getAttachables();
+        const attachables = this.Server.getAttachables();
 
-        const wordRange = document.getWordRangeAtPosition(position, this.Core.SymClassRgx);
-        const atValPair = this.Core.getTagAtValPairRanges().some(r => r.valRange.contains(position)) || !wordRange;
-        const isWordInTrackedRange = this.Core.isCssTargetedFile() || atValPair;
+        const wordRange = document.getWordRangeAtPosition(position, this.Server.SymClassRgx);
+        const atValPair = this.Server.getTagAtValPairRanges().some(r => r.valRange.contains(position)) || !wordRange;
+        const isWordInTrackedRange = this.Server.isCssTargetedFile() || atValPair;
         if (!isWordInTrackedRange) { return undefined; }
 
         const word = document.getText(wordRange);
@@ -50,7 +50,7 @@ export class Definitions {
                 const searchWord = newWord.includes('$') ? newWord.slice(newWord.lastIndexOf('$') + 1) : newWord;
 
                 try {
-                    const targetUri = vscode.Uri.joinPath(vscode.Uri.file(this.Core.Ed_WorkspaceFolder.uri.fsPath), filePath);
+                    const targetUri = vscode.Uri.joinPath(vscode.Uri.file(this.Server.Ed_WorkspaceFolder.uri.fsPath), filePath);
                     const targetDocument = await vscode.workspace.openTextDocument(targetUri);
                     const fileContent = targetDocument.getText();
                     const wordVarients = [
@@ -96,7 +96,7 @@ export class Definitions {
             const definitionPosition = new vscode.Position(definitionLine, definitionChar);
 
             const definitionLocation = new vscode.Location(
-                vscode.Uri.joinPath(vscode.Uri.file(this.Core.Ed_WorkspaceFolder.uri.fsPath), filePath),
+                vscode.Uri.joinPath(vscode.Uri.file(this.Server.Ed_WorkspaceFolder.uri.fsPath), filePath),
                 new vscode.Range(definitionPosition, definitionPosition)
             );
             return definitionLocation;

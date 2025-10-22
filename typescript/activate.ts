@@ -20,7 +20,7 @@ class ExtensionManager {
 	readonly rootBinary = BIN;
 	readonly statusbarRefreshInterval = 1000;
 
-	private Core: SERVER | undefined;
+	private Server: SERVER | undefined;
 	private Definitions: Definitions | undefined;
 	private Formatter: FORMATTING | undefined;
 	private Intellisense: INTELLISENSE | undefined;
@@ -35,24 +35,24 @@ class ExtensionManager {
 		this.Context = context;
 		if (!this.Context) { return; };
 
-		this.Core = new SERVER(this.Context, this.extensionId, this.rootBinary);
-		this.Definitions = new Definitions(this.Core);
-		this.Formatter = new FORMATTING(this.Core);
-		this.Intellisense = new INTELLISENSE(this.Core);
-		this.Palette = new PALETTE(this.Core);
-		this.BlockSummon = new SUMMON(this.Core);
+		this.Server = new SERVER(this.Context, this.extensionId, this.rootBinary);
+		this.Definitions = new Definitions(this.Server);
+		this.Formatter = new FORMATTING(this.Server);
+		this.Intellisense = new INTELLISENSE(this.Server);
+		this.Palette = new PALETTE(this.Server);
+		this.BlockSummon = new SUMMON(this.Server);
 
-		const ColorPicks = vscode.languages.registerColorProvider(['*'], new PALETTE(this.Core));
-		const FoldRanges = vscode.languages.registerFoldingRangeProvider(['*'], this.Core);
-		const Definition = vscode.languages.registerDefinitionProvider({ language: '*', scheme: 'file' }, new Definitions(this.Core));
+		const ColorPicks = vscode.languages.registerColorProvider(['*'], new PALETTE(this.Server));
+		const FoldRanges = vscode.languages.registerFoldingRangeProvider(['*'], this.Server);
+		const Definition = vscode.languages.registerDefinitionProvider({ language: '*', scheme: 'file' }, new Definitions(this.Server));
 		const Assistance = vscode.languages.registerCompletionItemProvider(['*'], this.Intellisense, ...this.Intellisense.triggers);
 		const FileSwitch = vscode.commands.registerCommand(`${this.extensionId}.action.toggle`, this.CommandFileToggle);
 		const Formatting = vscode.commands.registerCommand(`${this.extensionId}.editor.format`, this.Formatter.formatFile);
 		const StructHere = vscode.commands.registerCommand(`${this.extensionId}.editor.summon`, this.BlockSummon.summonStructure);
-		const PreviewNow = vscode.commands.registerCommand(`${this.extensionId}.action.compview`, this.Core.W_COMPWEBVIEW.open);
+		const PreviewNow = vscode.commands.registerCommand(`${this.extensionId}.action.compview`, this.Server.W_COMPWEBVIEW.open);
 
 		this.Disposable.push(
-			this.Core,
+			this.Server,
 			this.Palette,
 			this.Formatter,
 			this.BlockSummon,
@@ -81,8 +81,8 @@ class ExtensionManager {
 		}
 
 		try {
-			const filePath = this.Core?.getTogglePath() || "";
-			if (this.Core && filePath) {
+			const filePath = this.Server?.getTogglePath() || "";
+			if (this.Server && filePath) {
 				if (await fileExists(filePath)) {
 					const targetUri = vscode.Uri.file(filePath);
 					await vscode.commands.executeCommand('vscode.open', targetUri, {

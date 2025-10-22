@@ -10,6 +10,7 @@ import { getDefaultCSSDataProvider, IPropertyData } from 'vscode-css-languageser
 import { t_FileManifest, m_Metadata, t_TagRange, t_TrackRange, t_StyleManifest } from './types';
 import { STATUSBAR as STATEWIDGET } from './internal/status-bar';
 import { EVENTSTREAM } from './internal/eventstream';
+// import * as CORE from '../core/run/detect';
 
 export class SERVER {
 

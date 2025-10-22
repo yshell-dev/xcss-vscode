@@ -5,7 +5,7 @@ import { SERVER } from '../server';
 
 
 export class DECORATIONS {
-    private Core: SERVER;
+    private Server: SERVER;
 
     attrs_Style: vscode.TextEditorDecorationType | undefined;
     value_Style: vscode.TextEditorDecorationType | undefined;
@@ -17,15 +17,15 @@ export class DECORATIONS {
 
 
     constructor(core: SERVER) {
-        this.Core = core;
+        this.Server = core;
         this.updateStyles();
     };
 
     updateStyles() {
-        const c_attribute = this.Core.config.get<string>('color.attribute');
-        const c_property = this.Core.config.get<string>('color.property');
-        const c_comment = this.Core.config.get<string>('color.comment');
-        const c_value = this.Core.config.get<string>('color.value');
+        const c_attribute = this.Server.config.get<string>('color.attribute');
+        const c_property = this.Server.config.get<string>('color.property');
+        const c_comment = this.Server.config.get<string>('color.comment');
+        const c_value = this.Server.config.get<string>('color.value');
 
         this.attrs_Style = vscode.window.createTextEditorDecorationType({
             color: c_attribute,
@@ -77,7 +77,7 @@ export class DECORATIONS {
     }
 
     clear() {
-        const editor = this.Core.Ed_Editor;
+        const editor = this.Server.Ed_Editor;
         if (editor) {
             if (this.attrs_Style) { editor.setDecorations(this.attrs_Style, []); }
             if (this.value_Style) { editor.setDecorations(this.value_Style, []); }
@@ -96,14 +96,14 @@ export class DECORATIONS {
 
     refresh() {
 
-        if (!this.Core.Ed_Editor) {
-            if (!this.Core.isFileTargetedFile()) {
+        if (!this.Server.Ed_Editor) {
+            if (!this.Server.isFileTargetedFile()) {
                 this.clear();
             }
             return;
         }
 
-        const attachables = this.Core.getAttachables();
+        const attachables = this.Server.getAttachables();
 
         const comment_Decos: vscode.DecorationOptions[] = [];
         const hashrule_Decos: vscode.DecorationOptions[] = [];
@@ -113,7 +113,7 @@ export class DECORATIONS {
         const symclass_Decos: vscode.DecorationOptions[] = [];
         const comProp_Decos: vscode.DecorationOptions[] = [];
 
-        for (const tagRange of this.Core.getTagRanges()) {
+        for (const tagRange of this.Server.getTagRanges()) {
 
             for (const track of tagRange.cache.comments) {
                 try {
@@ -133,7 +133,7 @@ export class DECORATIONS {
                         if (metadata) {
                             Object.assign(tagRange.variables, metadata.variables);
                         }
-                        const tooltip = metadata ? metadata.markdown || metadataFormat(track.attr, metadata) : `${this.Core.Ed_IdCap} Definition.`;
+                        const tooltip = metadata ? metadata.markdown || metadataFormat(track.attr, metadata) : `${this.Server.Ed_IdCap} Definition.`;
                         attrs_Decos.push({ range: track.attrRange, hoverMessage: tooltip });
                         compVal_Decos.push({ range: track.valRange });
                     }
@@ -154,7 +154,7 @@ export class DECORATIONS {
                                 Object.assign(tagRange.variables, attachables[fragx].variables);
                             }
                         }
-                        const MetadataMerged = metamergeFormat(track.attr, this.Core.filePath, Metadatas);
+                        const MetadataMerged = metamergeFormat(track.attr, this.Server.filePath, Metadatas);
                         attrs_Decos.push({ range: track.attrRange, hoverMessage: MetadataMerged.toolTip });
                         value_Decos.push({ range: track.valRange });
                     }
@@ -167,7 +167,7 @@ export class DECORATIONS {
                 try {
                     if (track.val.endsWith(":")) {
                         const tr_val = track.val.slice(0, -1);
-                        const found = this.Core.CSS_Properties.find(prop => prop.name ? (prop.name === tr_val) : false);
+                        const found = this.Server.CSS_Properties.find(prop => prop.name ? (prop.name === tr_val) : false);
                         if (found) {
                             comProp_Decos.push({
                                 range: track.valRange,
@@ -193,10 +193,10 @@ export class DECORATIONS {
             for (const track of tagRange.cache.hashrules) {
                 try {
                     if (track.valRange) {
-                        if (this.Core.FileManifest.hashrules[track.val]) {
+                        if (this.Server.FileManifest.hashrules[track.val]) {
                             hashrule_Decos.push({
                                 range: track.valRange,
-                                hoverMessage: `Hashrule: \`${this.Core.FileManifest.hashrules[track.val]}\``
+                                hoverMessage: `Hashrule: \`${this.Server.FileManifest.hashrules[track.val]}\``
                             });
                         }
                     }
@@ -208,12 +208,12 @@ export class DECORATIONS {
 
 
         // Apply decorations
-        if (this.attrs_Style) { this.Core.Ed_Editor.setDecorations(this.attrs_Style, attrs_Decos); }
-        if (this.value_Style) { this.Core.Ed_Editor.setDecorations(this.value_Style, value_Decos); }
-        if (this.comProp_Style) { this.Core.Ed_Editor.setDecorations(this.comProp_Style, comProp_Decos); }
-        if (this.compVal_Style) { this.Core.Ed_Editor.setDecorations(this.compVal_Style, compVal_Decos); }
-        if (this.comment_Style) { this.Core.Ed_Editor.setDecorations(this.comment_Style, comment_Decos); }
-        if (this.hashrule_Style) { this.Core.Ed_Editor.setDecorations(this.hashrule_Style, hashrule_Decos); }
-        if (this.symclass_Style) { this.Core.Ed_Editor.setDecorations(this.symclass_Style, symclass_Decos); }
+        if (this.attrs_Style) { this.Server.Ed_Editor.setDecorations(this.attrs_Style, attrs_Decos); }
+        if (this.value_Style) { this.Server.Ed_Editor.setDecorations(this.value_Style, value_Decos); }
+        if (this.comProp_Style) { this.Server.Ed_Editor.setDecorations(this.comProp_Style, comProp_Decos); }
+        if (this.compVal_Style) { this.Server.Ed_Editor.setDecorations(this.compVal_Style, compVal_Decos); }
+        if (this.comment_Style) { this.Server.Ed_Editor.setDecorations(this.comment_Style, comment_Decos); }
+        if (this.hashrule_Style) { this.Server.Ed_Editor.setDecorations(this.hashrule_Style, hashrule_Decos); }
+        if (this.symclass_Style) { this.Server.Ed_Editor.setDecorations(this.symclass_Style, symclass_Decos); }
     };
 }

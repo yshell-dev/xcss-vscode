@@ -2,11 +2,11 @@ import vscode from 'vscode';
 import { SERVER } from '../server';
 
 export class COMPVIEW {
-    private Core: SERVER;
+    private Server: SERVER;
     public previewPanal: vscode.WebviewPanel | undefined;
 
     constructor(core: SERVER) {
-        this.Core = core;
+        this.Server = core;
     }
 
     clear() {
@@ -22,14 +22,14 @@ export class COMPVIEW {
 
     open = async () => {
 
-        this.Core.RequestManifest(true);
+        this.Server.RequestManifest(true);
 
         if (this.previewPanal) {
             this.previewPanal.reveal(vscode.ViewColumn.Active);
-        } else if (this.Core.FileManifest.webviewport > 0) {
+        } else if (this.Server.FileManifest.webviewport > 0) {
             this.previewPanal = vscode.window.createWebviewPanel(
-                this.Core.FileManifest.webviewurl,
-                this.Core.Ed_Id + ' Component Sandbox',
+                this.Server.FileManifest.webviewurl,
+                this.Server.Ed_Id + ' Component Sandbox',
                 {
                     viewColumn: vscode.ViewColumn.Beside,
                     preserveFocus: false
@@ -37,26 +37,26 @@ export class COMPVIEW {
                 {
                     enableScripts: true,
                     localResourceRoots: [
-                        this.Core.Ed_Uri,
-                        this.Core.Ed_WorkspaceFolder?.uri || this.Core.Ed_Uri
+                        this.Server.Ed_Uri,
+                        this.Server.Ed_WorkspaceFolder?.uri || this.Server.Ed_Uri
                     ]
                 }
             );
 
             vscode.env.asExternalUri(
-                vscode.Uri.parse(this.Core.FileManifest.webviewurl)
+                vscode.Uri.parse(this.Server.FileManifest.webviewurl)
             );
 
             this.previewPanal.onDidDispose(() => {
                 this.previewPanal = undefined;
-            }, null, this.Core.Ed_Context.subscriptions);
+            }, null, this.Server.Ed_Context.subscriptions);
 
             this.previewPanal.webview.html = `
             <!DOCTYPE html>
             <html lang="en">
                 <body style="margin:0;padding:0;">
                     <iframe 
-                    src="${this.Core.FileManifest.webviewurl}" 
+                    src="${this.Server.FileManifest.webviewurl}" 
                     style="
                         width:100%;
                         height:100%;

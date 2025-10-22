@@ -7,11 +7,11 @@ import { metadataFormat } from '../helpers/metadata';
 import { m_Metadata, t_CursorSnippet, t_SnippetType } from '../types';
 
 export class INTELLISENSE {
-    private Core: SERVER;
+    private Server: SERVER;
     readonly triggers = ['@', ' ', '=', '#', '~', '&', '$', '\t', '\n', '/', '_', '(', ')', ':', '{', '}'];
 
     constructor(core: SERVER) {
-        this.Core = core;
+        this.Server = core;
     }
 
     dispose() {
@@ -168,17 +168,17 @@ export class INTELLISENSE {
     }
 
     public AttachableFilter(prefix: string, iconKind: vscode.CompletionItemKind): vscode.CompletionItem[] {
-        if (this.Core.config.get<boolean>("intellisense.mode")) {
-            return this.SmartSymClassFilter(prefix, iconKind, this.Core.getAttachables());
+        if (this.Server.config.get<boolean>("intellisense.mode")) {
+            return this.SmartSymClassFilter(prefix, iconKind, this.Server.getAttachables());
         }
-        return this.SimpleSymClassFilter(prefix, iconKind, this.Core.getAttachables());
+        return this.SimpleSymClassFilter(prefix, iconKind, this.Server.getAttachables());
     }
 
     public AssignableFilter(prefix: string, iconKind: vscode.CompletionItemKind): vscode.CompletionItem[] {
-        if (this.Core.config.get<boolean>("intellisense.mode")) {
-            return this.SmartSymClassFilter(prefix, iconKind, this.Core.getAssignables());
+        if (this.Server.config.get<boolean>("intellisense.mode")) {
+            return this.SmartSymClassFilter(prefix, iconKind, this.Server.getAssignables());
         }
-        return this.SimpleSymClassFilter(prefix, iconKind, this.Core.getAssignables());
+        return this.SimpleSymClassFilter(prefix, iconKind, this.Server.getAssignables());
     }
 
     provideCompletionItems(document: vscode.TextDocument, position: vscode.Position): vscode.CompletionItem[] | undefined {
@@ -186,11 +186,11 @@ export class INTELLISENSE {
             const completions: vscode.CompletionItem[] = [];
             const fileFragment = document.getText(new vscode.Range(new vscode.Position(0, 0), position));
 
-            if (this.Core.Ed_Editor) {
-                if (this.Core.isFileTargetedFile()) {
-                    const parsed = cursorSense(fileFragment, this.Core.Ed_Editor.document.offsetAt(this.Core.Ed_Editor.selection.active));
+            if (this.Server.Ed_Editor) {
+                if (this.Server.isFileTargetedFile()) {
+                    const parsed = cursorSense(fileFragment, this.Server.Ed_Editor.document.offsetAt(this.Server.Ed_Editor.selection.active));
                     const valueFragment = parsed.cursorString.slice(parsed.cursorAttribute.length + 2);
-                    const foundTag = this.Core.getTagRanges().find(tag => tag.range.contains(position));
+                    const foundTag = this.Server.getTagRanges().find(tag => tag.range.contains(position));
                     const foundVars = foundTag ? foundTag.variables : {};
 
                     if (parsed.cursorValue.length) {
@@ -198,7 +198,7 @@ export class INTELLISENSE {
                     } else if (parsed.cursorString.length) {
                         completions.push(...this.handleAttributeMatch(parsed.cursorString));
                     }
-                } else if (this.Core.isCssTargetedFile()) {
+                } else if (this.Server.isCssTargetedFile()) {
                     completions.push(...this.provideCssCompletions(styleScanner(fileFragment)));
                 }
             }
@@ -231,7 +231,7 @@ export class INTELLISENSE {
                 case t_SnippetType.constant:
                 case t_SnippetType.variable:
                 case t_SnippetType.varfetch: {
-                    const items = Object.keys(this.Core.filterVariables(cursorSnippet.fragment ?? "")) || [];
+                    const items = Object.keys(this.Server.filterVariables(cursorSnippet.fragment ?? "")) || [];
                     for (const item of items) {
                         completions.push(this.createCompletionItem(
                             item,
@@ -265,7 +265,7 @@ export class INTELLISENSE {
         const completions: vscode.CompletionItem[] = [];
 
         if (attributeFragment.endsWith("&")) {
-            const hashrules = this.Core.getHashrules();
+            const hashrules = this.Server.getHashrules();
             for (const key of Object.keys(hashrules)) {
                 const value = hashrules[key];
                 completions.push(this.createCompletionItem(
@@ -277,7 +277,7 @@ export class INTELLISENSE {
                 ));
             }
         } else if (attributeFragment.endsWith("#")) {
-            const hashrules = this.Core.getHashrules();
+            const hashrules = this.Server.getHashrules();
             for (const key of Object.keys(hashrules)) {
                 const value = hashrules[key];
                 completions.push(this.createCompletionItem(
@@ -289,7 +289,7 @@ export class INTELLISENSE {
                 ));
             }
         } else if (attributeFragment.endsWith("#{")) {
-            const hashrules = this.Core.getHashrules();
+            const hashrules = this.Server.getHashrules();
             for (const key of Object.keys(hashrules)) {
                 const value = hashrules[key];
                 completions.push(this.createCompletionItem(
@@ -308,7 +308,7 @@ export class INTELLISENSE {
     handleValueMatch(attributeMatch: string, valueMatch: string, tagScopeVars: Record<string, string>): vscode.CompletionItem[] {
         const completions: vscode.CompletionItem[] = [];
 
-        if (this.Core.getAttributes().includes(attributeMatch)) {
+        if (this.Server.getAttributes().includes(attributeMatch)) {
             const valuePrefix = valueMatch.match(/[=~][\w/$_-]*$/i)?.[0] || '';
             const isAtStyle = this.testAtrule(valuePrefix || '');
             if (valueMatch[0] === "=" || valueMatch[0] === "~") {
@@ -322,7 +322,7 @@ export class INTELLISENSE {
             const result = styleScanner(valueMatch);
             const isAtStyle = this.testAtrule(result.fragment);
             const iconKind = isAtStyle ? vscode.CompletionItemKind.Variable : vscode.CompletionItemKind.Field;
-            const property = this.Core.CSS_Properties.find(item => item.name === result.property);
+            const property = this.Server.CSS_Properties.find(item => item.name === result.property);
 
             switch (result.type) {
                 case t_SnippetType.rule:
@@ -336,7 +336,7 @@ export class INTELLISENSE {
                         ));
                     }
 
-                    for (const rule of this.Core.CSS_AtDirectives) {
+                    for (const rule of this.Server.CSS_AtDirectives) {
                         if (result.fragment.startsWith("@-") === rule.name.startsWith("@-")) {
                             completions.push(this.createCompletionItem(
                                 rule.name.slice(1),
@@ -350,7 +350,7 @@ export class INTELLISENSE {
 
                 case t_SnippetType.pseudo:
                     if (valueMatch.endsWith("::")) {
-                        for (const pseudo of this.Core.CSS_PseudoElements) {
+                        for (const pseudo of this.Server.CSS_PseudoElements) {
                             if (result.fragment.startsWith("::-") === pseudo.name.startsWith("::-")) {
                                 completions.push(this.createCompletionItem(
                                     `${pseudo.name} (snippet)`,
@@ -361,7 +361,7 @@ export class INTELLISENSE {
                             }
                         }
                     } else {
-                        for (const pseudo of this.Core.CSS_PseudoClasses) {
+                        for (const pseudo of this.Server.CSS_PseudoClasses) {
                             if (result.fragment.startsWith(":-") === pseudo.name.startsWith(":-")) {
                                 completions.push(this.createCompletionItem(
                                     `${pseudo.name} (snippet)`,
@@ -376,7 +376,7 @@ export class INTELLISENSE {
 
                 case t_SnippetType.property:
                     {
-                        const temp = { ...tagScopeVars, ...this.Core.getAttachables()[attributeMatch]?.variables || {} };
+                        const temp = { ...tagScopeVars, ...this.Server.getAttachables()[attributeMatch]?.variables || {} };
                         for (const key of Object.keys(temp)) {
                             const value = temp[key];
                             completions.push(this.createCompletionItem(
@@ -388,7 +388,7 @@ export class INTELLISENSE {
                         }
                     }
 
-                    for (const prop of this.Core.CSS_Properties) {
+                    for (const prop of this.Server.CSS_Properties) {
                         if (result.fragment.startsWith("-") === prop.name.startsWith("-")) {
                             completions.push(this.createCompletionItem(
                                 `${prop.name} (snippet)`,
@@ -399,7 +399,7 @@ export class INTELLISENSE {
                         }
                     }
 
-                    for (const prop of this.Core.CSS_Properties) {
+                    for (const prop of this.Server.CSS_Properties) {
                         if (result.fragment.startsWith("-") === prop.name.startsWith("-")) {
                             if (prop.restrictions?.includes('hashrule')) {
                                 completions.push(this.createCompletionItem(
@@ -440,7 +440,7 @@ export class INTELLISENSE {
                 case t_SnippetType.varfetch:
                 case t_SnippetType.variable:
                     {
-                        const temp = { ...tagScopeVars, ...this.Core.getAttachables()[attributeMatch]?.variables || {} };
+                        const temp = { ...tagScopeVars, ...this.Server.getAttachables()[attributeMatch]?.variables || {} };
 
                         for (const key of Object.keys(temp)) {
                             const value = temp[key];
@@ -455,7 +455,7 @@ export class INTELLISENSE {
                     break;
 
                 case t_SnippetType.constant:
-                    for (const item of Object.keys(this.Core.filterVariables(result.fragment))) {
+                    for (const item of Object.keys(this.Server.filterVariables(result.fragment))) {
                         completions.push(this.createCompletionItem(
                             item,
                             item,
