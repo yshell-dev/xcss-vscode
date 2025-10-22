@@ -1,7 +1,7 @@
 import vscode from 'vscode';
 import { SERVER } from '../server';
 
-export class STATUSBAR {
+export class STATEWIDGET {
     private Server: SERVER | undefined;
     private statusBar: vscode.StatusBarItem;
     private statusIcon: 'debug-stop' | 'debug-pause' | 'eye-watch' | 'eye-closed' | 'warning' = 'debug-stop';

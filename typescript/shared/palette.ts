@@ -18,12 +18,13 @@ export class PALETTE {
     }
 
     // Color Provider
-
     provideDocumentColors(document: vscode.TextDocument): vscode.ColorInformation[] {
-        if (!(this.Server.isFileTargetedFile() && document)) { return []; };
+        if (!(document && this.Server.isFileTargetedFile())) { return []; };
+
         const colors: vscode.ColorInformation[] = [];
         const scanned = fileScanner(document.getText());
         const blockRanges: t_TrackRange[] = [];
+        
         if (scanned.TagRanges) {
             for (const range of scanned.TagRanges) {
                 blockRanges.push(...range.cache.composes);

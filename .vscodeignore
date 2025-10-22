@@ -17,4 +17,6 @@ typescript/**
 **/eslint.config.mjs
 **/tsconfig.build.json
 
+core/source/**
+core/bin/**
 build.js

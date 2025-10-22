@@ -3,7 +3,7 @@ import { SERVER } from '../server';
 
 const DECLARATION_PATH_REGEX = /^(.*?):(\d+):(\d+)$/;
 
-export class Definitions {
+export class DEFINITION {
     private Server: SERVER;
 
     constructor(core: SERVER) {

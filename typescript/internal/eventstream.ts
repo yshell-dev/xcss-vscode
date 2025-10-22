@@ -1,10 +1,11 @@
-import { ChildProcessWithoutNullStreams, spawn, spawnSync } from 'child_process';
+// import path from 'path';
+import { spawn, ChildProcessWithoutNullStreams } from 'child_process';
 import { SERVER } from '../server';
 import * as fs from 'fs';
 import { t_JsonRPCResponse, t_FileManifest, t_StyleManifest } from '../types';
 import vscode from 'vscode';
-import path from 'path';
 import { WebSocket } from 'ws';
+import getBinPath from '../../core/execute';
 
 export class EVENTSTREAM {
     private Server: SERVER;
@@ -21,23 +22,8 @@ export class EVENTSTREAM {
     constructor(core: SERVER) {
         this.Server = core;
         this.Paused = false;
+        this.RootBinary = getBinPath();
         this.OutputChannel = vscode.window.createOutputChannel(this.Server.Ed_IdCap + ' Server');
-        this.RootBinary = ((tests: string[][]): string => {
-            for (const test of tests) {
-                if (test.length === 1) {
-                    const result = spawnSync(test[0], ['--version'], { stdio: 'ignore' });
-                    if (result.status === 0) {
-                        return test[0];
-                    }
-                } else {
-                    const resolvedpath = path.resolve(this.Server.Ed_Uri.fsPath, ...test);
-                    if (fs.statSync(resolvedpath).isFile()) {
-                        return resolvedpath;
-                    }
-                }
-            }
-            return "";
-        })(this.Server.Ed_RootBinTests);
     }
 
     showDeathMessage = () => {
@@ -61,14 +47,13 @@ export class EVENTSTREAM {
                         case "fileManifest": {
                             const r = res.result as t_FileManifest;
                             this.Server.UpdateFileManifest(r);
-                            if (this.WS) {
-                                this.WS.close();
+                            if (!this.WS) {
+                                this.WS = new WebSocket(r.webviewurl + "/ws");
+                                this.WS.on("message", (data) => {
+                                    const str = data.toString();
+                                    this.receive(str);
+                                });
                             }
-                            this.WS = new WebSocket(r.webviewurl + "/ws");
-                            this.WS.on("message", (data) => {
-                                const str = data.toString();
-                                this.receive(str);
-                            });
                             break;
                         }
 
@@ -134,16 +119,17 @@ export class EVENTSTREAM {
 
         setTimeout(() => { this.unpause(); }, 1000);
     };
-  
+
 
     buffer = Buffer.alloc(0);
-    Start(spawnPath: string, args: string[], overide_config = false) {
-
-        if (this.Process && this.Spawn_IsAlive) { return; }
+    async Start(spawnPath: string, args: string[], overide_config = false) {
+        if ((this.Process && this.Spawn_IsAlive) || !fs.existsSync(this.RootBinary)) { return; }
         const autostartflag = this.Server.config.get<boolean>("development.autostart");
         if (!(autostartflag || overide_config)) { return; }
 
         this.dopause();
+        this.WS?.close();
+        this.WS = null;
         this.Process = spawn(this.RootBinary, args, {
             cwd: spawnPath,
             stdio: ['pipe', 'pipe', 'pipe'],

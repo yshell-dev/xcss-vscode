@@ -3,30 +3,25 @@ import path from 'path';
 import vscode from 'vscode';
 
 import { SERVER } from './server';
-import { PALETTE } from './shared/palette';
-import { FORMATTING } from './shared/formatting';
 import { SUMMON } from './shared/summon';
-import { Definitions } from './shared/definition';
+import { PALETTE } from './shared/palette';
+import { DEFINITION } from './shared/definition';
+import { FORMATTING } from './shared/formatting';
 import { INTELLISENSE } from './shared/intellisense';
 
 const ID = "xcss";
-const BIN = [
-	["core", "bin", "run"],
-	["core", "execute.js"],
-	["core", "source", "scripts", 'live.sh'],
-];
 
 class ExtensionManager {
 	readonly extensionId = ID;
-	readonly rootBinary = BIN;
 	readonly statusbarRefreshInterval = 1000;
 
 	private Server: SERVER | undefined;
-	private Definitions: Definitions | undefined;
+	private Definitions: DEFINITION | undefined;
 	private Formatter: FORMATTING | undefined;
 	private Intellisense: INTELLISENSE | undefined;
 	private Palette: PALETTE | undefined;
 	private BlockSummon: SUMMON | undefined;
+
 	private Context: vscode.ExtensionContext | undefined;
 	private Disposable: vscode.Disposable[] = [];
 
@@ -36,8 +31,8 @@ class ExtensionManager {
 		this.Context = context;
 		if (!this.Context) { return; };
 
-		this.Server = new SERVER(this.Context, this.extensionId, this.rootBinary);
-		this.Definitions = new Definitions(this.Server);
+		this.Server = new SERVER(this.Context, this.extensionId);
+		this.Definitions = new DEFINITION(this.Server);
 		this.Formatter = new FORMATTING(this.Server);
 		this.Intellisense = new INTELLISENSE(this.Server);
 		this.Palette = new PALETTE(this.Server);
@@ -45,7 +40,7 @@ class ExtensionManager {
 
 		const ColorPicks = vscode.languages.registerColorProvider(['*'], new PALETTE(this.Server));
 		const FoldRanges = vscode.languages.registerFoldingRangeProvider(['*'], this.Server);
-		const Definition = vscode.languages.registerDefinitionProvider({ language: '*', scheme: 'file' }, new Definitions(this.Server));
+		const Definition = vscode.languages.registerDefinitionProvider({ language: '*', scheme: 'file' }, new DEFINITION(this.Server));
 		const Assistance = vscode.languages.registerCompletionItemProvider(['*'], this.Intellisense, ...this.Intellisense.triggers);
 		const FileSwitch = vscode.commands.registerCommand(`${this.extensionId}.action.toggle`, this.CommandFileToggle);
 		const Formatting = vscode.commands.registerCommand(`${this.extensionId}.editor.format`, this.Formatter.formatFile);

@@ -3,13 +3,13 @@ import path from 'path';
 import vscode from 'vscode';
 import fileScanner from './helpers/file-scanner';
 import { metadataFormat } from './helpers/metadata';
-import { COMPVIEW as COMPWEBVIEW } from './shared/compview';
+import { COMPWEBVIEW } from './internal/compview';
 import { DIAGNOSTICS } from './internal/diagnostics';
 import { DECORATIONS } from './internal/decorations';
+import { STATEWIDGET } from './internal/status-bar';
+import { EVENTSTREAM } from './internal/eventstream';
 import { getDefaultCSSDataProvider, IPropertyData } from 'vscode-css-languageservice';
 import { t_FileManifest, m_Metadata, t_TagRange, t_TrackRange, t_StyleManifest } from './types';
-import { STATUSBAR as STATEWIDGET } from './internal/status-bar';
-import { EVENTSTREAM } from './internal/eventstream';
 
 export class SERVER {
 
@@ -53,7 +53,6 @@ export class SERVER {
     public Ed_Id: string;
     public Ed_Uri: vscode.Uri;
     public Ed_IdCap: string;
-    public Ed_RootBinTests: string[][];
     public Ed_Editor: vscode.TextEditor | undefined;
     public Ed_Context: vscode.ExtensionContext;
     public Ed_WorkspaceFolder: vscode.WorkspaceFolder | undefined;
@@ -177,15 +176,13 @@ export class SERVER {
 
     constructor(
         context: vscode.ExtensionContext,
-        extensionId: string,
-        rootBinTests: string[][]
+        extensionId: string
     ) {
         this.reset();
         this.Ed_Id = extensionId;
         this.Ed_Uri = context.extensionUri;
         this.Ed_IdCap = extensionId.toLocaleUpperCase();
         this.Ed_Context = context;
-        this.Ed_RootBinTests = rootBinTests;
 
         this.W_EVENTSTREAM = new EVENTSTREAM(this);
         this.W_DIAGNOSTICS = new DIAGNOSTICS(this);
@@ -239,14 +236,14 @@ export class SERVER {
 
 
         const document = editor.document;
+        this.filePath = path.relative(workpath, editor.document.uri.fsPath);
+        this.fileExtn = editor.document.uri.path.split('.').pop() || '';
+
         if (updateSymclass) {
             const wordRange = document.getWordRangeAtPosition(editor.selection.active, this.SymClassRgx);
             const wordString = document.getText(wordRange);
             this.cursorword = wordString.startsWith("-$") ? wordString.replace("-$", "$") : wordString;
         }
-
-        this.filePath = path.relative(workpath, editor.document.uri.fsPath);
-        this.fileExtn = editor.document.uri.path.split('.').pop() || '';
 
         this.W_EVENTSTREAM.JsonRpc("fileManifest", {
             filepath: this.filePath,
@@ -384,16 +381,23 @@ export class SERVER {
         return this.Flag_ExtnActivated;
     }
 
+    private pathResolve() {
+        const workpath = this.getWorkspaceFolder();
+        const editor = vscode.window.activeTextEditor;
+        if (!workpath || !editor) { return false; }
+
+        const filePath = path.relative(workpath.uri.fsPath, editor.document.uri.fsPath);
+        return this.FileManifest.watchfiles.includes(filePath);
+    }
+
     public isCssTargetedFile(): boolean {
-        return this.Flag_ExtnActivated &&
-            (this.FileManifest.assistfile || this.FileManifest.watchfiles.includes(this.filePath))
-            && this.fileExtn === "css";
+        return this.Flag_ExtnActivated && this.fileExtn === "css" &&
+            (this.FileManifest.assistfile || this.pathResolve());
     }
 
     public isFileTargetedFile(): boolean {
-        return this.Flag_ExtnActivated
-            && (this.FileManifest.assistfile || this.FileManifest.watchfiles.includes(this.filePath))
-            && this.fileExtn !== "css";
+        return this.Flag_ExtnActivated && this.fileExtn !== "css" &&
+            (this.FileManifest.assistfile || this.pathResolve());
     }
 
     public getAttributes(): string[] {
