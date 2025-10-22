@@ -22,7 +22,7 @@ export class EVENTSTREAM {
     constructor(core: SERVER) {
         this.Server = core;
         this.Paused = false;
-        this.RootBinary = getBinPath(core.DevMode);
+        this.RootBinary = getBinPath(core.DevMode);   
         this.OutputChannel = vscode.window.createOutputChannel(this.Server.Ed_IdCap + ' Server');
     }
 

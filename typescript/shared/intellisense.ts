@@ -38,8 +38,6 @@ export class INTELLISENSE {
     }
 
 
-
-
     public SmartSymClassFilter(prefix: string, iconKind: vscode.CompletionItemKind, stashmap: Record<string, m_Metadata>) {
 
         const stashKeys = Object.keys(stashmap);
