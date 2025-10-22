@@ -10,6 +10,7 @@ import { FORMATTING } from './shared/formatting';
 import { INTELLISENSE } from './shared/intellisense';
 
 const ID = "xcss";
+const DEV = true;
 
 class ExtensionManager {
 	readonly extensionId = ID;
@@ -31,7 +32,7 @@ class ExtensionManager {
 		this.Context = context;
 		if (!this.Context) { return; };
 
-		this.Server = new SERVER(this.Context, this.extensionId);
+		this.Server = new SERVER(this.Context, this.extensionId, DEV);
 		this.Definitions = new DEFINITION(this.Server);
 		this.Formatter = new FORMATTING(this.Server);
 		this.Intellisense = new INTELLISENSE(this.Server);

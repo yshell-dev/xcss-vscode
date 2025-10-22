@@ -77,6 +77,7 @@ export class SERVER {
     // Ranges Saved on Parse
     public filePath = "";
     public fileExtn = "";
+    public DevMode: boolean;
     private cursorword = "";
     private Rs_TagRanges: t_TagRange[] = [];
     private M_assignable: Record<string, m_Metadata> = {};
@@ -176,13 +177,15 @@ export class SERVER {
 
     constructor(
         context: vscode.ExtensionContext,
-        extensionId: string
+        extensionId: string,
+        devMode: boolean,
     ) {
         this.reset();
         this.Ed_Id = extensionId;
         this.Ed_Uri = context.extensionUri;
         this.Ed_IdCap = extensionId.toLocaleUpperCase();
         this.Ed_Context = context;
+        this.DevMode = devMode;
 
         this.W_EVENTSTREAM = new EVENTSTREAM(this);
         this.W_DIAGNOSTICS = new DIAGNOSTICS(this);
