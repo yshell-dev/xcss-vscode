@@ -102,6 +102,7 @@ export class DECORATIONS {
             }
             return;
         }
+        const hashrules = this.Server.getHashrules();
 
         const attachables = this.Server.getAttachables();
 
@@ -193,10 +194,10 @@ export class DECORATIONS {
             for (const track of tagRange.cache.hashrules) {
                 try {
                     if (track.valRange) {
-                        if (this.Server.FileManifest.hashrules[track.val]) {
+                        if (hashrules[track.val]) {
                             hashrule_Decos.push({
                                 range: track.valRange,
-                                hoverMessage: `Hashrule: \`${this.Server.FileManifest.hashrules[track.val]}\``
+                                hoverMessage: `Hashrule: \`${hashrules[track.val]}\``
                             });
                         }
                     }

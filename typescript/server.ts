@@ -92,14 +92,14 @@ export class SERVER {
         switchmap: {},
         attributes: [],
         customtags: [],
-        hashrules: {},
-        constants: {},
         livecursor: false,
         assistfile: false,
     };
-
+    
     public StyleManifest: t_StyleManifest = {
         diagnostics: [],
+        hashrules: {},
+        constants: {},
         lodashes: [],
         symclassData: {},
         symclasses: {},
@@ -119,12 +119,12 @@ export class SERVER {
             switchmap: {},
             attributes: [],
             customtags: [],
-            hashrules: {},
-            constants: {},
             livecursor: false,
             assistfile: false,
         };
         this.StyleManifest = {
+            constants: {},
+            hashrules: {},
             diagnostics: [],
             lodashes: [],
             symclassData: {},
@@ -354,8 +354,8 @@ export class SERVER {
 
     public filterVariables(snippet: string, additionals: Record<string, string> = {}): Record<string, string> {
         const vars: Record<string, string> = {};
-        for (const k of Object.keys(this.FileManifest.constants)) {
-            if (k.startsWith(snippet)) { vars[k] = this.FileManifest.constants[k]; }
+        for (const k of Object.keys(this.StyleManifest.constants)) {
+            if (k.startsWith(snippet)) { vars[k] = this.StyleManifest.constants[k]; }
         }
         for (const k of Object.keys(additionals)) {
             if (k.startsWith(snippet)) { vars[k] = additionals[k]; }
@@ -413,7 +413,7 @@ export class SERVER {
     }
 
     public getHashrules(): Record<string, string> {
-        return { ...this.FileManifest.hashrules };
+        return { ...this.StyleManifest.hashrules };
     }
 
     public getAttachables(): Record<string, m_Metadata> {

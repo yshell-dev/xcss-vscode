@@ -87,8 +87,6 @@ export interface t_FileManifest {
     attributes: string[],
     customtags: string[],
     switchmap: Record<string, string>,
-    hashrules: Record<string, string>,
-    constants: Record<string, string>,
     assistfile: boolean,
     watchfiles: string[],
     livecursor: boolean,
@@ -97,6 +95,8 @@ export interface t_FileManifest {
 export interface t_StyleManifest {
     lodashes: string[],
     assignable: string[],
+    hashrules: Record<string, string>,
+    constants: Record<string, string>,
     symclasses: Record<string, number>,
     symclassData: Record<number, m_Metadata>,
     diagnostics: m_Diagnostic[],

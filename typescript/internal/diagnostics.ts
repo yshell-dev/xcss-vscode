@@ -86,13 +86,14 @@ export class DIAGNOSTICS {
             if (!diagnosticMap[this.Server.filePath]) {
                 diagnosticMap[this.Server.filePath] = [];
             }
+            const hashrules = this.Server.getHashrules();
 
             const thisDiags: vscode.Diagnostic[] = diagnosticMap[this.Server.filePath];
             const assignables = this.Server.getAssignables();
             const attachables = this.Server.getAttachables();
             for (const tag of this.Server.getTagRanges()) {
                 for (const i of tag.cache.hashrules) {
-                    if (!this.Server.FileManifest.hashrules[i.attr]) {
+                    if (!hashrules[i.attr]) {
                         thisDiags.push(this.createError(i.attrRange, "Invalid Hashrule."));
                     }
                 }
