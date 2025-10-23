@@ -126,6 +126,7 @@ export class DIAGNOSTICS {
             }
 
             const workspace_uri = this.Server.Ed_WorkspaceFolder.uri;
+            this.diagnosticCollection.clear();
             for (const p of Object.keys(diagnosticMap)) {
                 const fileuri = vscode.Uri.joinPath(workspace_uri, p);
                 this.diagnosticCollection.set(fileuri, diagnosticMap[p]);

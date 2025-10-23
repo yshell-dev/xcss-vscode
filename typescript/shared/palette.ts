@@ -3,96 +3,102 @@ import colorSense from '../helpers/color-sense';
 import fileScanner from '../helpers/file-scanner';
 
 import { SwitchRGB } from "../helpers/color-swap";
-import { t_TrackRange } from '../types';
+import { SERVER } from '../server';
 
 export class PALETTE {
 
-    constructor() {
+    private Server: SERVER;
+
+    constructor(Server: SERVER) {
+        this.Server = Server;
     }
+
 
     dispose() {
         return;
     }
 
+    readColorData(content: string, startMarker: number, position: vscode.Position): vscode.ColorInformation[] {
+        const colors: vscode.ColorInformation[] = [];
+        const colorResults = colorSense(content, startMarker, position);
+        for (const type of Object.keys(colorResults)) {
+            const colorDatas = colorResults[type];
+            for (const colorData of colorDatas) {
+                let r = 0, g = 0, b = 0, alpha = 1;
+                switch (type) {
+                    case 'hex':
+                    case 'rgb':
+                    case 'rgba':
+                        [r, g, b, alpha] = colorData.values.length === 4 ? colorData.values : [...colorData.values, 1];
+                        r = +r * 255 <= 1 ? +r * 255 : +r;
+                        g = +g * 255 <= 1 ? +g * 255 : +g;
+                        b = +b * 255 <= 1 ? +b * 255 : +b;
+                        break;
+                    case 'hsl':
+                    case 'hsla':
+                        [r, g, b, alpha] = (() => {
+                            const [h, s, l, a = 1] = colorData.values;
+                            const rgb = SwitchRGB.from.hsl(h, s * 100, l * 100, a);
+                            return [rgb.r, rgb.g, rgb.b, a];
+                        })();
+                        break;
+                    case 'hwb':
+                        [r, g, b, alpha] = (() => {
+                            const [h, w, b_, a = 1] = colorData.values;
+                            const rgb = SwitchRGB.from.hwb(h, w * 100, b_ * 100, a);
+                            return [rgb.r, rgb.g, rgb.b, a];
+                        })();
+                        break;
+                    case 'lab':
+                        [r, g, b, alpha] = (() => {
+                            const [l, a_, b_, a = 1] = colorData.values;
+                            const rgb = SwitchRGB.from.lab(l, a_, b_, a);
+                            return [rgb.r, rgb.g, rgb.b, a];
+                        })();
+                        break;
+                    case 'lch':
+                        [r, g, b, alpha] = (() => {
+                            const [l, c, h, a = 1] = colorData.values;
+                            const rgb = SwitchRGB.from.lch(l, c, h, a);
+                            return [rgb.r, rgb.g, rgb.b, a];
+                        })();
+                        break;
+                    case 'oklab':
+                        [r, g, b, alpha] = (() => {
+                            const [l, a_, b_, a = 1] = colorData.values;
+                            const rgb = SwitchRGB.from.oklab(l, a_, b_, a);
+                            return [rgb.r, rgb.g, rgb.b, a];
+                        })();
+                        break;
+                    case 'oklch':
+                        [r, g, b, alpha] = (() => {
+                            const [l, c, h, a = 1] = colorData.values;
+                            const rgb = SwitchRGB.from.oklch(l, c, h, a);
+                            return [rgb.r, rgb.g, rgb.b, a];
+                        })();
+                        break;
+                }
+                colors.push(new vscode.ColorInformation(colorData.range, new vscode.Color(r / 255, g / 255, b / 255, alpha)));
+            }
+        }
+        return colors;
+    }
+
     // Color Provider
     provideDocumentColors(document: vscode.TextDocument): vscode.ColorInformation[] {
         if (!document) { return []; };
-
         const colors: vscode.ColorInformation[] = [];
-        const scanned = fileScanner(document.getText());
-        const blockRanges: t_TrackRange[] = [];
 
-        if (scanned.TagRanges) {
-            for (const range of scanned.TagRanges) {
-                blockRanges.push(...range.cache.composes);
-            }
-        }
-
-        for (const range of blockRanges) {
-            if (!range.val) { continue; }
-            const colorResults = colorSense(range.val, 0, range.valRange.start);
-            for (const type of Object.keys(colorResults)) {
-                const colorDatas = colorResults[type];
-                for (const colorData of colorDatas) {
-                    let r = 0, g = 0, b = 0, alpha = 1;
-                    switch (type) {
-                        case 'hex':
-                        case 'rgb':
-                        case 'rgba':
-                            [r, g, b, alpha] = colorData.values.length === 4 ? colorData.values : [...colorData.values, 1];
-                            r = +r * 255 <= 1 ? +r * 255 : +r;
-                            g = +g * 255 <= 1 ? +g * 255 : +g;
-                            b = +b * 255 <= 1 ? +b * 255 : +b;
-                            break;
-                        case 'hsl':
-                        case 'hsla':
-                            [r, g, b, alpha] = (() => {
-                                const [h, s, l, a = 1] = colorData.values;
-                                const rgb = SwitchRGB.from.hsl(h, s * 100, l * 100, a);
-                                return [rgb.r, rgb.g, rgb.b, a];
-                            })();
-                            break;
-                        case 'hwb':
-                            [r, g, b, alpha] = (() => {
-                                const [h, w, b_, a = 1] = colorData.values;
-                                const rgb = SwitchRGB.from.hwb(h, w * 100, b_ * 100, a);
-                                return [rgb.r, rgb.g, rgb.b, a];
-                            })();
-                            break;
-                        case 'lab':
-                            [r, g, b, alpha] = (() => {
-                                const [l, a_, b_, a = 1] = colorData.values;
-                                const rgb = SwitchRGB.from.lab(l, a_, b_, a);
-                                return [rgb.r, rgb.g, rgb.b, a];
-                            })();
-                            break;
-                        case 'lch':
-                            [r, g, b, alpha] = (() => {
-                                const [l, c, h, a = 1] = colorData.values;
-                                const rgb = SwitchRGB.from.lch(l, c, h, a);
-                                return [rgb.r, rgb.g, rgb.b, a];
-                            })();
-                            break;
-                        case 'oklab':
-                            [r, g, b, alpha] = (() => {
-                                const [l, a_, b_, a = 1] = colorData.values;
-                                const rgb = SwitchRGB.from.oklab(l, a_, b_, a);
-                                return [rgb.r, rgb.g, rgb.b, a];
-                            })();
-                            break;
-                        case 'oklch':
-                            [r, g, b, alpha] = (() => {
-                                const [l, c, h, a = 1] = colorData.values;
-                                const rgb = SwitchRGB.from.oklch(l, c, h, a);
-                                return [rgb.r, rgb.g, rgb.b, a];
-                            })();
-                            break;
-                    }
-                    colors.push(new vscode.ColorInformation(colorData.range, new vscode.Color(r / 255, g / 255, b / 255, alpha)));
+        if (this.Server.config.get<boolean>("providers.palette")) {
+            colors.push(...this.readColorData(document.getText(), 0, new vscode.Position(0, 0)));
+        } else {
+            for (const range of fileScanner(document.getText()).TagRanges) {
+                for (const r of range.cache.composes) {
+                    if (!r.val) { continue; }
+                    colors.push(...this.readColorData(r.val, 0, r.valRange.start));
                 }
             }
         }
-
 
         return colors;
     };

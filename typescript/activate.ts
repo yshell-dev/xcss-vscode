@@ -34,7 +34,7 @@ class ExtensionManager {
 		this.Definitions = new DEFINITION(this.Server);
 		this.Formatter = new FORMATTING(this.Server);
 		this.Intellisense = new INTELLISENSE(this.Server);
-		this.Palette = new PALETTE();
+		this.Palette = new PALETTE(this.Server);
 
 		const ColorPicks = vscode.languages.registerColorProvider(['*'], this.Palette);
 		const FoldRanges = vscode.languages.registerFoldingRangeProvider(['*'], this.Server);

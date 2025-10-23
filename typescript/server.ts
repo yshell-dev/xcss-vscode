@@ -300,14 +300,11 @@ export class SERVER {
     };
 
     RefreshEditor = () => {
-        if (!this.Ed_Editor
-            || !this.Ed_WorkspaceFolder
-            || !vscode.window.activeTextEditor
-            || !this.isFileTargetedFile()
-        ) { return; }
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) { return; }
 
-        const content = this.Ed_Editor.document.getText();
-        const cursorOffset = this.Ed_Editor.document.offsetAt(this.Ed_Editor.selection.active);
+        const content = editor.document.getText();
+        const cursorOffset = editor.document.offsetAt(editor.selection.active);
         this.Rs_TagRanges = fileScanner(content, this.FileManifest.attributes, cursorOffset).TagRanges || [];
         this.W_DECORATIONS.refresh();
         this.W_DIAGNOSTICS.refresh();

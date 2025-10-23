@@ -22,10 +22,10 @@ export class DECORATIONS {
     };
 
     updateStyles() {
-        const c_attribute = this.Server.config.get<string>('color.attribute');
-        const c_property = this.Server.config.get<string>('color.property');
-        const c_comment = this.Server.config.get<string>('color.comment');
-        const c_value = this.Server.config.get<string>('color.value');
+        const c_attribute = this.Server.config.get<string>('decoration.attribute');
+        const c_property = this.Server.config.get<string>('decoration.property');
+        const c_comment = this.Server.config.get<string>('decoration.comment');
+        const c_value = this.Server.config.get<string>('decoration.value');
 
         this.attrs_Style = vscode.window.createTextEditorDecorationType({
             color: c_attribute,

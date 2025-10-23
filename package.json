@@ -107,35 +107,43 @@
     "configuration": {
       "title": "xcss",
       "properties": {
-        "xcss.color.attribute": {
+        "xcss.decoration.attribute": {
           "type": "string",
           "default": "#f57970",
           "description": "Color for tag attribute. Restart extension to take effect."
         },
         "xcss.intellisense.mode": {
-          "type": "bool",
+          "type": "boolean",
           "default": true,
           "description": "Symclass suggestions can smart(true) or simple(false)"
         },
         "xcss.development.autostart": {
-          "type": "bool",
+          "type": "boolean",
           "default": true,
           "description": "Incase of server faliure, auto-start another instance."
         },
-        "xcss.color.comment": {
+        "xcss.decoration.comment": {
           "type": "string",
           "default": "#ffbe88bb",
           "description": "Color for attribute comment value. Restart extension to take effect."
         },
-        "xcss.color.property": {
+        "xcss.decoration.property": {
           "type": "string",
           "default": "#ffe1a1",
           "description": "Color for css properties in tag value. Restart extension to take effect."
         },
-        "xcss.color.value": {
+        "xcss.decoration.value": {
           "type": "string",
           "default": "#ffbe88",
           "description": "Color for tag value. Restart extension to take effect."
+        },
+        "xcss.providers.palette": {
+          "type": "boolean",
+          "default": false,
+          "description": "Color provider scope. (Targeted: false, Global: true)",
+          "tags": [
+            "experimental"
+          ]
         }
       }
     },
