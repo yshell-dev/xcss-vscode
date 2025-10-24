@@ -95,7 +95,7 @@ export class SERVER {
         livecursor: false,
         assistfile: false,
     };
-    
+
     public StyleManifest: t_StyleManifest = {
         diagnostics: [],
         hashrules: {},
@@ -209,6 +209,9 @@ export class SERVER {
             vscode.workspace.onDidOpenTextDocument(() => { this.RequestManifest(); }),
             vscode.workspace.onDidCloseTextDocument(() => { this.RequestManifest(); }),
             vscode.workspace.onDidChangeTextDocument(() => { this.RequestManifest(); }),
+
+            vscode.workspace.onDidDeleteFiles(() => { this.W_EVENTSTREAM.StdIoRpc("$ rebuild"); }),
+            vscode.workspace.onDidCreateFiles(() => { this.W_EVENTSTREAM.StdIoRpc("$ rebuild"); }),
 
             vscode.commands.registerCommand(`${this.Ed_Id}.server.toggle`, this.toggle),
             vscode.commands.registerCommand(`${this.Ed_Id}.server.restart`, this.restart),
