@@ -96,14 +96,8 @@ export class DECORATIONS {
 
     refresh() {
 
-        if (!this.Server.Ed_Editor) {
-            if (!this.Server.isFileTargetedFile()) {
-                this.clear();
-            }
-            return;
-        }
+        if (!this.Server.Ed_Editor) { return; }
         const hashrules = this.Server.getHashrules();
-
         const attachables = this.Server.getAttachables();
 
         const comment_Decos: vscode.DecorationOptions[] = [];
