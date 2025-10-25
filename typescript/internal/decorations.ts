@@ -124,11 +124,12 @@ export class DECORATIONS {
             for (const track of tagRange.cache.composes) {
                 try {
                     if (track.attrRange && track.valRange) {
-                        const metadata = attachables[track.attr];
+                        const f = track.attr.replace(/^[-_]\$/, "$");
+                        const metadata = attachables[f];
                         if (metadata) {
                             Object.assign(tagRange.variables, metadata.variables);
                         }
-                        const tooltip = metadata ? metadata.markdown || metadataFormat(track.attr, metadata) : `${this.Server.Ed_IdCap} Definition.`;
+                        const tooltip = metadata ? metadata.markdown || metadataFormat(`${track.attr} -> ${f} `, metadata) : `${this.Server.Ed_IdCap} Definition.`;
                         attrs_Decos.push({ range: track.attrRange, hoverMessage: tooltip });
                         compVal_Decos.push({ range: track.valRange });
                     }

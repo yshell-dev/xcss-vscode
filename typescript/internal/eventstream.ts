@@ -120,8 +120,6 @@ export class EVENTSTREAM {
         setTimeout(() => { this.unpause(); }, 1000);
     };
 
-
-    buffer = Buffer.alloc(0);
     async Start(spawnPath: string, args: string[], overide_config = false) {
         if ((this.Process && this.Spawn_IsAlive) || !fs.existsSync(this.RootBinary)) { return; }
         const autostartflag = this.Server.config.get<boolean>("development.autostart");

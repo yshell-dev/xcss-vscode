@@ -22,7 +22,6 @@ export class STATEWIDGET {
         this.options = [
             { label: 'Docs', script: "" },
             { label: 'Init/Verify', script: 'init' },
-            { label: 'Debug', script: 'debug' },
             { label: 'Watch', script: 'preview -w' },
             { label: 'Preview', script: 'preview' },
         ];

@@ -59,9 +59,9 @@ export function metadataFormat(selector: string, data: m_Metadata, subhead = "")
     lines.push('\n- **Skeleton:**');
 
     if (data.skeleton) {
-        for (const K of Object.keys(data.skeleton)) {
+        for (const K of Object.keys(data.skeleton).sort().reverse()) {
             const V = data.skeleton[K];
-            const formatted = formatObject({ "[]": V }).newobj;
+            const formatted = formatObject({ [K]: V }).newobj;
             lines.push(...objectTreeMd(formatted));
         }
     }
