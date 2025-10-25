@@ -21,9 +21,10 @@ export class STATEWIDGET {
         this.bin = this.Server.W_EVENTSTREAM.RootBinary;
         this.options = [
             { label: 'Docs', script: "" },
-            { label: 'Init/Verify', script: 'init' },
             { label: 'Watch', script: 'preview -w' },
+            { label: 'Debug', script: 'debug' },
             { label: 'Preview', script: 'preview' },
+            { label: 'Init/Verify', script: 'init' },
         ];
         this.options.forEach((s, i) => {
             s.label = `${i}. Terminal Command: ${s.label}`;
