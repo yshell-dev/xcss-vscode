@@ -13,8 +13,7 @@
     "color": "#171b22",
     "theme": "dark"
   },
-  "preview": true,
-  "license": "Public-Beta",
+  "license": "LICENSE.md",
   "betaLicense": {
     "summary": "Temporary Public-Beta License for evaluation and testing only. Not for production use or redistribution. Beta period ends when public version is updated to major version 1.0.0. Terms may change after beta."
   },
@@ -49,7 +48,7 @@
     "extension"
   ],
   "engines": {
-    "vscode": "^1.8.0"
+    "vscode": "^1.51.0"
   },
   "scripts": {
     "lint": "eslint ./typescript --ext .ts",
