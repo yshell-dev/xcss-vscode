@@ -19,13 +19,13 @@
     "summary": "Temporary Public-Beta License for evaluation and testing only. Not for production use or redistribution. Beta period ends when public version is updated to major version 1.0.0. Terms may change after beta."
   },
   "icon": "./logo.png",
-  "homepage": "https://yshell.dev/projects/xcss-assistant",
+  "homepage": "https://yshell.dev/projects/xcss-core",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yshell-dev/xcss-vscode"
+    "url": "https://github.com/yshell-dev/xcss-core"
   },
   "bugs": {
-    "url": "https://github.com/yshell-dev/xcss-vdcode/issues"
+    "url": "https://github.com/yshell-dev/xcss-core/issues"
   },
   "categories": [
     "Keymaps",
@@ -45,7 +45,6 @@
     "vscode",
     "intellisense",
     "autocomplete",
-    "syntax highlighting",
     "formatting",
     "extension"
   ],
