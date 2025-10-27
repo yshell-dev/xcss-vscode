@@ -377,7 +377,7 @@ export class SERVER {
             }
         }
 
-        return path.join(this.Ed_WorkspaceFolder?.uri.path || '.', (switchpath));
+        return path.join(this.Ed_WorkspaceFolder?.uri.fsPath || '.', (switchpath));
     }
 
     public isExtenActivated(): boolean {
