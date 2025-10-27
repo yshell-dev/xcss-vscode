@@ -22,10 +22,10 @@
   "homepage": "https://yshell.dev/projects/xcss-assistant",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yshell.dev/xcss-assistant"
+    "url": "https://github.com/yshell-dev/xcss-vscode"
   },
   "bugs": {
-    "url": "https://github.com/yshell.dev/xcss-assistant/issues"
+    "url": "https://github.com/yshell-dev/xcss-vdcode/issues"
   },
   "categories": [
     "Keymaps",
@@ -42,32 +42,12 @@
     "xcss",
     "toolkit",
     "stylesheet",
-    "css toolkit",
-    "css framework",
     "vscode",
-    "extension",
     "intellisense",
     "autocomplete",
     "syntax highlighting",
     "formatting",
-    "prettier",
-    "color picker",
-    "folding",
-    "at-rules",
-    "xtyles",
-    "stylemap",
-    "css assistant",
-    "css helper",
-    "css development",
-    "frontend",
-    "web development",
-    "styling",
-    "css properties",
-    "css variables",
-    "css values",
-    "code completion",
-    "snippets",
-    "language support"
+    "extension"
   ],
   "engines": {
     "vscode": "^1.51.0"
