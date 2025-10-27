@@ -1,6 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import vscode from 'vscode';
+import { existsSync } from 'fs';
 
 import { SERVER } from './server';
 import { PALETTE } from './shared/palette';
@@ -9,7 +10,9 @@ import { FORMATTING } from './shared/formatting';
 import { INTELLISENSE } from './shared/intellisense';
 
 const ID = "xcss";
-const DEV = false;
+const DEV: boolean = existsSync(
+	path.resolve(__dirname, "..", "core", "source")
+);
 
 class ExtensionManager {
 	readonly extensionId = ID;

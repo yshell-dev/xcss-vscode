@@ -8,15 +8,6 @@
     "name": "Yshell.dev",
     "email": "official@yshell.dev"
   },
-  "galleryBanner": {
-    "color": "#171b22",
-    "theme": "dark"
-  },
-  "license": "LICENSE.md",
-  "betaLicense": {
-    "summary": "Temporary Public-Beta License for evaluation and testing only. Not for production use or redistribution. Beta period ends when public version is updated to major version 1.0.0. Terms may change after beta."
-  },
-  "icon": "./logo.png",
   "homepage": "https://yshell.dev/projects/xcss-vscode",
   "repository": {
     "type": "git",
@@ -24,6 +15,40 @@
   },
   "bugs": {
     "url": "https://github.com/yshell-dev/xcss-vscode/issues"
+  },
+  "scripts": {
+    "lint": "eslint ./typescript --ext .ts",
+    "init": "npm install -g typescript @vscode/vsce && npm install",
+    "tsbuild": "npx tsc -p ./typescript",
+    "esbuild": "node build.js",
+    "package": "npm run init && npm run tsbuild && npm install --omit=dev && vsce package",
+    "publish": "npm run package && vsce publish"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.13.0",
+    "@stylistic/eslint-plugin": "^2.9.0",
+    "@types/node": "^22.18.11",
+    "@types/vscode": "^1.51.0",
+    "@types/ws": "^8.18.1",
+    "esbuild": "^0.25.8",
+    "eslint": "^9.13.0",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.26.0"
+  },
+  "dependencies": {
+    "vscode-css-languageservice": "^6.3.5",
+    "ws": "^8.18.3"
+  },
+  "license": "LICENSE.md",
+  "betaLicense": {
+    "summary": "Temporary Public-Beta License for evaluation and testing only. Not for production use or redistribution. Beta period ends when public version is updated to major version 1.0.0. Terms may change after beta."
+  },
+  "type": "commonjs",
+  "main": "./extension/activate.js",
+  "icon": "./logo.png",
+  "galleryBanner": {
+    "color": "#171b22",
+    "theme": "dark"
   },
   "categories": [
     "Keymaps",
@@ -49,31 +74,6 @@
   "engines": {
     "vscode": "^1.51.0"
   },
-  "scripts": {
-    "lint": "eslint ./typescript --ext .ts",
-    "init": "npm install -g typescript @vscode/vsce && npm install",
-    "tsbuild": "npx tsc -p ./typescript",
-    "esbuild": "node build.js",
-    "package": "npm run init && npm run tsbuild && npm install --omit=dev && vsce package",
-    "publish": "npm run package && vsce publish"
-  },
-  "devDependencies": {
-    "@eslint/js": "^9.13.0",
-    "@stylistic/eslint-plugin": "^2.9.0",
-    "@types/node": "^22.18.11",
-    "@types/vscode": "^1.51.0",
-    "@types/ws": "^8.18.1",
-    "esbuild": "^0.25.8",
-    "eslint": "^9.13.0",
-    "typescript": "^5.8.3",
-    "typescript-eslint": "^8.26.0"
-  },
-  "dependencies": {
-    "vscode-css-languageservice": "^6.3.5",
-    "ws": "^8.18.3"
-  },
-  "type": "commonjs",
-  "main": "./extension/activate.js",
   "activationEvents": [
     "onStartupFinished"
   ],
