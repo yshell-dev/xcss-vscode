@@ -33,12 +33,16 @@ esbuild.build({
 	target: ['node18'],
 	platform: 'node',
 	format: 'esm',
-	external: ['vscode', 'vscode-css-languageservice']
-})
-	.then(() => {
-		console.log('Js Bundling successful.');
-	})
-	.catch((err) => {
-		console.error('Build error:', err);
-		process.exit(1);
-	});
+	external: [
+		'vscode',
+		'vscode-css-languageservice',
+		'../../core/execute.d.ts',
+		'../../core/execute.js',
+		'../../core/execute',
+	]
+}).then(() => {
+	console.log('Js Bundling successful.');
+}).catch((err) => {
+	console.error('Build error:', err);
+	process.exit(1);
+});

@@ -14,7 +14,8 @@ export default tseslint.config(
 			'.vscode-test',
 			'core/',
 			'build.js',
-			'extension'
+			'extension',
+			'core/execute.js'
 		]
 	},
 	js.configs.recommended,

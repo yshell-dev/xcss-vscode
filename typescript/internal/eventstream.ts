@@ -120,12 +120,15 @@ export class EVENTSTREAM {
         setTimeout(() => { this.unpause(); }, 1000);
     };
 
-    debounce = false;
+    restartAwait = false;
     async Start(spawnPath: string, args: string[], overide_config = false) {
-        if ((this.Process && this.Spawn_IsAlive) || !fs.existsSync(this.RootBinary) || !this.debounce) { return; }
-
-        this.debounce = true;
-        setTimeout(() => this.debounce = false, 1000);
+        if ((this.Process && this.Spawn_IsAlive) || !fs.existsSync(this.RootBinary)) { return; }
+        if (this.restartAwait) {
+            return;
+        } else {
+            this.restartAwait = true;
+            setTimeout(() => this.restartAwait = false, 1000);
+        }
 
         const autostartflag = this.Server.config.get<boolean>("development.autostart");
         if (!(autostartflag || overide_config)) { return; }
