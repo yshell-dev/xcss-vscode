@@ -2,9 +2,9 @@ name: Publish VSCode Extension
 
 on:
   workflow_dispatch:
-  # push:
-  #   tags:
-  #     - 'v*'
+  push:
+    tags:
+      - 'v*'
 
 jobs:
   publish:
@@ -15,9 +15,10 @@ jobs:
 
       - uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '22'
 
       - run: git submodule update --init ./core
+      - run: npm run package
       - run: npm run publish
 
       - name: Publish VSCode Extension
