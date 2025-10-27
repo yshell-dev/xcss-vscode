@@ -5,9 +5,8 @@
   "version": "0.0.3",
   "publisher": "yshell-dev",
   "author": {
-    "name": "Vyshnav Prasad",
-    "email": "official@yshell.dev",
-    "url": "http://yshell.dev"
+    "name": "Yshell.dev",
+    "email": "official@yshell.dev"
   },
   "galleryBanner": {
     "color": "#171b22",
@@ -18,13 +17,13 @@
     "summary": "Temporary Public-Beta License for evaluation and testing only. Not for production use or redistribution. Beta period ends when public version is updated to major version 1.0.0. Terms may change after beta."
   },
   "icon": "./logo.png",
-  "homepage": "https://yshell.dev/projects/xcss-core",
+  "homepage": "https://yshell.dev/projects/xcss-vscode",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yshell-dev/xcss-core"
+    "url": "https://github.com/yshell-dev/xcss-vscode"
   },
   "bugs": {
-    "url": "https://github.com/yshell-dev/xcss-core/issues"
+    "url": "https://github.com/yshell-dev/xcss-vscode/issues"
   },
   "categories": [
     "Keymaps",
