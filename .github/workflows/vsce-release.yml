@@ -18,7 +18,7 @@ jobs:
           node-version: '18'
 
       - run: git submodule update --init ./core
-      - run: npm run pubish
+      - run: npm run publish
 
       - name: Publish VSCode Extension
         uses: lannonbr/vsce-action@4.0.0
