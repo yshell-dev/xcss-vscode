@@ -1,36 +1,45 @@
 # XCSS Extension for VS Code
 
-An extension that enhances development workflow with XCSS, with essential features.
+Essential XCSS developer tooling for VSCode, featuring integrated LSP, bundled binary, and focused support for XCSS workflows.
 
 ![Extension Demo](./preview.png)
 
-## Commands
-- **xcss.switch**: Switch between source and target files `Alt+Ctrl+X`.
-- **xcss.format**: Format & toggle fold XCSS attributes `Alt+Shift+X`.
+## Shortcuts
+
+### Template Import: `[ alt + x ]` 
+
+- Import available templates for the `symclass` at the active cursor position, appending them to the current HTML tag.
+
+### Template Import: `[ alt + shift + x ]` 
+
+- Format only XCSS-specific blocks. Use repeatedly to toggle folding for the nearest foldable range.
+
+### Component Sandbox: `[ ctrl + alt + x ]`
+
+- Open the component sandbox webview for the symclass at the cursor, next to the editor.
+
+### Source/Target Switch: `[ ctrl + alt + shift + x ]`
+
+- Toggle between files in the source and target directories with a one-to-one mapping.
 
 ## Features
 
-- **Activation switch**: Placed on on statusbar.
+### Statusbar Widget
 
-- **CSS Features**: Valid for `reference` & `target` stylesheets. 
-  - XCSS-specific at-rules (`@--pre-bind`, `@--post-bind`, `@--compose`).
-  - Intellisense suggustions following at-rules.
+- Displays file status and error count.
+- Quick access to integrated core binary commands from the status bar.
 
-- **Target Folder Features**: 
-  - Intellisense.
-  - Hover information.
-  - Provides folding ranges.
-  - Colorpicker in value blocks.
-  - Attribute Detection, Decoration and Hignlighting.
-  - Color picker for `rgb`/`rgba`/`hsl`/`hsla`/`lch`/`oklch`/`lab`/`oklab`/`hex`.
+### Developer Assistance
 
-- **Intellisense**.
-  - CSS property, value and variable suggestions.
-  - Xtyle suggustions for bindables and composables.
-  - XCSS-specific at-rules and corresponding shortcuts.
-  
-## Requirements
+- Real-time diagnostics.
+- Intellisense and autocomplete.
+- Tooltips with information.
+- Folding range support.
+- Attribute detection, decoration, and highlighting.
+- Go to definition for `symclasses`.
+- Color picker for formats: `rgb`, `rgba`, `hsl`, `hsla`, `lch`, `oklch`, `lab`, `oklab`, `hex`
 
-- An xcss-initialized project with:
-  - xtyles/configure.jsonc
-  - xtyles/autogen/manifest.json (auto-generated)
+## Language Support
+
+- Files with a `.xcss` extension are treated as Markdown and support all core extension features.
+
