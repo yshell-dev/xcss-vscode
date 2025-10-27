@@ -22,7 +22,7 @@ function clearFolder(folderPath) {
 	});
 }
 
-// clearFolder('./extension');
+clearFolder('./extension');
 
 esbuild.build({
 	entryPoints: ['./typescript/activate.ts'],
@@ -32,7 +32,7 @@ esbuild.build({
 	sourcemap: true,
 	target: ['node18'],
 	platform: 'node',
-	format: 'cjs',
+	format: 'esm',
 	external: ['vscode', 'vscode-css-languageservice']
 })
 	.then(() => {

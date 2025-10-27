@@ -2,7 +2,7 @@
   "name": "xcss",
   "displayName": "XCSS Client",
   "description": "Extension bundle for XCSS",
-  "version": "0.1.0",
+  "version": "0.0.0",
   "publisher": "yshell-dev",
   "author": {
     "name": "Vyshnav Prasad",
@@ -76,9 +76,9 @@
     "lint": "eslint ./typescript --ext .ts",
     "tsbuild": "tsc -p ./typescript",
     "esbuild": "node build.js",
-    "install": "npm install && npm install -g @vscode/vsce",
-    "package": "npm run install && npm run es:compile && npm install --omit=dev && vsce package && npm ci",
-    "publish": "vsce publish"
+    "install": "npm install -g @vscode/vsce",
+    "package": "npm run install && npm run tsbuild && npm install --omit=dev && vsce package && npm ci",
+    "publish": "npm run package && vsce publish"
   },
   "devDependencies": {
     "@eslint/js": "^9.13.0",

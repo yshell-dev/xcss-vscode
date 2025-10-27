@@ -1,6 +1,7 @@
 **/.git
 .git/**
 .github/**
+.gitmodules/**
 .vscode/**
 coverage/**
 typescript/**

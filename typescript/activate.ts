@@ -9,7 +9,7 @@ import { FORMATTING } from './shared/formatting';
 import { INTELLISENSE } from './shared/intellisense';
 
 const ID = "xcss";
-const DEV = true;
+const DEV = false;
 
 class ExtensionManager {
 	readonly extensionId = ID;
