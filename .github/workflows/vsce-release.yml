@@ -2,9 +2,7 @@ name: Publish VSCode
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
+    
 jobs:
   publish:
     runs-on: ubuntu-latest
