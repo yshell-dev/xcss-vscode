@@ -74,9 +74,9 @@
   },
   "scripts": {
     "lint": "eslint ./typescript --ext .ts",
-    "tsbuild": "tsc -p ./typescript",
+    "tsbuild": "npx tsc -p ./typescript",
     "esbuild": "node build.js",
-    "install": "npm install -g @vscode/vsce",
+    "install": "npm install -g typescript @vscode/vsce",
     "package": "npm run install && npm run tsbuild && npm install --omit=dev && vsce package && npm ci",
     "publish": "npm run package && vsce publish"
   },
