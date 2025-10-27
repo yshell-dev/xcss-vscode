@@ -22,7 +22,7 @@ export class EVENTSTREAM {
     constructor(core: SERVER) {
         this.Server = core;
         this.Paused = false;
-        this.RootBinary = getBinPath(core.DevMode);   
+        this.RootBinary = getBinPath(core.DevMode);
         this.OutputChannel = vscode.window.createOutputChannel(this.Server.Ed_IdCap + ' Server');
     }
 
@@ -120,8 +120,13 @@ export class EVENTSTREAM {
         setTimeout(() => { this.unpause(); }, 1000);
     };
 
+    debounce = false;
     async Start(spawnPath: string, args: string[], overide_config = false) {
-        if ((this.Process && this.Spawn_IsAlive) || !fs.existsSync(this.RootBinary)) { return; }
+        if ((this.Process && this.Spawn_IsAlive) || !fs.existsSync(this.RootBinary) || !this.debounce) { return; }
+
+        this.debounce = true;
+        setTimeout(() => this.debounce = false, 1000);
+
         const autostartflag = this.Server.config.get<boolean>("development.autostart");
         if (!(autostartflag || overide_config)) { return; }
 
