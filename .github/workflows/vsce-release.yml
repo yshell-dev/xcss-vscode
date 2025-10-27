@@ -19,4 +19,4 @@ jobs:
 
       - run: git submodule update --init ./core
       - run: npm run package
-      - run: vsce publish --pat ${{ secrets.VSCE_TOKEN }} --tag beta
+      - run: vsce publish --pat ${{ secrets.VSCE_TOKEN }} --pre-release
