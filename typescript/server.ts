@@ -141,12 +141,11 @@ export class SERVER {
         this.cursorword = "";
 
         this.W_COMPWEBVIEW?.clear();
-        this.W_DECORATIONS?.clear();
         this.W_DIAGNOSTICS?.clear();
     };
 
-    toggle = (): void => {
-        this.Flag_ExtnActivated = !this.Flag_ExtnActivated;
+    pause = (): void => {
+        this.Flag_ExtnActivated = false;
         this.reset();
     };
 
@@ -213,7 +212,7 @@ export class SERVER {
             vscode.workspace.onDidDeleteFiles(() => { this.W_EVENTSTREAM.StdIoRpc("$ rebuild"); }),
             vscode.workspace.onDidCreateFiles(() => { this.W_EVENTSTREAM.StdIoRpc("$ rebuild"); }),
 
-            vscode.commands.registerCommand(`${this.Ed_Id}.server.toggle`, this.toggle),
+            vscode.commands.registerCommand(`${this.Ed_Id}.server.pause`, this.pause),
             vscode.commands.registerCommand(`${this.Ed_Id}.server.restart`, this.restart),
             vscode.commands.registerCommand(`${this.Ed_Id}.server.send`, this.W_EVENTSTREAM.Interactive),
 
@@ -384,9 +383,8 @@ export class SERVER {
         return this.Flag_ExtnActivated;
     }
 
-    private pathResolve() {
+    public CheckEditorPathWatching(editor = vscode.window.activeTextEditor) {
         const workpath = this.getWorkspaceFolder();
-        const editor = vscode.window.activeTextEditor;
         if (!workpath || !editor) { return false; }
 
         const filePath = path.relative(workpath.uri.fsPath, editor.document.uri.fsPath);
@@ -395,12 +393,12 @@ export class SERVER {
 
     public isCssTargetedFile(): boolean {
         return this.Flag_ExtnActivated && this.fileExtn === "css" &&
-            (this.FileManifest.assistfile || this.pathResolve());
+            (this.FileManifest.assistfile || this.CheckEditorPathWatching());
     }
 
     public isFileTargetedFile(): boolean {
         return this.Flag_ExtnActivated && this.fileExtn !== "css" &&
-            (this.FileManifest.assistfile || this.pathResolve());
+            (this.FileManifest.assistfile || this.CheckEditorPathWatching());
     }
 
     public getAttributes(): string[] {
@@ -425,10 +423,6 @@ export class SERVER {
 
     public getAssignables(): Record<string, m_Metadata> {
         return { ...this.M_assignable };
-    }
-
-    public getFilePath(): string {
-        return this.filePath;
     }
 
     public getEditor(): vscode.TextEditor | undefined {

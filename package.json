@@ -158,8 +158,8 @@
         "category": "XCSS Action"
       },
       {
-        "command": "xcss.server.toggle",
-        "title": "Toggle Activity",
+        "command": "xcss.server.pause",
+        "title": "Pause Activity",
         "category": "XCSS Server"
       },
       {
