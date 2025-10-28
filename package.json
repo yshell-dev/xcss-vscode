@@ -21,8 +21,7 @@
     "init": "npm install -g typescript @vscode/vsce && npm install",
     "tsbuild": "npx tsc -p ./typescript",
     "esbuild": "node build.js",
-    "package": "npm run init && npm run tsbuild && npm install --omit=dev && vsce package",
-    "publish": "npm run package && vsce publish"
+    "package": "npm run init && npm run tsbuild && npm install --omit=dev && vsce package"
   },
   "devDependencies": {
     "@eslint/js": "^9.13.0",
