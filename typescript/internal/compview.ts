@@ -1,7 +1,7 @@
 import vscode from 'vscode';
 import { SERVER } from '../server';
 
-export class COMPWEBVIEW {
+export class COMPSANDBOX {
     private Server: SERVER;
     public previewPanal: vscode.WebviewPanel | undefined;
 

@@ -46,7 +46,7 @@ class ExtensionManager {
 		const StructHere = vscode.commands.registerCommand(`${this.extensionId}.editor.summon`, this.SummonStructure);
 		const FileSwitch = vscode.commands.registerCommand(`${this.extensionId}.action.toggle`, this.CommandFileToggle);
 		const Formatting = vscode.commands.registerCommand(`${this.extensionId}.editor.format`, this.Formatter.formatFile);
-		const PreviewNow = vscode.commands.registerCommand(`${this.extensionId}.action.compview`, this.Server.W_COMPWEBVIEW.open);
+		const PreviewNow = vscode.commands.registerCommand(`${this.extensionId}.action.compview`, this.Server.W_COMPSANDBOX.open);
 
 		this.Disposable.push(
 			this.Server,

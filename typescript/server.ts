@@ -3,7 +3,7 @@ import path from 'path';
 import vscode from 'vscode';
 import fileScanner from './helpers/file-scanner';
 import { metadataFormat } from './helpers/metadata';
-import { COMPWEBVIEW } from './internal/compview';
+import { COMPSANDBOX } from './internal/compview';
 import { DIAGNOSTICS } from './internal/diagnostics';
 import { DECORATIONS } from './internal/decorations';
 import { STATEWIDGET } from './internal/status-bar';
@@ -60,7 +60,7 @@ export class SERVER {
     // External Workers
     public W_DIAGNOSTICS: DIAGNOSTICS;
     public W_DECORATIONS: DECORATIONS;
-    public W_COMPWEBVIEW: COMPWEBVIEW;
+    public W_COMPSANDBOX: COMPSANDBOX;
     public W_EVENTSTREAM: EVENTSTREAM;
     public W_STATEWIDGET: STATEWIDGET;
 
@@ -140,7 +140,7 @@ export class SERVER {
         this.fileExtn = "";
         this.cursorword = "";
 
-        this.W_COMPWEBVIEW?.clear();
+        this.W_COMPSANDBOX?.clear();
         this.W_DIAGNOSTICS?.clear();
     };
 
@@ -149,7 +149,7 @@ export class SERVER {
         this.reset();
     };
 
-    restart = (): void => {
+    respawn = (): void => {
         this.W_EVENTSTREAM.Kill();
         this.reset();
         this.spawn();
@@ -169,7 +169,7 @@ export class SERVER {
         this.reset();
         this.W_DECORATIONS.dispose();
         this.W_DIAGNOSTICS.dispose();
-        this.W_COMPWEBVIEW.dispose();
+        this.W_COMPSANDBOX.dispose();
         this.W_STATEWIDGET.dispose();
         clearTimeout(this.Ref_AutoRefreshId);
     }
@@ -189,7 +189,7 @@ export class SERVER {
         this.W_EVENTSTREAM = new EVENTSTREAM(this);
         this.W_DIAGNOSTICS = new DIAGNOSTICS(this);
         this.W_DECORATIONS = new DECORATIONS(this);
-        this.W_COMPWEBVIEW = new COMPWEBVIEW(this);
+        this.W_COMPSANDBOX = new COMPSANDBOX(this);
         this.W_STATEWIDGET = new STATEWIDGET(this);
 
         this.Ref_AutoRefreshId = setInterval(() => {
@@ -213,7 +213,7 @@ export class SERVER {
             vscode.workspace.onDidCreateFiles(() => { this.W_EVENTSTREAM.StdIoRpc("$ rebuild"); }),
 
             vscode.commands.registerCommand(`${this.Ed_Id}.server.pause`, this.pause),
-            vscode.commands.registerCommand(`${this.Ed_Id}.server.restart`, this.restart),
+            vscode.commands.registerCommand(`${this.Ed_Id}.server.restart`, this.respawn),
             vscode.commands.registerCommand(`${this.Ed_Id}.server.send`, this.W_EVENTSTREAM.Interactive),
 
         );
@@ -308,6 +308,7 @@ export class SERVER {
         const content = editor.document.getText();
         const cursorOffset = editor.document.offsetAt(editor.selection.active);
         this.Rs_TagRanges = fileScanner(content, this.FileManifest.attributes, cursorOffset).TagRanges || [];
+        
         this.W_DECORATIONS.refresh();
         this.W_DIAGNOSTICS.refresh();
         this.W_STATEWIDGET.refresh();

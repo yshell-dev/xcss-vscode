@@ -2,7 +2,7 @@ import vscode from 'vscode';
 import { metadataFormat, metamergeFormat } from '../helpers/metadata';
 import { m_Metadata, } from '../types';
 import { SERVER } from '../server';
-
+import fileScanner from '../helpers/file-scanner';
 
 export class DECORATIONS {
     private Server: SERVER;
@@ -98,7 +98,10 @@ export class DECORATIONS {
     refresh() {
         const hashrules = this.Server.getHashrules();
         const symclasses = this.Server.getAttachables();
-        const editors = vscode.window.visibleTextEditors;
+        let editors = vscode.window.visibleTextEditors;
+        if (vscode.window.activeTextEditor) {
+            editors = [vscode.window.activeTextEditor];
+        }
 
         for (const editor of editors) {
             let localhashrules: typeof hashrules = {};
@@ -116,7 +119,11 @@ export class DECORATIONS {
             const symclass_Decos: vscode.DecorationOptions[] = [];
             const comProp_Decos: vscode.DecorationOptions[] = [];
 
-            for (const tagRange of this.Server.getTagRanges()) {
+            const content = editor.document.getText();
+            const cursorOffset = editor.document.offsetAt(editor.selection.active);
+            const parsed = fileScanner(content, this.Server.FileManifest.attributes, cursorOffset);
+
+            for (const tagRange of parsed.TagRanges) {
 
                 for (const track of tagRange.cache.comments) {
                     try {
