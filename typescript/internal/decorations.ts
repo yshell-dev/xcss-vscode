@@ -98,10 +98,7 @@ export class DECORATIONS {
     refresh() {
         const hashrules = this.Server.getHashrules();
         const symclasses = this.Server.getAttachables();
-        let editors = vscode.window.visibleTextEditors;
-        if (vscode.window.activeTextEditor) {
-            editors = [vscode.window.activeTextEditor];
-        }
+        const editors = vscode.window.visibleTextEditors;
 
         for (const editor of editors) {
             let localhashrules: typeof hashrules = {};
