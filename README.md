@@ -42,4 +42,4 @@ Essential XCSS developer tooling for VSCode, featuring integrated LSP, bundled b
 ## Language Support
 
 - Files with a `.xcss` extension are treated as Markdown and support all core extension features.
-
+- Recognized extended custom css directives, `@--attach` and `@--assign`.

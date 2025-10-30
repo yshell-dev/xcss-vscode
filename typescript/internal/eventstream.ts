@@ -1,11 +1,11 @@
 // import path from 'path';
-import { spawn, ChildProcessWithoutNullStreams } from 'child_process';
-import { SERVER } from '../server';
 import * as fs from 'fs';
-import { t_JsonRPCResponse, t_FileManifest, t_StyleManifest } from '../types';
 import vscode from 'vscode';
+import { SERVER } from '../server';
 import { WebSocket } from 'ws';
-import getBinPath from '../../core/execute';
+import { getBinPath } from '../../core/execute';
+import { spawn, ChildProcessWithoutNullStreams } from 'child_process';
+import { t_JsonRPCResponse, t_FileManifest, t_StyleManifest } from '../types';
 
 export class EVENTSTREAM {
     private Server: SERVER;
