@@ -1,9 +1,9 @@
 // import path from 'path';
-import * as fs from 'fs';
+import fs from 'fs';
 import vscode from 'vscode';
+import getBinPath from '../../core/execute';
 import { SERVER } from '../server';
 import { WebSocket } from 'ws';
-import { getBinPath } from '../../core/execute';
 import { spawn, ChildProcessWithoutNullStreams } from 'child_process';
 import { t_JsonRPCResponse, t_FileManifest, t_StyleManifest } from '../types';
 
