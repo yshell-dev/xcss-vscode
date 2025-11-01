@@ -53,15 +53,15 @@ export class FORMATTING {
     }
 
     formatFile = async (): Promise<void> => {
-        if (!this.Server.Ed_Editor) { return; }
+        if (!this.Server.Editor) { return; }
         try {
             if (this.reactByFold_flag) {
                 await (this.fold_1__unfold_0 ? this.foldRanges : this.unfoldRanges)();
                 this.switchToFoldingTrigger(false);
             } else {
-                const edits = this.provideDocEdits(this.Server.Ed_Editor.document);
+                const edits = this.provideDocEdits(this.Server.Editor.document);
                 if (edits.length > 0) {
-                    await this.Server.Ed_Editor.edit(editBuilder => { for (const e of edits) { editBuilder.replace(e.range, e.newText); } },
+                    await this.Server.Editor.edit(editBuilder => { for (const e of edits) { editBuilder.replace(e.range, e.newText); } },
                         { undoStopBefore: true, undoStopAfter: true }
                     );
                 }
@@ -90,7 +90,7 @@ export class FORMATTING {
         if (vscode.window.activeTextEditor) {
             try {
                 await vscode.commands.executeCommand('editor.fold', {
-                    ranges: this.Server.provideFoldingRanges(),
+                    ranges: this.Server.W_FOLDRANGE.provideFoldingRanges(),
                     direction: 'all'
                 });
             } catch (error) {
@@ -106,7 +106,7 @@ export class FORMATTING {
         if (vscode.window.activeTextEditor) {
             try {
                 await vscode.commands.executeCommand('editor.unfold', {
-                    ranges: this.Server.provideFoldingRanges(),
+                    ranges: this.Server.W_FOLDRANGE.provideFoldingRanges(),
                     direction: 'all'
                 });
             } catch (error) {

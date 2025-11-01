@@ -4,7 +4,7 @@ import getBinPath from '../core/execute';
 import { ExtensionManager } from './activate';
 import { WebSocket } from 'ws';
 import { spawn, ChildProcessWithoutNullStreams } from 'child_process';
-import { t_JsonRPCResponse, t_StyleManifest } from './types';
+import { t_JsonRPCResponse } from './types';
 
 export class BRIDGE {
 
@@ -21,11 +21,6 @@ export class BRIDGE {
                             this.receive(data.toString());
                         });
                     }
-                    break;
-                }
-
-                case "styleManifest": {
-                    this.Server.UpdateStyleManifest(res.result as t_StyleManifest);
                     break;
                 }
 
@@ -48,12 +43,14 @@ export class BRIDGE {
     private dopause = () => this.Paused = true;
     private unpause = () => this.Paused = false;
 
-    public RootBinary: string;
+    public RootBinary = "";
+    public WebviewUrl = "";
+    public WebviewPort = 0;
     public spawnAlive = () => !!this.Process && !this.Process.killed;
 
     constructor(core: ExtensionManager) {
         this.Server = core;
-        this.RootBinary = getBinPath(core.developerMode);
+        this.RootBinary = getBinPath(core.DeveloperMode);
         this.OutputCh = vscode.window.createOutputChannel(this.Server.IDCAP + ' Server');
         setInterval(() => {
             this.stdIoRpc("manifest-global");

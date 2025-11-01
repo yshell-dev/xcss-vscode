@@ -1,134 +1,94 @@
-import fs from 'fs/promises';
+
 import path from 'path';
 import vscode from 'vscode';
 import fileScanner from './helpers/file-scanner';
 
 import { existsSync } from 'fs';
 import { metadataFormat } from './helpers/metadata';
-import { t_FileManifest, m_Metadata, t_TagRange, t_TrackRange, t_StyleManifest } from './types';
+import { m_Metadata, t_GlobalManifest, t_TrackRange, } from './types';
 
 import { BRIDGE } from './bridge';
-import { WIDGET } from './shared/widget';
-import { PALETTE } from './shared/palette';
-import { CSSREFER } from './shared/css-refer';
+import { WIDGET } from './internal/widget';
+import { PALETTE } from './internal/palette';
+import { CSSREFERENCE } from './internal/css-refer';
 import { DEFINITION } from './internal/definition';
 import { FORMATTING } from './internal/formatting';
-import { INTELLISENSE } from './shared/intellisense';
+import { INTELLISENSE } from './internal/intellisense';
 import { DIAGNOSTICS } from './internal/diagnostics';
 import { DECORATIONS } from './internal/decorations';
+import { SANDBOX } from './internal/sandbox';
+import { FILETOGGLE } from './internal/file-toggle';
+import { FOLDRANGE } from './internal/fold-range';
+import { SUMMON } from './internal/summon';
 
 const ID = "xcss";
 
 export class ExtensionManager {
     readonly ID = ID;
     readonly IDCAP = this.ID.toLocaleUpperCase();
-    readonly developerMode: boolean = existsSync(path.resolve(__dirname, "..", "core", "source"));
-    readonly statusbarRefreshInterval = 1000;
-
-    private W_DEFINITION: DEFINITION | undefined;
-    private W_FORMATTING: FORMATTING | undefined;
-    private W_INTELLISENSE: INTELLISENSE | undefined;
-    private W_PALETTE: PALETTE | undefined;
-
-    private Context: vscode.ExtensionContext | undefined;
-    private Disposable: vscode.Disposable[] = [];
-
-    private statusBarUpdateInterval: NodeJS.Timeout | undefined;
-
-    // Environment Declared
-    public Ed_Uri: vscode.Uri;
-    public Ed_Editor: vscode.TextEditor | undefined;
-    public Ed_Context: vscode.ExtensionContext;
-    public Ed_WorkspaceFolder: vscode.WorkspaceFolder | undefined;
+    readonly SymClassRgx = /[\w/$_-]+/i;;
+    readonly DeveloperMode: boolean = existsSync(path.resolve(__dirname, "..", "core", "source"));
+    get config(): vscode.WorkspaceConfiguration { return vscode.workspace.getConfiguration(this.ID); };
 
     // External Workers
+    public W_SUMMON: SUMMON;
+    public W_BRIDGE: BRIDGE;
+    public W_WIDGET: WIDGET;
+    public W_SANDBOX: SANDBOX;
+    public W_PALETTE: PALETTE;
+    public W_FOLDRANGE: FOLDRANGE;
+    public W_FORMATTING: FORMATTING;
+    public W_DEFINITION: DEFINITION;
+    public W_FILETOGGLE: FILETOGGLE;
     public W_DIAGNOSTICS: DIAGNOSTICS;
     public W_DECORATIONS: DECORATIONS;
-    public W_EVENTSTREAM: BRIDGE;
-    public W_STATEWIDGET: WIDGET;
-    public W_CSSREFERENCE: CSSREFER;
+    public W_CSSREFERENCE: CSSREFERENCE;
+    public W_INTELLISENSE: INTELLISENSE;
 
-    // Activity Flags
-    private Flag_ExtnActivated = true;
-    private ManifestMutexLock = false;
-    private Ref_AutoRefreshId: NodeJS.Timeout | undefined;
-
-    // Values from manifest
-    public SymClassRgx = /[\w/$_-]+/i;;
+    // Environment Declared
+    public Context: vscode.ExtensionContext;
+    public Editor: vscode.TextEditor | undefined;
+    public WorkspaceFolder: vscode.WorkspaceFolder | undefined;
 
     // Ranges Saved on Parse
     public filePath = "";
     public fileExtn = "";
-    private cursorword = "";
-    private Rs_TagRanges: t_TagRange[] = [];
-    private M_assignable: Record<string, m_Metadata> = {};
-    private M_attachables: Record<string, m_Metadata> = {};
+    public cursorword = "";
+
+    // Activity Flags
+    private F_ManifestMutex = false;
+    private F_ExtnActivated = true;
+    get ExtentionStatus() { return this.F_ExtnActivated; }
 
     // Editor Specifics
-    public FileManifest: t_FileManifest = {
-        watchfiles: [],
-        webviewurl: "",
-        webviewport: 0,
-        environment: "",
-        switchmap: {},
-        attributes: [],
-        customtags: [],
-        livecursor: false,
-        assistfile: false,
-    };
-
-    public StyleManifest: t_StyleManifest = {
-        diagnostics: [],
-        hashrules: {},
-        constants: {},
-        symclassData: {},
-        symclasses: {},
-        assignable: [],
-    };
-
-    get config(): vscode.WorkspaceConfiguration {
-        return vscode.workspace.getConfiguration(this.ID);
-    };
+    public GlobalManifest!: t_GlobalManifest;
+    public LocalManifests: Record<string, t_GlobalManifest> = {};
+    public SandboxStates: Record<string, string | boolean> = {};
 
     reset = (): void => {
-        this.FileManifest = {
+        this.GlobalManifest = {
             watchfiles: [],
-            webviewurl: "",
-            webviewport: 0,
             environment: "",
-            switchmap: {},
-            attributes: [],
             customtags: [],
-            livecursor: false,
-            assistfile: false,
-        };
-        this.StyleManifest = {
-            constants: {},
+            switchmap: {},
             hashrules: {},
-            diagnostics: [],
-            symclassData: {},
+            constants: {},
             symclasses: {},
-            assignable: [],
+            attributemap: {},
+            diagnostics: [],
         };
 
-        this.M_attachables = {};
-        this.M_assignable = {};
-        this.Rs_TagRanges = [];
-
-        this.filePath = "";
-        this.fileExtn = "";
         this.cursorword = "";
-
         this.W_DIAGNOSTICS?.clear();
     };
 
     pause = (): void => {
-        this.Flag_ExtnActivated = false;
+        this.F_ExtnActivated = false;
         this.reset();
     };
 
     respawn = (): void => {
-        this.W_EVENTSTREAM.kill();
+        this.W_BRIDGE.kill();
         this.reset();
         this.spawn();
     };
@@ -137,79 +97,67 @@ export class ExtensionManager {
         const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
         if (!workspaceFolder) { return; }
 
-        this.Ed_WorkspaceFolder = workspaceFolder;
+        this.WorkspaceFolder = workspaceFolder;
         const workpath = workspaceFolder.uri.fsPath;
 
-        this.W_EVENTSTREAM.start(workpath, ["server"]);
+        this.W_BRIDGE.start(workpath, ["server"]);
     };
 
     public dispose() {
         this.reset();
-        this.W_DECORATIONS.dispose();
-        this.W_DIAGNOSTICS.dispose();
-        this.W_STATEWIDGET.dispose();
-        clearTimeout(this.Ref_AutoRefreshId);
-
-
-
-        if (this.statusBarUpdateInterval) {
-            clearInterval(this.statusBarUpdateInterval);
-            this.statusBarUpdateInterval = undefined;
-        }
-
-        this.Disposable.forEach((d) => { if (d.dispose) { d.dispose(); } });
-        this.Disposable = [];
     }
 
     constructor(
         context: vscode.ExtensionContext,
     ) {
         this.reset();
-        this.Ed_Uri = context.extensionUri;
-        this.Ed_Context = context;
+        this.Context = context;
 
-        this.W_CSSREFERENCE = new CSSREFER();
-        this.W_INTELLISENSE = new INTELLISENSE(this);
-        this.W_EVENTSTREAM = new BRIDGE(this);
-        this.W_DIAGNOSTICS = new DIAGNOSTICS(this);
-        this.W_DECORATIONS = new DECORATIONS(this);
-        this.W_STATEWIDGET = new WIDGET(this);
+        this.W_SUMMON = new SUMMON(this);
+        this.W_BRIDGE = new BRIDGE(this);
+        this.W_WIDGET = new WIDGET(this);
+        this.W_PALETTE = new PALETTE(this);
+        this.W_SANDBOX = new SANDBOX(this);
+        this.W_FOLDRANGE = new FOLDRANGE(this);
         this.W_DEFINITION = new DEFINITION(this);
         this.W_FORMATTING = new FORMATTING(this);
-        this.W_PALETTE = new PALETTE(this);
+        this.W_FILETOGGLE = new FILETOGGLE(this);
+        this.W_DIAGNOSTICS = new DIAGNOSTICS(this);
+        this.W_DECORATIONS = new DECORATIONS(this);
+        this.W_CSSREFERENCE = new CSSREFERENCE();
+        this.W_INTELLISENSE = new INTELLISENSE(this);
 
-        this.Ref_AutoRefreshId = setInterval(() => {
+        const autoRefresh = setInterval(() => {
             this.RequestManifest();
         }, 250);
 
-        this.Context = context;
-        if (!this.Context) { return; };
 
+        this.Context.subscriptions.push(
+            { dispose() { autoRefresh.close(); } },
 
-        const ColorPicks = vscode.languages.registerColorProvider(['*'], this.W_PALETTE);
-        const FoldRanges = vscode.languages.registerFoldingRangeProvider(['*'], this);
-        const Definition = vscode.languages.registerDefinitionProvider({ language: '*', scheme: 'file' }, this.W_DEFINITION);
-        const Assistance = vscode.languages.registerCompletionItemProvider(['*'], this.W_INTELLISENSE, ...this.W_INTELLISENSE.triggers);
-        const SummonHere = vscode.commands.registerCommand(`${this.ID}.editor.summon`, this.SummonStructure);
-        const FileSwitch = vscode.commands.registerCommand(`${this.ID}.action.toggle`, this.CommandFileToggle);
-        const Formatting = vscode.commands.registerCommand(`${this.ID}.editor.format`, this.W_FORMATTING.formatFile);
-        const PreviewNow = vscode.commands.registerCommand(`${this.ID}.action.compview`, this.OpenSandbox);
-
-        this.Disposable.push(
+            this.W_SUMMON,
+            this.W_BRIDGE,
+            this.W_WIDGET,
             this.W_PALETTE,
-            this.W_FORMATTING,
+            this.W_SANDBOX,
+            this.W_FOLDRANGE,
             this.W_DEFINITION,
+            this.W_FORMATTING,
+            this.W_FILETOGGLE,
+            this.W_DIAGNOSTICS,
+            this.W_DECORATIONS,
+            this.W_CSSREFERENCE,
             this.W_INTELLISENSE,
-            ColorPicks,
-            PreviewNow,
-            SummonHere,
-            Definition,
-            Assistance,
-            FileSwitch,
-            Formatting,
-            FoldRanges,
-        );
-        this.Ed_Context.subscriptions.push(
+
+            vscode.languages.registerColorProvider(['*'], this.W_PALETTE),
+            vscode.languages.registerFoldingRangeProvider(['*'], this.W_FOLDRANGE),
+            vscode.languages.registerDefinitionProvider({ language: '*', scheme: 'file' }, this.W_DEFINITION),
+            vscode.languages.registerCompletionItemProvider(['*'], this.W_INTELLISENSE, ...this.W_INTELLISENSE.triggers),
+
+            vscode.commands.registerCommand(`${this.ID}.action.toggle`, this.W_FILETOGGLE.CommandFileToggle),
+            vscode.commands.registerCommand(`${this.ID}.editor.format`, this.W_FORMATTING.formatFile),
+            vscode.commands.registerCommand(`${this.ID}.action.compview`, this.W_SANDBOX.OpenSandbox),
+            vscode.commands.registerCommand(`${this.ID}.editor.summon`, this.W_SUMMON.SummonStructure),
 
             vscode.window.onDidChangeWindowState(() => { this.RefreshEditor(); }),
             vscode.window.tabGroups.onDidChangeTabs(() => { this.RefreshEditor(); }),
@@ -222,31 +170,31 @@ export class ExtensionManager {
             vscode.workspace.onDidCloseTextDocument(() => { this.RequestManifest(); }),
             vscode.workspace.onDidChangeTextDocument(() => { this.RequestManifest(); }),
 
-            vscode.workspace.onDidDeleteFiles(() => { this.W_EVENTSTREAM.stdIoRpc("rebuild"); }),
-            vscode.workspace.onDidCreateFiles(() => { this.W_EVENTSTREAM.stdIoRpc("rebuild"); }),
+            vscode.workspace.onDidDeleteFiles(() => { this.W_BRIDGE.stdIoRpc("rebuild"); }),
+            vscode.workspace.onDidCreateFiles(() => { this.W_BRIDGE.stdIoRpc("rebuild"); }),
 
             vscode.commands.registerCommand(`${this.ID}.server.pause`, this.pause),
             vscode.commands.registerCommand(`${this.ID}.server.restart`, this.respawn),
-            vscode.commands.registerCommand(`${this.ID}.server.send`, this.W_EVENTSTREAM.interactive),
+            vscode.commands.registerCommand(`${this.ID}.server.send`, this.W_BRIDGE.interactive),
 
         );
     }
 
-    RequestManifest = (updateSymclass = this.FileManifest.livecursor) => {
+    RequestManifest = (updateSymclass = this.SandboxStates["livecursor"] as boolean) => {
         const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-        if (!workspaceFolder || !this.Flag_ExtnActivated) {
+        if (!workspaceFolder || !this.F_ExtnActivated) {
             this.reset();
             return;
         }
-        this.Ed_WorkspaceFolder = workspaceFolder;
+        this.WorkspaceFolder = workspaceFolder;
         const workpath = workspaceFolder.uri.fsPath;
 
         const editor = vscode.window.activeTextEditor;
-        this.Ed_Editor = editor || undefined;
+        this.Editor = editor || undefined;
         if (!editor) { return; }
 
         this.spawn();
-        if (!this.W_EVENTSTREAM.spawnAlive) {
+        if (!this.W_BRIDGE.spawnAlive) {
             this.reset();
             return;
         }
@@ -263,7 +211,7 @@ export class ExtensionManager {
             this.cursorword = wordString.startsWith("-$") ? wordString.replace("-$", "$") : wordString;
         }
 
-        this.W_EVENTSTREAM.jsonRpc("fileManifest", {
+        this.W_BRIDGE.jsonRpc("fileManifest", {
             filepath: this.filePath,
             content: document.getText(),
             symclass: this.cursorword,
@@ -276,8 +224,8 @@ export class ExtensionManager {
     };
 
     UpdateStyleManifest = (manifest: t_StyleManifest) => {
-        if (this.ManifestMutexLock) { return; }
-        this.ManifestMutexLock = true;
+        if (this.F_ManifestMutex) { return; }
+        this.F_ManifestMutex = true;
         const attachable: Record<string, m_Metadata> = {};
         const assignable: Record<string, m_Metadata> = {};
 
@@ -308,7 +256,7 @@ export class ExtensionManager {
         } finally {
             this.M_attachables = attachable;
             this.M_assignable = assignable;
-            this.ManifestMutexLock = false;
+            this.F_ManifestMutex = false;
 
             this.RefreshEditor();
         }
@@ -324,145 +272,8 @@ export class ExtensionManager {
 
         this.W_DECORATIONS.refresh();
         this.W_DIAGNOSTICS.refresh();
-        this.W_STATEWIDGET.refresh();
+        this.W_WIDGET.refresh();
     };
-
-    public previewPanal: vscode.WebviewPanel | undefined;
-    OpenSandbox = async () => {
-
-        this.RequestManifest(true);
-
-        if (this.previewPanal) {
-            this.previewPanal.reveal(vscode.ViewColumn.Active);
-        } else if (this.FileManifest.webviewport > 0) {
-            this.previewPanal = vscode.window.createWebviewPanel(
-                this.FileManifest.webviewurl,
-                this.IDCAP + ' Component Sandbox',
-                {
-                    viewColumn: vscode.ViewColumn.Beside,
-                    preserveFocus: false
-                },
-                {
-                    enableScripts: true,
-                    localResourceRoots: [
-                        this.Ed_Uri,
-                        this.Ed_WorkspaceFolder?.uri || this.Ed_Uri
-                    ]
-                }
-            );
-
-            vscode.env.asExternalUri(
-                vscode.Uri.parse(this.FileManifest.webviewurl)
-            );
-
-            this.previewPanal.onDidDispose(() => {
-                this.previewPanal = undefined;
-            }, null, this.Ed_Context.subscriptions);
-
-            this.previewPanal.webview.html = `
-            <!DOCTYPE html>
-            <html lang="en">
-                <body style="margin:0;padding:0;">
-                    <iframe 
-                    src="${this.FileManifest.webviewurl}" 
-                    style="
-                        width:100%;
-                        height:100%;
-                        border:none;
-                        top: 0;
-                        bottom: 0;
-                        left: 0;
-                        right: 0;
-                        position: absolute;
-                    "> </iframe>
-                </body>
-            </html>
-            `;
-        }
-
-        return;
-    };
-
-    CommandFileToggle = async () => {
-
-        async function fileExists(filePath: string): Promise<boolean> {
-            try {
-                await fs.access(filePath);
-                return true;
-            } catch {
-                return false;
-            }
-        }
-
-        try {
-            const filePath = this.getTogglePath() || "";
-            if (filePath) {
-                if (await fileExists(filePath)) {
-                    const targetUri = vscode.Uri.file(filePath);
-                    await vscode.commands.executeCommand('vscode.open', targetUri, {
-                        viewColumn: vscode.ViewColumn.Active
-                    });
-                    return;
-                } else if (path.extname(filePath) === `.${this.ID}`) {
-                    vscode.window.showErrorMessage(`Toggle unavailable for *.${this.ID} files: ${filePath}`);
-                    return;
-                } else {
-                    vscode.window.showErrorMessage(`Corresponding file not found: ${filePath}`);
-                    return;
-                }
-            }
-            vscode.window.showErrorMessage('File is not in any source or target directory defined.');
-        } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            vscode.window.showErrorMessage(`Failed to switch: ${errorMessage}`);
-        }
-    };
-
-
-    SummonStructure = async () => {
-        if (!this.Ed_Editor) { return; }
-
-        const attachables = this.getAttachables();
-        const document = this.Ed_Editor.document;
-        const selection = this.Ed_Editor.selection;
-        const wordRange = !selection.isEmpty ? selection
-            : document.getWordRangeAtPosition(selection.active, this.SymClassRgx);
-        const fragment = document.getText(wordRange);
-
-        if (!wordRange) { return; }
-        const tagRange = this.getTagRanges().find(r => r.range.contains(wordRange));
-        if (!tagRange) { return; }
-
-        if (wordRange && attachables[fragment]?.summon && tagRange) {
-            await this.Ed_Editor.edit(editBuilder => {
-                editBuilder.insert(tagRange.range.end, '\n' + attachables[fragment].summon);
-            }, { undoStopBefore: true, undoStopAfter: true });
-        }
-    };
-
-    // Folding Range Provider
-
-    public provideFoldingRanges(): vscode.FoldingRange[] {
-        const A: vscode.FoldingRange[] = [];
-        for (const I of this.Rs_TagRanges) {
-            for (const i of I.cache.composes) {
-                if (i.multiLine) {
-                    A.push(new vscode.FoldingRange(i.valRange.start.line, i.valRange.end.line, vscode.FoldingRangeKind.Region));
-                }
-            }
-            for (const i of I.cache.watchtracks) {
-                if (i.multiLine) {
-                    A.push(new vscode.FoldingRange(i.valRange.start.line, i.valRange.end.line, vscode.FoldingRangeKind.Region));
-                }
-            }
-            for (const i of I.cache.comments) {
-                if (i.multiLine) {
-                    A.push(new vscode.FoldingRange(i.valRange.start.line, i.valRange.end.line, vscode.FoldingRangeKind.Region));
-                }
-            }
-        }
-        return A;
-    }
 
     public getTagAtValPairRanges(tracks = true, comments = true, compose = true): t_TrackRange[] {
         const acc: t_TrackRange[] = [];
@@ -491,22 +302,11 @@ export class ExtensionManager {
         return vars;
     }
 
-    public getTogglePath(): string {
-        let switchpath = this.filePath;
+    public FetchTargetAttributes(editor: vscode.TextEditor): string[] {
+        const extension = path.extname(editor?.document)?.slice(1) || "";
+        const targetFolder = this.GlobalManifest.attributemap?.[targetFolder]?.[extension] || []
 
-        if (this.filePath !== "") {
-            for (const k of Object.keys(this.FileManifest.switchmap)) {
-                if (this.filePath.startsWith(k)) {
-                    switchpath = this.filePath.replace(k, this.FileManifest.switchmap[k]);
-                }
-            }
-        }
-
-        return path.join(this.Ed_WorkspaceFolder?.uri.fsPath || '.', (switchpath));
-    }
-
-    public isExtenActivated(): boolean {
-        return this.Flag_ExtnActivated;
+        return [];
     }
 
     public CheckEditorPathWatching(editor = vscode.window.activeTextEditor) {
@@ -518,12 +318,12 @@ export class ExtensionManager {
     }
 
     public isCssTargetedFile(): boolean {
-        return this.Flag_ExtnActivated && this.fileExtn === "css" &&
+        return this.F_ExtnActivated && this.fileExtn === "css" &&
             (this.FileManifest.assistfile || this.CheckEditorPathWatching());
     }
 
     public isFileTargetedFile(): boolean {
-        return this.Flag_ExtnActivated && this.fileExtn !== "css" &&
+        return this.F_ExtnActivated && this.fileExtn !== "css" &&
             (this.FileManifest.assistfile || this.CheckEditorPathWatching());
     }
 
@@ -540,10 +340,10 @@ export class ExtensionManager {
     }
 
     public getHashrules(): Record<string, string> {
-        return { ...this.StyleManifest.hashrules };
+        return { ...this.GlobalManifest.hashrules };
     }
 
-    public getAttachables(): Record<string, m_Metadata> {
+    public getAttachables(editor = vscode.window.activeTextEditor): Record<string, m_Metadata> {
         return { ...this.M_attachables };
     }
 
@@ -551,18 +351,11 @@ export class ExtensionManager {
         return { ...this.M_assignable };
     }
 
-    public getEditor(): vscode.TextEditor | undefined {
-        return this.Ed_Editor;
-    }
+    AssistingActive(): boolean {
 
-    public getWorkspaceFolder(): vscode.WorkspaceFolder | undefined {
-        return this.Ed_WorkspaceFolder;
-    }
-
-    public getFileExtension(): string {
-        return this.fileExtn;
     }
 }
+
 
 let Manager: ExtensionManager | undefined;
 

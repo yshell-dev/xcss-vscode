@@ -183,9 +183,9 @@ export class INTELLISENSE {
             const completions: vscode.CompletionItem[] = [];
             const fileFragment = document.getText(new vscode.Range(new vscode.Position(0, 0), position));
 
-            if (this.Server.Ed_Editor) {
+            if (this.Server.Editor) {
                 if (this.Server.isFileTargetedFile()) {
-                    const parsed = cursorSense(fileFragment, this.Server.Ed_Editor.document.offsetAt(this.Server.Ed_Editor.selection.active));
+                    const parsed = cursorSense(fileFragment, this.Server.Editor.document.offsetAt(this.Server.Editor.selection.active));
                     const valueFragment = parsed.cursorString.slice(parsed.cursorAttribute.length + 2);
                     const foundTag = this.Server.getTagRanges().find(tag => tag.range.contains(position));
                     const foundVars = foundTag ? foundTag.variables : {};

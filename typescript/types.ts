@@ -80,27 +80,6 @@ export interface m_Metadata {
     markdown?: string
 }
 
-export interface t_FileManifest {
-    webviewport: number,
-    webviewurl: string,
-    environment: string,
-    attributes: string[],
-    customtags: string[],
-    switchmap: Record<string, string>,
-    assistfile: boolean,
-    watchfiles: string[],
-    livecursor: boolean,
-}
-
-export interface t_StyleManifest {
-    assignable: string[],
-    hashrules: Record<string, string>,
-    constants: Record<string, string>,
-    symclasses: Record<string, number>,
-    symclassData: Record<number, m_Metadata>,
-    diagnostics: m_Diagnostic[],
-}
-
 export interface t_JsonRPCRequest {
     jsonrpc: string,
     id: any,
@@ -113,4 +92,23 @@ export interface t_JsonRPCResponse {
     method: string,
     result: any,
     error: any,
+}
+
+export interface t_GlobalManifest {
+    watchfiles: string[],
+    environment: string,
+    customtags: string[],
+    switchmap: Record<string, string>,
+    hashrules: Record<string, string>,
+    constants: Record<string, string>,
+    symclasses: Record<string, m_Metadata>,
+    attributemap: Record<string, Record<string, string[]>>,
+    diagnostics: m_Diagnostic[],
+}
+
+export interface t_ManifestLocal {
+    assignable: string[],
+    attachable: string[],
+    diagnostics: m_Diagnostic[],
+    symclassData: Record<string, m_Metadata>,
 }

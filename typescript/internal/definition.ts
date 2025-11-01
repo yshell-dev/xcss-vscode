@@ -1,5 +1,6 @@
 import vscode from 'vscode';
 import { ExtensionManager } from '../activate';
+import AnalyzeLocation from '../helpers/location';
 
 export class DEFINITION {
     private Server: ExtensionManager;
@@ -18,7 +19,7 @@ export class DEFINITION {
         document: vscode.TextDocument,
         position: vscode.Position
     ): Promise<vscode.Definition | vscode.LocationLink[] | undefined> {
-        if (!this.Server.Ed_WorkspaceFolder || !(this.Server.isFileTargetedFile() || this.Server.isCssTargetedFile())) { return undefined; }
+        if (!this.Server.WorkspaceFolder || !(this.Server.isFileTargetedFile() || this.Server.isCssTargetedFile())) { return undefined; }
 
         const attachables = this.Server.getAttachables();
 
@@ -33,18 +34,16 @@ export class DEFINITION {
         if (attachables[word]?.declarations) {
             const declaration = attachables[word].declarations[0];
             if (typeof declaration !== "string") { return undefined; }
-
-            let filePath = declaration;
-
-
-            const definitionPosition = new vscode.Position(definitionLine, definitionChar);
+            const location = AnalyzeLocation(declaration);
+            if (location === undefined) { return undefined; }
 
             const definitionLocation = new vscode.Location(
-                vscode.Uri.joinPath(vscode.Uri.file(this.Server.Ed_WorkspaceFolder.uri.fsPath), filePath),
-                new vscode.Range(definitionPosition, definitionPosition)
+                vscode.Uri.joinPath(vscode.Uri.file(this.Server.WorkspaceFolder.uri.fsPath), location.filepath),
+                location.definitionRange,
             );
             return definitionLocation;
         }
+
 
         return undefined;
     }

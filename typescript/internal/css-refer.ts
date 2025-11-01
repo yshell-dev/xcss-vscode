@@ -1,7 +1,7 @@
 
 import { getDefaultCSSDataProvider, IPropertyData } from 'vscode-css-languageservice';
 
-export class CSSREFER {
+export class CSSREFERENCE {
 
     public CSS_Properties: IPropertyData[] = [];
     public CSS_AtDirectives: IPropertyData[] = [];
@@ -39,4 +39,7 @@ export class CSSREFER {
         }
     }
 
+    dispose () {
+        return;
+    }
 }

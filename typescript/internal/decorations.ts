@@ -96,16 +96,16 @@ export class DECORATIONS {
     }
 
     refresh() {
-        const hashrules = this.Server.getHashrules();
-        const symclasses = this.Server.getAttachables();
-        const editors = vscode.window.visibleTextEditors;
 
-        for (const editor of editors) {
-            let localhashrules: typeof hashrules = {};
-            let localsymclasses: typeof symclasses = {};
+        for (const editor of vscode.window.visibleTextEditors) {
+            const cursorOffset = editor.document.offsetAt(editor.selection.active);
+            const parsed = fileScanner(editor.document.getText(), this.Server.FetchTargetAttributes(editor), cursorOffset);
+
+            let localhashrules: Record<string, string> = {};
+            let localsymclasses: Record<string, m_Metadata> = {};
             if (this.Server.CheckEditorPathWatching(editor)) {
-                localhashrules = hashrules;
-                localsymclasses = symclasses;
+                localhashrules = this.Server.getHashrules();
+                localsymclasses = this.Server.getAttachables(editor);
             }
 
             const comment_Decos: vscode.DecorationOptions[] = [];
@@ -116,9 +116,6 @@ export class DECORATIONS {
             const symclass_Decos: vscode.DecorationOptions[] = [];
             const comProp_Decos: vscode.DecorationOptions[] = [];
 
-            const content = editor.document.getText();
-            const cursorOffset = editor.document.offsetAt(editor.selection.active);
-            const parsed = fileScanner(content, this.Server.FileManifest.attributes, cursorOffset);
 
             for (const tagRange of parsed.TagRanges) {
 

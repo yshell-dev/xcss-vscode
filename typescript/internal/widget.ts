@@ -2,10 +2,9 @@ import vscode from 'vscode';
 import { ExtensionManager } from '../activate';
 
 export class WIDGET {
-    private Server: ExtensionManager | undefined;
+    private Server: ExtensionManager;
     private statusBar: vscode.StatusBarItem;
     private statusIcon: 'debug-stop' | 'debug-pause' | 'eye-watch' | 'eye-closed' | 'warning' = 'debug-stop';
-    private identifier: string;
     private options: {
         label: string;
         script: string;
@@ -14,11 +13,10 @@ export class WIDGET {
 
     constructor(core: ExtensionManager) {
         this.Server = core;
-        this.identifier = this.Server.IDCAP;
         this.statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
         this.statusBar.command = `${this.Server.ID}.action.command`;
 
-        this.bin = this.Server.W_EVENTSTREAM.RootBinary;
+        this.bin = this.Server.W_BRIDGE.RootBinary;
         this.options = [
             { label: 'Docs', script: "" },
             { label: 'Watch', script: 'preview -w' },
@@ -31,19 +29,19 @@ export class WIDGET {
             s.script = `${this.bin} ${s.script}`;
         });
 
-        this.Server.Ed_Context.subscriptions.push(
+        this.Server.Context.subscriptions.push(
             vscode.window.onDidChangeActiveTextEditor(() => { this.refresh(); }),
             vscode.workspace.onDidChangeWorkspaceFolders(() => { this.refresh(); }),
             vscode.workspace.onDidOpenTextDocument(() => { this.refresh(); }),
             vscode.commands.registerCommand(this.statusBar.command, async () => {
                 const picked = await vscode.window.showQuickPick(this.options.map((o) => `${o.label}`), {
-                    placeHolder: this.identifier + ': Server Command Palette.'
+                    placeHolder: this.Server.IDCAP + ': Server Command Palette.'
                 });
                 if (!picked) { return; }
 
                 const script = this.options.find(o => o.label === picked)?.script;
                 if (script) {
-                    const terminal = vscode.window.createTerminal({ name: `${this.identifier}: ${picked}` });
+                    const terminal = vscode.window.createTerminal({ name: `${this.Server.IDCAP}: ${picked}` });
                     terminal.show();
                     terminal.sendText(script);
                 }
@@ -56,16 +54,16 @@ export class WIDGET {
         if (!this.Server) {
             return;
         }
-        if (this.Server.isExtenActivated()) {
-            this.statusIcon = (this.Server.FileManifest.assistfile) ? "eye-watch" : "eye-closed";
+        if (this.Server.ExtentionStatus) {
+            this.statusIcon = (this.Server.AssistingActive()) ? "eye-watch" : "eye-closed";
         } else {
-            this.statusIcon = this.Server.W_EVENTSTREAM.spawnAlive() ? "debug-pause" : "debug-stop";
+            this.statusIcon = this.Server.W_BRIDGE.spawnAlive() ? "debug-pause" : "debug-stop";
         };
 
-        const errlen = this.Server.StyleManifest.diagnostics.length;
-        this.statusBar.text = `$(${this.statusIcon}) ${this.identifier} $(warning) ${errlen}`;
+        const errlen = this.Server.GlobalManifest.diagnostics.length;
+        this.statusBar.text = `$(${this.statusIcon}) ${this.Server.IDCAP} $(warning) ${errlen}`;
         this.statusBar.backgroundColor = errlen ? new vscode.ThemeColor('statusBarItem.errorBackground') : undefined;
-        this.statusBar.tooltip = this.Server.FileManifest.webviewurl;
+        this.statusBar.tooltip = this.Server.W_BRIDGE.WebviewUrl;
         this.statusBar.show();
     };
 
