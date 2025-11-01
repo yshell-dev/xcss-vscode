@@ -7,15 +7,15 @@ import { existsSync } from 'fs';
 import { metadataFormat } from './helpers/metadata';
 import { t_FileManifest, m_Metadata, t_TagRange, t_TrackRange, t_StyleManifest } from './types';
 
+import { BRIDGE } from './bridge';
+import { WIDGET } from './shared/widget';
 import { PALETTE } from './shared/palette';
 import { CSSREFER } from './shared/css-refer';
-import { DEFINITION } from './shared/definition';
-import { FORMATTING } from './shared/formatting';
+import { DEFINITION } from './internal/definition';
+import { FORMATTING } from './internal/formatting';
 import { INTELLISENSE } from './shared/intellisense';
-import { DIAGNOSTICS } from './shared/diagnostics';
-import { DECORATIONS } from './shared/decorations';
-import { STATEWIDGET } from './shared/status-bar';
-import { EVENTSTREAM } from './shared/eventstream';
+import { DIAGNOSTICS } from './internal/diagnostics';
+import { DECORATIONS } from './internal/decorations';
 
 const ID = "xcss";
 
@@ -44,8 +44,8 @@ export class ExtensionManager {
     // External Workers
     public W_DIAGNOSTICS: DIAGNOSTICS;
     public W_DECORATIONS: DECORATIONS;
-    public W_EVENTSTREAM: EVENTSTREAM;
-    public W_STATEWIDGET: STATEWIDGET;
+    public W_EVENTSTREAM: BRIDGE;
+    public W_STATEWIDGET: WIDGET;
     public W_CSSREFERENCE: CSSREFER;
 
     // Activity Flags
@@ -81,7 +81,6 @@ export class ExtensionManager {
         diagnostics: [],
         hashrules: {},
         constants: {},
-        lodashes: [],
         symclassData: {},
         symclasses: {},
         assignable: [],
@@ -107,7 +106,6 @@ export class ExtensionManager {
             constants: {},
             hashrules: {},
             diagnostics: [],
-            lodashes: [],
             symclassData: {},
             symclasses: {},
             assignable: [],
@@ -172,10 +170,10 @@ export class ExtensionManager {
 
         this.W_CSSREFERENCE = new CSSREFER();
         this.W_INTELLISENSE = new INTELLISENSE(this);
-        this.W_EVENTSTREAM = new EVENTSTREAM(this);
+        this.W_EVENTSTREAM = new BRIDGE(this);
         this.W_DIAGNOSTICS = new DIAGNOSTICS(this);
         this.W_DECORATIONS = new DECORATIONS(this);
-        this.W_STATEWIDGET = new STATEWIDGET(this);
+        this.W_STATEWIDGET = new WIDGET(this);
         this.W_DEFINITION = new DEFINITION(this);
         this.W_FORMATTING = new FORMATTING(this);
         this.W_PALETTE = new PALETTE(this);

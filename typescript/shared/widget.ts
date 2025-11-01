@@ -1,7 +1,7 @@
 import vscode from 'vscode';
 import { ExtensionManager } from '../activate';
 
-export class STATEWIDGET {
+export class WIDGET {
     private Server: ExtensionManager | undefined;
     private statusBar: vscode.StatusBarItem;
     private statusIcon: 'debug-stop' | 'debug-pause' | 'eye-watch' | 'eye-closed' | 'warning' = 'debug-stop';

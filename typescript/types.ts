@@ -93,7 +93,6 @@ export interface t_FileManifest {
 }
 
 export interface t_StyleManifest {
-    lodashes: string[],
     assignable: string[],
     hashrules: Record<string, string>,
     constants: Record<string, string>,

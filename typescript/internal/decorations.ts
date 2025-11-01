@@ -176,7 +176,7 @@ export class DECORATIONS {
                         if (track.val.endsWith(":")) {
                             const tr_val = track.val.slice(0, -1);
                             const found = this.Server.W_CSSREFERENCE.CSS_Properties.find(prop => {
-                                return prop.name ? (prop.name === tr_val) : false
+                                return prop.name ? (prop.name === tr_val) : false;
                             });
                             if (found) {
                                 comProp_Decos.push({

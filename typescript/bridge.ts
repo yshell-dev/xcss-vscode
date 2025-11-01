@@ -1,12 +1,12 @@
 import fs from 'fs';
 import vscode from 'vscode';
-import getBinPath from '../../core/execute';
-import { ExtensionManager } from '../activate';
+import getBinPath from '../core/execute';
+import { ExtensionManager } from './activate';
 import { WebSocket } from 'ws';
 import { spawn, ChildProcessWithoutNullStreams } from 'child_process';
-import { t_JsonRPCResponse, t_StyleManifest } from '../types';
+import { t_JsonRPCResponse, t_StyleManifest } from './types';
 
-export class EVENTSTREAM {
+export class BRIDGE {
 
     receive = (text: string) => {
         try {
