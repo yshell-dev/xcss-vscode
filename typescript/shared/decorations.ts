@@ -1,11 +1,11 @@
 import vscode from 'vscode';
 import { metadataFormat, metamergeFormat } from '../helpers/metadata';
 import { m_Metadata, } from '../types';
-import { SERVER } from '../server';
+import { ExtensionManager } from '../activate';
 import fileScanner from '../helpers/file-scanner';
 
 export class DECORATIONS {
-    private Server: SERVER;
+    private Server: ExtensionManager;
 
     attrs_Style: vscode.TextEditorDecorationType | undefined;
     value_Style: vscode.TextEditorDecorationType | undefined;
@@ -16,7 +16,7 @@ export class DECORATIONS {
     comment_Style: vscode.TextEditorDecorationType | undefined;
 
 
-    constructor(core: SERVER) {
+    constructor(core: ExtensionManager) {
         this.Server = core;
         this.updateStyles();
     };
@@ -141,7 +141,7 @@ export class DECORATIONS {
                             if (metadata) {
                                 Object.assign(tagRange.variables, metadata.variables);
                             }
-                            const tooltip = metadata ? metadata.markdown || metadataFormat(`${track.attr} -> ${f} `, metadata) : `${this.Server.Ed_IdCap} Definition.`;
+                            const tooltip = metadata ? metadata.markdown || metadataFormat(`${track.attr} -> ${f} `, metadata) : `${this.Server.IDCAP} Definition.`;
                             attrs_Decos.push({ range: track.attrRange, hoverMessage: tooltip });
                             compVal_Decos.push({ range: track.valRange });
                         }
@@ -175,7 +175,9 @@ export class DECORATIONS {
                     try {
                         if (track.val.endsWith(":")) {
                             const tr_val = track.val.slice(0, -1);
-                            const found = this.Server.CSS_Properties.find(prop => prop.name ? (prop.name === tr_val) : false);
+                            const found = this.Server.W_CSSREFERENCE.CSS_Properties.find(prop => {
+                                return prop.name ? (prop.name === tr_val) : false
+                            });
                             if (found) {
                                 comProp_Decos.push({
                                     range: track.valRange,

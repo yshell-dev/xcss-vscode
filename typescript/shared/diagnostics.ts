@@ -1,15 +1,15 @@
 import vscode from 'vscode';
-import { SERVER } from '../server';
+import { ExtensionManager } from '../activate';
 import { t_TrackRange } from '../types';
 
 export class DIAGNOSTICS {
-    private Server: SERVER;
+    private Server: ExtensionManager;
     public diagnosticCollection: vscode.DiagnosticCollection;
 
 
-    constructor(core: SERVER) {
+    constructor(core: ExtensionManager) {
         this.Server = core;
-        this.diagnosticCollection = vscode.languages.createDiagnosticCollection(core.Ed_Id);
+        this.diagnosticCollection = vscode.languages.createDiagnosticCollection(core.ID);
         this.Server.Ed_Context.subscriptions.push(this.diagnosticCollection);
     }
 
@@ -28,7 +28,7 @@ export class DIAGNOSTICS {
             message,
             vscode.DiagnosticSeverity.Error
         );
-        d.source = this.Server.Ed_Id;
+        d.source = this.Server.ID;
         return d;
     }
 
@@ -38,7 +38,7 @@ export class DIAGNOSTICS {
             message,
             vscode.DiagnosticSeverity.Warning
         );
-        d.source = this.Server.Ed_Id;
+        d.source = this.Server.ID;
         return d;
     }
 

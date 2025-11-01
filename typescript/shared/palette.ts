@@ -3,13 +3,13 @@ import colorSense from '../helpers/color-sense';
 import fileScanner from '../helpers/file-scanner';
 
 import { SwitchRGB } from "../helpers/color-swap";
-import { SERVER } from '../server';
+import { ExtensionManager } from '../activate';
 
 export class PALETTE {
 
-    private Server: SERVER;
+    private Server: ExtensionManager;
 
-    constructor(Server: SERVER) {
+    constructor(Server: ExtensionManager) {
         this.Server = Server;
     }
 

@@ -2,15 +2,15 @@ import vscode from 'vscode';
 import cursorSense from '../helpers/cursor-sense';
 import styleScanner from '../helpers/style-scanner';
 
-import { SERVER } from "../server";
+import { ExtensionManager } from "../activate";
 import { metadataFormat } from '../helpers/metadata';
 import { m_Metadata, t_CursorSnippet, t_SnippetType } from '../types';
 
 export class INTELLISENSE {
-    private Server: SERVER;
+    private Server: ExtensionManager;
     readonly triggers = ['@', ' ', '=', '#', '~', '&', '$', '\t', '\n', '/', '_', '(', ')', ':', '{', '}'];
 
-    constructor(core: SERVER) {
+    constructor(core: ExtensionManager) {
         this.Server = core;
     }
 
@@ -36,7 +36,6 @@ export class INTELLISENSE {
         if (detail) { completion.detail = detail; }
         return completion;
     }
-
 
     public SmartSymClassFilter(prefix: string, iconKind: vscode.CompletionItemKind, stashmap: Record<string, m_Metadata>) {
 
@@ -320,7 +319,7 @@ export class INTELLISENSE {
             const result = styleScanner(valueMatch);
             const isAtStyle = this.testAtrule(result.fragment);
             const iconKind = isAtStyle ? vscode.CompletionItemKind.Variable : vscode.CompletionItemKind.Field;
-            const property = this.Server.CSS_Properties.find(item => item.name === result.property);
+            const property = this.Server.W_CSSREFERENCE.CSS_Properties.find(item => item.name === result.property);
 
             switch (result.type) {
                 case t_SnippetType.rule:
@@ -334,7 +333,7 @@ export class INTELLISENSE {
                         ));
                     }
 
-                    for (const rule of this.Server.CSS_AtDirectives) {
+                    for (const rule of this.Server.W_CSSREFERENCE.CSS_AtDirectives) {
                         if (result.fragment.startsWith("@-") === rule.name.startsWith("@-")) {
                             completions.push(this.createCompletionItem(
                                 rule.name.slice(1),
@@ -348,7 +347,7 @@ export class INTELLISENSE {
 
                 case t_SnippetType.pseudo:
                     if (valueMatch.endsWith("::")) {
-                        for (const pseudo of this.Server.CSS_PseudoElements) {
+                        for (const pseudo of this.Server.W_CSSREFERENCE.CSS_PseudoElements) {
                             if (result.fragment.startsWith("::-") === pseudo.name.startsWith("::-")) {
                                 completions.push(this.createCompletionItem(
                                     `${pseudo.name} (snippet)`,
@@ -359,7 +358,7 @@ export class INTELLISENSE {
                             }
                         }
                     } else {
-                        for (const pseudo of this.Server.CSS_PseudoClasses) {
+                        for (const pseudo of this.Server.W_CSSREFERENCE.CSS_PseudoClasses) {
                             if (result.fragment.startsWith(":-") === pseudo.name.startsWith(":-")) {
                                 completions.push(this.createCompletionItem(
                                     `${pseudo.name} (snippet)`,
@@ -386,7 +385,7 @@ export class INTELLISENSE {
                         }
                     }
 
-                    for (const prop of this.Server.CSS_Properties) {
+                    for (const prop of this.Server.W_CSSREFERENCE.CSS_Properties) {
                         if (result.fragment.startsWith("-") === prop.name.startsWith("-")) {
                             completions.push(this.createCompletionItem(
                                 `${prop.name} (snippet)`,
@@ -397,7 +396,7 @@ export class INTELLISENSE {
                         }
                     }
 
-                    for (const prop of this.Server.CSS_Properties) {
+                    for (const prop of this.Server.W_CSSREFERENCE.CSS_Properties) {
                         if (result.fragment.startsWith("-") === prop.name.startsWith("-")) {
                             if (prop.restrictions?.includes('hashrule')) {
                                 completions.push(this.createCompletionItem(

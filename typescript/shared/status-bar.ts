@@ -1,8 +1,8 @@
 import vscode from 'vscode';
-import { SERVER } from '../server';
+import { ExtensionManager } from '../activate';
 
 export class STATEWIDGET {
-    private Server: SERVER | undefined;
+    private Server: ExtensionManager | undefined;
     private statusBar: vscode.StatusBarItem;
     private statusIcon: 'debug-stop' | 'debug-pause' | 'eye-watch' | 'eye-closed' | 'warning' = 'debug-stop';
     private identifier: string;
@@ -12,11 +12,11 @@ export class STATEWIDGET {
     }[];
     private bin: string;
 
-    constructor(core: SERVER) {
+    constructor(core: ExtensionManager) {
         this.Server = core;
-        this.identifier = this.Server.Ed_IdCap;
+        this.identifier = this.Server.IDCAP;
         this.statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-        this.statusBar.command = `${this.Server.Ed_Id}.action.command`;
+        this.statusBar.command = `${this.Server.ID}.action.command`;
 
         this.bin = this.Server.W_EVENTSTREAM.RootBinary;
         this.options = [
@@ -59,7 +59,7 @@ export class STATEWIDGET {
         if (this.Server.isExtenActivated()) {
             this.statusIcon = (this.Server.FileManifest.assistfile) ? "eye-watch" : "eye-closed";
         } else {
-            this.statusIcon = this.Server.W_EVENTSTREAM.Spawn_IsAlive ? "debug-pause" : "debug-stop";
+            this.statusIcon = this.Server.W_EVENTSTREAM.spawnAlive() ? "debug-pause" : "debug-stop";
         };
 
         const errlen = this.Server.StyleManifest.diagnostics.length;

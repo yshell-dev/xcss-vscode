@@ -1,12 +1,12 @@
 import vscode from 'vscode';
 import formatBlock from '../helpers/formatter';
-import { SERVER } from '../server';
+import { ExtensionManager } from '../activate';
 import { t_TrackRange } from '../types';
 
 export class FORMATTING {
-    private Server: SERVER;
+    private Server: ExtensionManager;
 
-    constructor(Server: SERVER) {
+    constructor(Server: ExtensionManager) {
         this.Server = Server;
     }
 
