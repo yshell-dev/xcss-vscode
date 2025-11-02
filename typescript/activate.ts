@@ -4,8 +4,7 @@ import vscode from 'vscode';
 import fileScanner from './helpers/file-scanner';
 
 import { existsSync } from 'fs';
-import { metadataFormat } from './helpers/metadata';
-import { m_Metadata, t_GlobalManifest, t_TrackRange, } from './types';
+import { m_Metadata, t_ManifestGlobal, t_ManifestLocal, t_TrackRange, } from './types';
 
 import { BRIDGE } from './bridge';
 import { WIDGET } from './internal/widget';
@@ -20,6 +19,7 @@ import { SANDBOX } from './internal/sandbox';
 import { FILETOGGLE } from './internal/file-toggle';
 import { FOLDRANGE } from './internal/fold-range';
 import { SUMMON } from './internal/summon';
+import { FILELOCAL } from './file-local';
 
 const ID = "xcss";
 
@@ -56,18 +56,17 @@ export class ExtensionManager {
     public cursorword = "";
 
     // Activity Flags
-    private F_ManifestMutex = false;
     private F_ExtnActivated = true;
     get ExtentionStatus() { return this.F_ExtnActivated; }
 
     // Editor Specifics
-    public GlobalManifest!: t_GlobalManifest;
-    public LocalManifests: Record<string, t_GlobalManifest> = {};
+    public Global!: t_ManifestGlobal;
     public SandboxStates: Record<string, string | boolean> = {};
+    public Locals: Record<string, FILELOCAL> = {};
 
     reset = (): void => {
-        this.GlobalManifest = {
-            watchfiles: [],
+        this.Global = {
+            fileAttrs: {},
             environment: "",
             customtags: [],
             switchmap: {},
@@ -124,13 +123,10 @@ export class ExtensionManager {
         this.W_FILETOGGLE = new FILETOGGLE(this);
         this.W_DIAGNOSTICS = new DIAGNOSTICS(this);
         this.W_DECORATIONS = new DECORATIONS(this);
-        this.W_CSSREFERENCE = new CSSREFERENCE();
+        this.W_CSSREFERENCE = new CSSREFERENCE(this);
         this.W_INTELLISENSE = new INTELLISENSE(this);
 
-        const autoRefresh = setInterval(() => {
-            this.RequestManifest();
-        }, 250);
-
+        const autoRefresh = setInterval(() => { this.RequestManifest(); }, 250);
 
         this.Context.subscriptions.push(
             { dispose() { autoRefresh.close(); } },
@@ -180,6 +176,23 @@ export class ExtensionManager {
         );
     }
 
+    UpdateGlobal = (global: t_ManifestGlobal) => {
+        this.Global = global;
+    }
+
+    UpdateLocals = (locals: Record<string, t_ManifestLocal>) => {
+        for (const l of Object.keys(locals)) {
+            if (this.Locals[l]) {
+                this.Locals[l].manifest = locals[l];
+            } else {
+                this.Locals[l] = {
+                    manifest: locals[l],
+                    tagranges: [],
+                };
+            }
+        }
+    }
+
     RequestManifest = (updateSymclass = this.SandboxStates["livecursor"] as boolean) => {
         const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
         if (!workspaceFolder || !this.F_ExtnActivated) {
@@ -218,49 +231,6 @@ export class ExtensionManager {
         });
     };
 
-    UpdateFileManifest = (manifest: t_FileManifest) => {
-        this.W_CSSREFERENCE.select(manifest.environment);
-        this.FileManifest = manifest;
-    };
-
-    UpdateStyleManifest = (manifest: t_StyleManifest) => {
-        if (this.F_ManifestMutex) { return; }
-        this.F_ManifestMutex = true;
-        const attachable: Record<string, m_Metadata> = {};
-        const assignable: Record<string, m_Metadata> = {};
-
-        try {
-            for (const k of Object.keys(manifest.symclasses)) {
-                const i = manifest.symclasses[k];
-                const v = manifest.symclassData[i];
-                if (!v.markdown && k.startsWith('/')) {
-                    v.markdown = metadataFormat(k, v, `Attachable`);
-                }
-                attachable[k] = v;
-            }
-
-            for (const k of manifest.assignable) {
-                const v = manifest.symclassData[manifest.symclasses[k]];
-                if (v.markdown) {
-                    v.markdown = `Assignable & ` + v.markdown;
-                } else {
-                    v.markdown = metadataFormat(k, v, `Attachable`);
-                }
-                assignable[k] = v;
-            }
-
-            this.StyleManifest = manifest;
-        } catch (err) {
-            this.reset();
-            vscode.window.showErrorMessage(`Error updating manifest: ${err instanceof Error ? err.message : String(err)}`);
-        } finally {
-            this.M_attachables = attachable;
-            this.M_assignable = assignable;
-            this.F_ManifestMutex = false;
-
-            this.RefreshEditor();
-        }
-    };
 
     RefreshEditor = () => {
         const editor = vscode.window.activeTextEditor;
@@ -275,84 +245,42 @@ export class ExtensionManager {
         this.W_WIDGET.refresh();
     };
 
-    public getTagAtValPairRanges(tracks = true, comments = true, compose = true): t_TrackRange[] {
-        const acc: t_TrackRange[] = [];
-        for (const I of this.Rs_TagRanges) {
-            if (tracks) {
-                for (const i of I.cache.watchtracks) { acc.push(i); }
-            }
-            if (comments) {
-                for (const i of I.cache.comments) { acc.push(i); }
-            }
-            if (compose) {
-                for (const i of I.cache.composes) { acc.push(i); }
-            }
-        }
-        return acc;
-    }
-
-    public filterVariables(snippet: string, additionals: Record<string, string> = {}): Record<string, string> {
-        const vars: Record<string, string> = {};
-        for (const k of Object.keys(this.StyleManifest.constants)) {
-            if (k.startsWith(snippet)) { vars[k] = this.StyleManifest.constants[k]; }
-        }
-        for (const k of Object.keys(additionals)) {
-            if (k.startsWith(snippet)) { vars[k] = additionals[k]; }
-        }
-        return vars;
-    }
-
-    public FetchTargetAttributes(editor: vscode.TextEditor): string[] {
-        const extension = path.extname(editor?.document)?.slice(1) || "";
-        const targetFolder = this.GlobalManifest.attributemap?.[targetFolder]?.[extension] || []
-
-        return [];
-    }
-
-    public CheckEditorPathWatching(editor = vscode.window.activeTextEditor) {
+    CheckEditorPathWatching(editor = vscode.window.activeTextEditor) {
         const workpath = this.getWorkspaceFolder();
         if (!workpath || !editor) { return false; }
 
         const filePath = path.relative(workpath.uri.fsPath, editor.document.uri.fsPath);
         return this.FileManifest.watchfiles.includes(filePath);
     }
-
-    public isCssTargetedFile(): boolean {
-        return this.F_ExtnActivated && this.fileExtn === "css" &&
-            (this.FileManifest.assistfile || this.CheckEditorPathWatching());
-    }
-
-    public isFileTargetedFile(): boolean {
-        return this.F_ExtnActivated && this.fileExtn !== "css" &&
-            (this.FileManifest.assistfile || this.CheckEditorPathWatching());
-    }
-
-    public getAttributes(): string[] {
-        return Array.isArray(this.FileManifest.attributes) ? [...this.FileManifest.attributes] : [];
-    }
-
-    public getTagRanges() {
-        return [...this.Rs_TagRanges];
-    }
-
-    public getManifest(): t_FileManifest {
-        return { ...this.FileManifest };
-    }
-
-    public getHashrules(): Record<string, string> {
-        return { ...this.GlobalManifest.hashrules };
-    }
-
-    public getAttachables(editor = vscode.window.activeTextEditor): Record<string, m_Metadata> {
-        return { ...this.M_attachables };
-    }
-
-    public getAssignables(): Record<string, m_Metadata> {
-        return { ...this.M_assignable };
-    }
-
     AssistingActive(): boolean {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) { return false; }
+        return this.isWatchingFile(editor.document.uri.fsPath).watching;
+    }
 
+    getTargetAttributes(filepath: string): string[] {
+        return this.Global.fileAttrs[filepath] || [];
+    }
+
+    isWatchingFile(filepath: string) {
+        const watching = (this.F_ExtnActivated && Boolean(this.Locals[filepath]));
+        const extension = path.extname(filepath);
+        return { watching, extension };
+    }
+
+    getHashrules(): Record<string, string> {
+        return { ...this.Global.hashrules };
+    }
+
+    filterVariables(snippet: string, additionals: Record<string, string> = {}): Record<string, string> {
+        const vars: Record<string, string> = {};
+        for (const k of Object.keys(this.Global.constants)) {
+            if (k.startsWith(snippet)) { vars[k] = this.Global.constants[k]; }
+        }
+        for (const k of Object.keys(additionals)) {
+            if (k.startsWith(snippet)) { vars[k] = additionals[k]; }
+        }
+        return vars;
     }
 }
 

@@ -60,7 +60,7 @@ export class WIDGET {
             this.statusIcon = this.Server.W_BRIDGE.spawnAlive() ? "debug-pause" : "debug-stop";
         };
 
-        const errlen = this.Server.GlobalManifest.diagnostics.length;
+        const errlen = this.Server.Global.diagnostics.length;
         this.statusBar.text = `$(${this.statusIcon}) ${this.Server.IDCAP} $(warning) ${errlen}`;
         this.statusBar.backgroundColor = errlen ? new vscode.ThemeColor('statusBarItem.errorBackground') : undefined;
         this.statusBar.tooltip = this.Server.W_BRIDGE.WebviewUrl;

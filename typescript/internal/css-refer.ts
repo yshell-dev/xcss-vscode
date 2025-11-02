@@ -1,7 +1,17 @@
 
 import { getDefaultCSSDataProvider, IPropertyData } from 'vscode-css-languageservice';
+import { ExtensionManager } from '../activate';
 
 export class CSSREFERENCE {
+
+    private Server: ExtensionManager;
+
+    constructor(core: ExtensionManager) {
+        this.Server = core;
+        const i = setInterval(() => this.select(this.Server.Global.environment), 10000);
+        this.Server.Context.subscriptions.push({ dispose: i.close });
+    };
+
 
     public CSS_Properties: IPropertyData[] = [];
     public CSS_AtDirectives: IPropertyData[] = [];
@@ -39,7 +49,7 @@ export class CSSREFERENCE {
         }
     }
 
-    dispose () {
+    dispose() {
         return;
     }
 }

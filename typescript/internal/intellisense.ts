@@ -305,7 +305,7 @@ export class INTELLISENSE {
     handleValueMatch(attributeMatch: string, valueMatch: string, tagScopeVars: Record<string, string>): vscode.CompletionItem[] {
         const completions: vscode.CompletionItem[] = [];
 
-        if (this.Server.getAttributes().includes(attributeMatch)) {
+        if (this.Server.getTargetAttributes().includes(attributeMatch)) {
             const valuePrefix = valueMatch.match(/[=~][\w/$_-]*$/i)?.[0] || '';
             const isAtStyle = this.testAtrule(valuePrefix || '');
             if (valueMatch[0] === "=" || valueMatch[0] === "~") {
@@ -437,7 +437,7 @@ export class INTELLISENSE {
                 case t_SnippetType.varfetch:
                 case t_SnippetType.variable:
                     {
-                        const temp = { ...tagScopeVars, ...this.Server.getAttachables()[attributeMatch]?.variables || {} };
+                        const temp = { ...tagScopeVars, ...this.Server. ()[attributeMatch]?.variables || {} };
 
                         for (const key of Object.keys(temp)) {
                             const value = temp[key];

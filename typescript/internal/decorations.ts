@@ -98,14 +98,15 @@ export class DECORATIONS {
     refresh() {
 
         for (const editor of vscode.window.visibleTextEditors) {
+            const filepath = editor.document.uri.fsPath;
             const cursorOffset = editor.document.offsetAt(editor.selection.active);
-            const parsed = fileScanner(editor.document.getText(), this.Server.FetchTargetAttributes(editor), cursorOffset);
+            const parsed = fileScanner(editor.document.getText(), this.Server.getTargetAttributes(filepath), cursorOffset);
 
             let localhashrules: Record<string, string> = {};
             let localsymclasses: Record<string, m_Metadata> = {};
             if (this.Server.CheckEditorPathWatching(editor)) {
                 localhashrules = this.Server.getHashrules();
-                localsymclasses = this.Server.getAttachables(editor);
+                localsymclasses = this.Server.getSymclasses(filepath, true);
             }
 
             const comment_Decos: vscode.DecorationOptions[] = [];

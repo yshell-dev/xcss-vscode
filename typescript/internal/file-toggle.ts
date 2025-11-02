@@ -26,9 +26,9 @@ export class FILETOGGLE {
             let switchpath = this.Server.filePath;
 
             if (this.Server.filePath !== "") {
-                for (const k of Object.keys(this.Server.GlobalManifest.switchmap)) {
+                for (const k of Object.keys(this.Server.Global.switchmap)) {
                     if (this.Server.filePath.startsWith(k)) {
-                        switchpath = this.Server.filePath.replace(k, this.Server.GlobalManifest.switchmap[k]);
+                        switchpath = this.Server.filePath.replace(k, this.Server.Global.switchmap[k]);
                     }
                 }
             };

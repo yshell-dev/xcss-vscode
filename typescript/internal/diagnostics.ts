@@ -54,7 +54,7 @@ export class DIAGNOSTICS {
 
     serverDiagnostic(): Record<string, vscode.Diagnostic[]> {
         const dmap: Record<string, vscode.Diagnostic[]> = {};
-        for (const diagnostic of this.Server.GlobalManifest.diagnostics) {
+        for (const diagnostic of this.Server.Global.diagnostics) {
             for (const source of diagnostic.sources) {
                 const parsed = this.parseSource(source);
                 if (!parsed) { continue; }

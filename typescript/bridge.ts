@@ -4,7 +4,7 @@ import getBinPath from '../core/execute';
 import { ExtensionManager } from './activate';
 import { WebSocket } from 'ws';
 import { spawn, ChildProcessWithoutNullStreams } from 'child_process';
-import { t_JsonRPCResponse } from './types';
+import { t_JsonRPCResponse, t_ManifestMixed } from './types';
 
 export class BRIDGE {
 
@@ -22,6 +22,27 @@ export class BRIDGE {
                         });
                     }
                     break;
+                }
+
+                case "manifest-global": {
+                    this.Server.UpdateGlobal(res.result.global);
+                    break;
+                }
+
+                case "manifest-mixed": {
+                    const result = res.result as t_ManifestMixed;
+                    this.Server.UpdateGlobal(result.global);
+                    this.Server.UpdateLocals(result.locals);
+                    break;
+                }
+
+                case "manifest-locals": {
+                    this.Server.UpdateLocals(res.result.locals);
+                    break;
+                }
+
+                case "sandbox-states": {
+                    this.Server.SandboxStates = res.result as typeof this.Server.SandboxStates;
                 }
 
             }

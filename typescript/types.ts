@@ -94,8 +94,8 @@ export interface t_JsonRPCResponse {
     error: any,
 }
 
-export interface t_GlobalManifest {
-    watchfiles: string[],
+export interface t_ManifestGlobal {
+    fileAttrs: Record<string,string[]>,
     environment: string,
     customtags: string[],
     switchmap: Record<string, string>,
@@ -110,5 +110,10 @@ export interface t_ManifestLocal {
     assignable: string[],
     attachable: string[],
     diagnostics: m_Diagnostic[],
-    symclassData: Record<string, m_Metadata>,
+    symclasses: Record<string, m_Metadata>,
+}
+
+export interface t_ManifestMixed {
+    global: t_ManifestGlobal,
+    locals: Record<string, t_ManifestLocal>,
 }
