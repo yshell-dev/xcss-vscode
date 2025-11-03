@@ -14,9 +14,8 @@ export class BRIDGE {
             switch (res.method) {
 
                 case "websocket-url": {
-                    const url = res.result as string;
                     if (!this.WS) {
-                        this.WS = new WebSocket(url);
+                        this.WS = new WebSocket(res.result as string);
                         this.WS.on("message", (data) => {
                             this.receive(data.toString());
                         });
@@ -32,12 +31,12 @@ export class BRIDGE {
                 case "manifest-mixed": {
                     const result = res.result as t_ManifestMixed;
                     this.Server.UpdateGlobal(result.global);
-                    this.Server.UpdateLocals(result.locals);
+                    this.Server.UpdateLocalManifest(result.locals);
                     break;
                 }
 
                 case "manifest-locals": {
-                    this.Server.UpdateLocals(res.result.locals);
+                    this.Server.UpdateLocalManifest(res.result.locals);
                     break;
                 }
 

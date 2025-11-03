@@ -4,7 +4,7 @@ import vscode from 'vscode';
 import fileScanner from './helpers/file-scanner';
 
 import { existsSync } from 'fs';
-import { m_Metadata, t_ManifestGlobal, t_ManifestLocal, t_TrackRange, } from './types';
+import { t_ManifestGlobal, t_ManifestLocal, t_TagCache, } from './types';
 
 import { BRIDGE } from './bridge';
 import { WIDGET } from './internal/widget';
@@ -178,20 +178,23 @@ export class ExtensionManager {
 
     UpdateGlobal = (global: t_ManifestGlobal) => {
         this.Global = global;
-    }
+    };
 
-    UpdateLocals = (locals: Record<string, t_ManifestLocal>) => {
-        for (const l of Object.keys(locals)) {
-            if (this.Locals[l]) {
-                this.Locals[l].manifest = locals[l];
-            } else {
-                this.Locals[l] = {
-                    manifest: locals[l],
-                    tagranges: [],
-                };
+    UpdateLocalManifest = (locals: Record<string, t_ManifestLocal>) => {
+        for (const relpath of Object.keys(locals)) {
+            const abspath = this.WorkspaceFolder?.uri.fsPath + relpath;
+            if (!this.Locals[abspath]) {
+                this.Locals[abspath] = new FILELOCAL(this);
+            }
+            const local = locals[relpath];
+            this.Locals[abspath].manifest = local;
+            for (const s of Object.keys(local.symclasses)) {
+                if (this.Global.symclasses[s]) {
+                    this.Global.symclasses[s] = local.symclasses[s];
+                }
             }
         }
-    }
+    };
 
     RequestManifest = (updateSymclass = this.SandboxStates["livecursor"] as boolean) => {
         const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
@@ -231,27 +234,16 @@ export class ExtensionManager {
         });
     };
 
-
     RefreshEditor = () => {
-        const editor = vscode.window.activeTextEditor;
-        if (!editor) { return; }
-
-        const content = editor.document.getText();
-        const cursorOffset = editor.document.offsetAt(editor.selection.active);
-        this.Rs_TagRanges = fileScanner(content, this.FileManifest.attributes, cursorOffset).TagRanges || [];
-
         this.W_DECORATIONS.refresh();
         this.W_DIAGNOSTICS.refresh();
         this.W_WIDGET.refresh();
     };
 
-    CheckEditorPathWatching(editor = vscode.window.activeTextEditor) {
-        const workpath = this.getWorkspaceFolder();
-        if (!workpath || !editor) { return false; }
-
-        const filePath = path.relative(workpath.uri.fsPath, editor.document.uri.fsPath);
-        return this.FileManifest.watchfiles.includes(filePath);
+    setLocalTagRanges(editor: vscode.TextEditor, tagRanges: t_TagCache) {
+        this.Locals[editor.document.uri.fsPath].tagranges = tagRanges;
     }
+
     AssistingActive(): boolean {
         const editor = vscode.window.activeTextEditor;
         if (!editor) { return false; }

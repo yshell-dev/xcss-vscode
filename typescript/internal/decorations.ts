@@ -1,8 +1,9 @@
 import vscode from 'vscode';
 import { metadataFormat, metamergeFormat } from '../helpers/metadata';
-import { m_Metadata, } from '../types';
+import { m_Metadata, t_TagRange, } from '../types';
 import { ExtensionManager } from '../activate';
 import fileScanner from '../helpers/file-scanner';
+import { FILELOCAL } from '../file-local';
 
 export class DECORATIONS {
     private Server: ExtensionManager;
@@ -97,10 +98,24 @@ export class DECORATIONS {
 
     refresh() {
 
+        const unusedLocalTracker: Record<string, boolean> = {};
+        for (const filepath of Object.keys(this.Server.Locals)) {
+            unusedLocalTracker[filepath] = true;
+        }
+
+        const fileContentMap: Record<string, string> = {};
+
         for (const editor of vscode.window.visibleTextEditors) {
             const filepath = editor.document.uri.fsPath;
+
+            if (unusedLocalTracker[filepath]) {
+                unusedLocalTracker[filepath] = false;
+            } else {
+                this.Server.Locals[filepath] = new FILELOCAL(this.Server);
+            }
+
+            const local = this.Server.Locals[filepath];
             const cursorOffset = editor.document.offsetAt(editor.selection.active);
-            const parsed = fileScanner(editor.document.getText(), this.Server.getTargetAttributes(filepath), cursorOffset);
 
             let localhashrules: Record<string, string> = {};
             let localsymclasses: Record<string, m_Metadata> = {};
@@ -109,6 +124,13 @@ export class DECORATIONS {
                 localsymclasses = this.Server.getSymclasses(filepath, true);
             }
 
+            const content = editor.document.getText();
+            const parsed = fileScanner(content, this.Server.getTargetAttributes(filepath), cursorOffset);
+            fileContentMap[filepath] = content;
+            local.tagranges = parsed.TagRanges;
+
+            // Apply decorations
+
             const comment_Decos: vscode.DecorationOptions[] = [];
             const hashrule_Decos: vscode.DecorationOptions[] = [];
             const value_Decos: vscode.DecorationOptions[] = [];
@@ -116,7 +138,6 @@ export class DECORATIONS {
             const compVal_Decos: vscode.DecorationOptions[] = [];
             const symclass_Decos: vscode.DecorationOptions[] = [];
             const comProp_Decos: vscode.DecorationOptions[] = [];
-
 
             for (const tagRange of parsed.TagRanges) {
 
@@ -135,7 +156,7 @@ export class DECORATIONS {
                     try {
                         if (track.attrRange && track.valRange) {
                             const f = track.attr.replace(/^[-_]\$/, "$");
-                            const metadata = localsymclasses[f];
+                            const metadata = local.getMetadata(f);
                             if (metadata) {
                                 Object.assign(tagRange.variables, metadata.variables);
                             }
@@ -154,10 +175,10 @@ export class DECORATIONS {
                         if (track.attrRange && track.valRange) {
                             const Metadatas: m_Metadata[] = [];
                             for (const frag of (track.fragments ?? [])) {
-                                const fragx = frag.slice(1);
-                                if (localsymclasses[fragx]) {
-                                    Metadatas.push(localsymclasses[fragx]);
-                                    Object.assign(tagRange.variables, localsymclasses[fragx].variables);
+                                const metadata = local.getMetadata(frag.slice(1));
+                                if (metadata) {
+                                    Metadatas.push(metadata);
+                                    Object.assign(tagRange.variables, metadata.variables);
                                 }
                             }
                             const MetadataMerged = metamergeFormat(track.attr, this.Server.filePath, Metadatas);
@@ -185,12 +206,7 @@ export class DECORATIONS {
                         } else {
                             const tr_val = (track.val.startsWith("=") || track.val.startsWith("~")) ? track.val.slice(1) : track.val;
                             if (localsymclasses[tr_val]) {
-                                const metadata = localsymclasses[tr_val];
-
-                                symclass_Decos.push({
-                                    range: track.valRange,
-                                    hoverMessage: metadata.markdown || metadataFormat(tr_val, metadata)
-                                });
+                                symclass_Decos.push({ range: track.valRange, hoverMessage: local.getMarkdown(tr_val) });
                             }
                         }
                     } catch (error) {
@@ -222,5 +238,19 @@ export class DECORATIONS {
             if (this.hashrule_Style) { editor.setDecorations(this.hashrule_Style, hashrule_Decos); }
             if (this.symclass_Style) { editor.setDecorations(this.symclass_Style, symclass_Decos); }
         }
+
+        const active = vscode.window.activeTextEditor;
+        if (active) {
+            fileContentMap[active.document.uri.fsPath] = active.document.getText();
+        }
+
+
+        for (const filepath of Object.keys(unusedLocalTracker)) {
+            if (unusedLocalTracker[filepath]) {
+                delete unusedLocalTracker[filepath];
+            }
+        }
+
+        return fileContentMap;
     };
 }

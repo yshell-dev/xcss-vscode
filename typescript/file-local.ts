@@ -15,19 +15,6 @@ export class FILELOCAL {
 
     }
 
-    UpdateLocals = (locals: Record<string, t_ManifestLocal>) => {
-        for (const l of Object.keys(locals)) {
-            if (this.Locals[l]) {
-                this.Locals[l].manifest = locals[l];
-            } else {
-                this.Locals[l] = {
-                    manifest: locals[l],
-                    tagranges: [],
-                };
-            }
-        }
-    };
-
     getTagAtValPairRanges(tracks = true, comments = true, compose = true): t_TrackRange[] {
         const acc: t_TrackRange[] = [];
         for (const I of this.tagranges) {
@@ -48,15 +35,19 @@ export class FILELOCAL {
         return this.tagranges || [];
     }
 
-    getMarkdown(local: t_ManifestLocal, symclass: string) {
+    getMetadata(symclass: string) {
+        return this.manifest.symclasses[symclass] || this.Server.Global.symclasses[symclass];
+    }
+
+    getMarkdown(symclass: string) {
         let r = "";
-        const metadata = local.symclasses[symclass] || this.Server.Global.symclasses[symclass];
+        const metadata = this.getMetadata(symclass);
 
         if (!metadata) {
             return "";
         } else if (!metadata.markdown) {
-            if (local.assignable.includes(symclass)) { r += "Assignable"; }
-            if (local.attachable.includes(symclass)) {
+            if (this.manifest.assignable.includes(symclass)) { r += "Assignable"; }
+            if (this.manifest.attachable.includes(symclass)) {
                 r += r.length == 0 ? "Attachable" : " & Attachable";
             }
             metadata.markdown = metadataFormat(r, metadata);
