@@ -20,48 +20,50 @@ export class FORMATTING {
     fold_1__unfold_0 = false;
     formatTimeout_id: NodeJS.Timeout | undefined = undefined;
 
-    provideDocEdits(document: vscode.TextDocument): vscode.TextEdit[] {
-        const edits: vscode.TextEdit[] = [];
-        const atValPairs: t_TrackRange[] = [];
-        for (const i of this.Server.getTagAtValPairRanges()) {
-            if (!i.attrRange.intersection(i.valRange)) {
-                atValPairs.push(i);
-            }
-        }
-
-        for (const track of atValPairs) {
-            const preAtrribute = document.getText(new vscode.Range(new vscode.Position(track.attrRange.start.line, 0), track.attrRange.start));
-            const postRange = new vscode.Range(track.valRange.end, document.lineAt(track.valRange.end.line).range.end);
-            const postValue = document.getText(postRange);
-            const valIntent = `${preAtrribute.match(/^[\t\s]*/)}`;
-            const valBreak = `\n${valIntent}`;
-            const valFormatted = formatBlock(track.val.slice(1, -1) || '', valBreak);
-            let collitions = 0;
-            for (const t of atValPairs) {
-                if (postRange.intersection(t.blockRange)) { collitions++; }
-            }
-
-            const begin = /^[\t\s]*$/.test(preAtrribute) ? "" : valBreak;
-            const end = (/^[\t\s]*$/.test(postValue) || !(collitions < 2)) ? "" : valBreak;
-
-            edits.push(vscode.TextEdit.replace(track.blockRange,
-                `${begin}${track.attr}=${track.val[0]}${valFormatted}${track.val[track.val.length - 1]}${end}`
-            ));
-        }
-
-        return edits;
-    }
-
     formatFile = async (): Promise<void> => {
-        if (!this.Server.Editor) { return; }
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) { return; }
+        const document = editor.document;
+        const local = this.Server.GetLocal(document);
+        if (!local) { return; }
+
+        const attrValPairs: t_TrackRange[] = [];
+        for (const i of local.getTagAttrValPairRanges()) {
+            if (!i.attrRange.intersection(i.valRange)) {
+                attrValPairs.push(i);
+            }
+        }
+
         try {
             if (this.reactByFold_flag) {
                 await (this.fold_1__unfold_0 ? this.foldRanges : this.unfoldRanges)();
                 this.switchToFoldingTrigger(false);
             } else {
-                const edits = this.provideDocEdits(this.Server.Editor.document);
+                const edits: vscode.TextEdit[] = [];
+
+
+                for (const track of attrValPairs) {
+                    const preAtrribute = document.getText(new vscode.Range(new vscode.Position(track.attrRange.start.line, 0), track.attrRange.start));
+                    const postRange = new vscode.Range(track.valRange.end, document.lineAt(track.valRange.end.line).range.end);
+                    const postValue = document.getText(postRange);
+                    const valIntent = `${preAtrribute.match(/^[\t\s]*/)}`;
+                    const valBreak = `\n${valIntent}`;
+                    const valFormatted = formatBlock(track.val.slice(1, -1) || '', valBreak);
+                    let collitions = 0;
+                    for (const t of attrValPairs) {
+                        if (postRange.intersection(t.blockRange)) { collitions++; }
+                    }
+
+                    const begin = /^[\t\s]*$/.test(preAtrribute) ? "" : valBreak;
+                    const end = (/^[\t\s]*$/.test(postValue) || !(collitions < 2)) ? "" : valBreak;
+
+                    edits.push(vscode.TextEdit.replace(track.blockRange,
+                        `${begin}${track.attr}=${track.val[0]}${valFormatted}${track.val[track.val.length - 1]}${end}`
+                    ));
+                }
+
                 if (edits.length > 0) {
-                    await this.Server.Editor.edit(editBuilder => { for (const e of edits) { editBuilder.replace(e.range, e.newText); } },
+                    await editor.edit(editBuilder => { for (const e of edits) { editBuilder.replace(e.range, e.newText); } },
                         { undoStopBefore: true, undoStopAfter: true }
                     );
                 }
@@ -89,10 +91,13 @@ export class FORMATTING {
     foldRanges = async (): Promise<void> => {
         if (vscode.window.activeTextEditor) {
             try {
-                await vscode.commands.executeCommand('editor.fold', {
-                    ranges: this.Server.W_FOLDRANGE.provideFoldingRanges(),
-                    direction: 'all'
-                });
+                const editor = vscode.window.activeTextEditor;
+                if (editor) {
+                    await vscode.commands.executeCommand('editor.fold', {
+                        ranges: this.Server.W_FOLDRANGE.provideFoldingRanges(editor.document),
+                        direction: 'all'
+                    });
+                }
             } catch (error) {
                 console.error('Error collapsing ranges:', error);
                 vscode.window.showErrorMessage(`Failed to collapse ranges: ${error}`);
@@ -103,10 +108,11 @@ export class FORMATTING {
     };
 
     unfoldRanges = async (): Promise<void> => {
-        if (vscode.window.activeTextEditor) {
+        const editor = vscode.window.activeTextEditor;
+        if (editor) {
             try {
                 await vscode.commands.executeCommand('editor.unfold', {
-                    ranges: this.Server.W_FOLDRANGE.provideFoldingRanges(),
+                    ranges: this.Server.W_FOLDRANGE.provideFoldingRanges(editor.document),
                     direction: 'all'
                 });
             } catch (error) {

@@ -55,15 +55,15 @@ export class WIDGET {
             return;
         }
         if (this.Server.ExtentionStatus) {
-            this.statusIcon = (this.Server.AssistingActive()) ? "eye-watch" : "eye-closed";
+            this.statusIcon = (this.Server.IsServerWatchingEditorFile()) ? "eye-watch" : "eye-closed";
         } else {
             this.statusIcon = this.Server.W_BRIDGE.spawnAlive() ? "debug-pause" : "debug-stop";
         };
 
-        const errlen = this.Server.Global.diagnostics.length;
+        const errlen = this.Server.W_DIAGNOSTICS.serverDiagnostic.length;
         this.statusBar.text = `$(${this.statusIcon}) ${this.Server.IDCAP} $(warning) ${errlen}`;
         this.statusBar.backgroundColor = errlen ? new vscode.ThemeColor('statusBarItem.errorBackground') : undefined;
-        this.statusBar.tooltip = this.Server.W_BRIDGE.WebviewUrl;
+        this.statusBar.tooltip = this.Server.W_SANDBOX.url;
         this.statusBar.show();
     };
 

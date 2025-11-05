@@ -4,22 +4,25 @@ import { t_TrackRange } from '../types';
 
 export class DIAGNOSTICS {
     private Server: ExtensionManager;
-    public diagnosticCollection: vscode.DiagnosticCollection;
+    public clientDiagnostics: vscode.DiagnosticCollection;
+    public serverDiagnostics: vscode.DiagnosticCollection;
 
 
     constructor(core: ExtensionManager) {
         this.Server = core;
-        this.diagnosticCollection = vscode.languages.createDiagnosticCollection(core.ID);
-        this.Server.Context.subscriptions.push(this.diagnosticCollection);
+        this.clientDiagnostics = vscode.languages.createDiagnosticCollection(core.ID);
+        this.serverDiagnostics = vscode.languages.createDiagnosticCollection(core.ID);
+        this.Server.Context.subscriptions.push(this.clientDiagnostics);
+        this.Server.Context.subscriptions.push(this.serverDiagnostics);
     }
 
     dispose() {
         this.clear();
-        this.diagnosticCollection.dispose();
+        this.clientDiagnostics.dispose();
     }
 
     clear() {
-        this.diagnosticCollection.clear();
+        this.clientDiagnostics.clear();
     }
 
     createError(range: vscode.Range, message: string) {
@@ -72,65 +75,61 @@ export class DIAGNOSTICS {
     // Diagnostics
     refresh() {
         try {
-            if (!(
-                this.Server.Editor &&
-                this.Server.WorkspaceFolder && (
-                    this.Server.isFileTargetedFile() ||
-                    this.Server.isCssTargetedFile()
-                )
-            )) {
-                return;
-            }
+            if (!this.Server.WorkspaceFolder) { return; }
 
             const diagnosticMap = this.serverDiagnostic();
             if (!diagnosticMap[this.Server.filePath]) {
                 diagnosticMap[this.Server.filePath] = [];
             }
-            const hashrules = this.Server.getHashrules();
+            const hashrules = this.Server.GetHashrules();
 
-            const thisDiags: vscode.Diagnostic[] = diagnosticMap[this.Server.filePath];
-            const assignables = this.Server.getAssignables();
-            const attachables = this.Server.getAttachables();
-            for (const tag of this.Server.getTagRanges()) {
-                for (const i of tag.cache.hashrules) {
-                    if (!hashrules[i.attr]) {
-                        thisDiags.push(this.createWaring(i.attrRange, "Invalid Hashrule."));
-                    }
-                }
-                const symclasses: t_TrackRange[] = [];
-                for (const i of tag.cache.composes) {
-                    if (!i.attr.endsWith('&')) {
-                        symclasses.push(i);
-                    }
-                }
+            for (const editor of vscode.window.visibleTextEditors) {
+                const filepath = editor.document.uri.fsPath;
+                const local = this.Server.Locals[filepath];
 
-                for (const i of symclasses) {
-                    const declarations = attachables[i.attr]?.declarations;
-                    if (declarations && declarations.length > 1) {
-                        thisDiags.push(this.createWaring(i.attrRange, "Definitions in multiple locations."));
+                const thisDiags: vscode.Diagnostic[] = diagnosticMap[this.Server.filePath];
+                const assignables = local.getSymclasses(true);
+                const attachables = local.getSymclasses(false);
+                for (const tag of local.tagranges) {
+                    for (const i of tag.cache.hashrules) {
+                        if (!hashrules[i.attr]) {
+                            thisDiags.push(this.createWaring(i.attrRange, "Invalid Hashrule."));
+                        }
                     }
-                    if (assignables[i.attr]) {
-                        thisDiags.push(this.createWaring(i.attrRange, "Assignable rule cannot be reused for declaration."));
+                    const symclasses: t_TrackRange[] = [];
+                    for (const i of tag.cache.composes) {
+                        if (!i.attr.endsWith('&')) {
+                            symclasses.push(i);
+                        }
                     }
-                    if (i.attr.includes("$---")) {
-                        thisDiags.push(this.createWaring(i.attrRange, "Symclass identifier shoundn't start with '---'."));
-                    }
-                }
 
-                if (symclasses.length === 0 && tag.cache.composes.length) {
-                    thisDiags.push(this.createError(tag.range, "Symclass missing in declaration scope."));
-                } else if (symclasses.length > 1) {
                     for (const i of symclasses) {
-                        thisDiags.push(this.createWaring(i.attrRange, "Multiple Symclasses found in declaration scope."));
+                        const declarations = attachables[i.attr]?.declarations;
+                        if (declarations && declarations.length > 1) {
+                            thisDiags.push(this.createWaring(i.attrRange, "Definitions in multiple locations."));
+                        }
+                        if (assignables[i.attr]) {
+                            thisDiags.push(this.createWaring(i.attrRange, "Assignable rule cannot be reused for declaration."));
+                        }
+                        if (i.attr.includes("$---")) {
+                            thisDiags.push(this.createWaring(i.attrRange, "Symclass identifier shoundn't start with '---'."));
+                        }
                     }
-                };
+
+                    if (symclasses.length === 0 && tag.cache.composes.length) {
+                        thisDiags.push(this.createError(tag.range, "Symclass missing in declaration scope."));
+                    } else if (symclasses.length > 1) {
+                        for (const i of symclasses) {
+                            thisDiags.push(this.createWaring(i.attrRange, "Multiple Symclasses found in declaration scope."));
+                        }
+                    };
+                }
             }
 
             const workspace_uri = this.Server.WorkspaceFolder.uri;
-            this.diagnosticCollection.clear();
             for (const p of Object.keys(diagnosticMap)) {
                 const fileuri = vscode.Uri.joinPath(workspace_uri, p);
-                this.diagnosticCollection.set(fileuri, diagnosticMap[p]);
+                this.clientDiagnostics.set(fileuri, diagnosticMap[p]);
             }
         } catch (error) {
             vscode.window.showErrorMessage(`unexpected Error: ${error}`);

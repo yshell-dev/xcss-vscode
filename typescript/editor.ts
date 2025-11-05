@@ -1,9 +1,9 @@
 import vscode from 'vscode';
-import { metadataFormat, metamergeFormat } from '../helpers/metadata';
-import { m_Metadata, t_TagRange, } from '../types';
-import { ExtensionManager } from '../activate';
-import fileScanner from '../helpers/file-scanner';
-import { FILELOCAL } from '../file-local';
+import fileScanner from './helpers/file-scanner';
+import { m_Metadata, } from './types';
+import { FILELOCAL } from './file-local';
+import { ExtensionManager } from './activate';
+import { metadataFormat, metamergeFormat } from './helpers/metadata';
 
 export class DECORATIONS {
     private Server: ExtensionManager;
@@ -119,14 +119,14 @@ export class DECORATIONS {
 
             let localhashrules: Record<string, string> = {};
             let localsymclasses: Record<string, m_Metadata> = {};
-            if (this.Server.CheckEditorPathWatching(editor)) {
-                localhashrules = this.Server.getHashrules();
-                localsymclasses = this.Server.getSymclasses(filepath, true);
+            if (this.Server.IsServerWatchingEditorFile(editor.document)) {
+                localhashrules = this.Server.GetHashrules();
+                localsymclasses = local.getSymclasses(false);
             }
 
             const content = editor.document.getText();
-            const parsed = fileScanner(content, this.Server.getTargetAttributes(filepath), cursorOffset);
-            fileContentMap[filepath] = content;
+            const parsed = fileScanner(content, this.Server.GetTargetAttributes(editor.document), cursorOffset);
+            fileContentMap[this.Server.GetDocumentPath(editor.document, true)] = content;
             local.tagranges = parsed.TagRanges;
 
             // Apply decorations
@@ -181,7 +181,7 @@ export class DECORATIONS {
                                     Object.assign(tagRange.variables, metadata.variables);
                                 }
                             }
-                            const MetadataMerged = metamergeFormat(track.attr, this.Server.filePath, Metadatas);
+                            const MetadataMerged = metamergeFormat(track.attr, filepath, Metadatas);
                             attrs_Decos.push({ range: track.attrRange, hoverMessage: MetadataMerged.toolTip });
                             value_Decos.push({ range: track.valRange });
                         }
@@ -238,12 +238,6 @@ export class DECORATIONS {
             if (this.hashrule_Style) { editor.setDecorations(this.hashrule_Style, hashrule_Decos); }
             if (this.symclass_Style) { editor.setDecorations(this.symclass_Style, symclass_Decos); }
         }
-
-        const active = vscode.window.activeTextEditor;
-        if (active) {
-            fileContentMap[active.document.uri.fsPath] = active.document.getText();
-        }
-
 
         for (const filepath of Object.keys(unusedLocalTracker)) {
             if (unusedLocalTracker[filepath]) {

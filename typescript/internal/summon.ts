@@ -16,21 +16,24 @@ export class SUMMON {
 
 
     SummonStructure = async () => {
-        if (!this.Server.Editor) { return; }
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) { return; }
+        const document = editor.document;
+        const local = this.Server.GetLocal(editor.document);
+        if (!local) { return; }
 
-        const attachables = this.Server.getAttachables();
-        const document = this.Server.Editor.document;
-        const selection = this.Server.Editor.selection;
+        const attachables = local.getSymclasses();
+        const selection = editor.selection;
         const wordRange = !selection.isEmpty ? selection
             : document.getWordRangeAtPosition(selection.active, this.Server.SymClassRgx);
         const fragment = document.getText(wordRange);
 
         if (!wordRange) { return; }
-        const tagRange = this.Server.getTagRanges().find(r => r.range.contains(wordRange));
+        const tagRange = local.getTagRanges().find(r => r.range.contains(wordRange));
         if (!tagRange) { return; }
 
-        if (wordRange && attachables[fragment]?.summon && tagRange) {
-            await this.Server.Editor.edit(editBuilder => {
+        if (attachables[fragment]?.summon) {
+            await editor.edit(editBuilder => {
                 editBuilder.insert(tagRange.range.end, '\n' + attachables[fragment].summon);
             }, { undoStopBefore: true, undoStopAfter: true });
         }

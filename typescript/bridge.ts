@@ -14,23 +14,38 @@ export class BRIDGE {
             switch (res.method) {
 
                 case "websocket-url": {
-                    if (!this.WS) {
-                        this.WS = new WebSocket(res.result as string);
-                        this.WS.on("message", (data) => {
-                            this.receive(data.toString());
-                        });
+                    const url = res.result;
+                    if (this.WS && this.WS.url === url && this.WS.readyState !== this.WS.CLOSED) {
+                        break;
                     }
+                    if (this.WS) { this.WS.close(); }
+                    this.WS = new WebSocket(url);
+
+                    this.WS.on('message', (data) => {
+                        const response = data.toString();
+                        this.receive(response);
+                    });
+                    break;
+                }
+
+                case "sandbox-url": {
+                    this.Server.W_SANDBOX.url = res.result;
+                    break;
+                }
+
+                case "session-port": {
+                    this.SessionPort = res.result as number;
                     break;
                 }
 
                 case "manifest-global": {
-                    this.Server.UpdateGlobal(res.result.global);
+                    this.Server.UpdateGlobalManifest(res.result.global);
                     break;
                 }
 
                 case "manifest-mixed": {
                     const result = res.result as t_ManifestMixed;
-                    this.Server.UpdateGlobal(result.global);
+                    this.Server.UpdateGlobalManifest(result.global);
                     this.Server.UpdateLocalManifest(result.locals);
                     break;
                 }
@@ -41,9 +56,9 @@ export class BRIDGE {
                 }
 
                 case "sandbox-states": {
-                    this.Server.SandboxStates = res.result as typeof this.Server.SandboxStates;
+                    this.Server.W_SANDBOX.States = res.result as typeof this.Server.W_SANDBOX.States;
+                    break;
                 }
-
             }
         } catch (err) {
             const message = "VSC: " + (err instanceof Error ? err.message : String(err));
@@ -64,18 +79,17 @@ export class BRIDGE {
     private unpause = () => this.Paused = false;
 
     public RootBinary = "";
-    public WebviewUrl = "";
-    public WebviewPort = 0;
+    public SessionPort = 0;
     public spawnAlive = () => !!this.Process && !this.Process.killed;
 
     constructor(core: ExtensionManager) {
         this.Server = core;
         this.RootBinary = getBinPath(core.DeveloperMode);
         this.OutputCh = vscode.window.createOutputChannel(this.Server.IDCAP + ' Server');
-        setInterval(() => {
-            this.stdIoRpc("manifest-global");
-            this.stdIoRpc("websocket-url");
-        }, 1000);
+        setInterval(() => { this.StdIOCmd("websocket-url"); }, 5000);
+        setInterval(() => { this.StdIOCmd("sandbox-url"); }, 2000);
+        setInterval(() => { this.StdIOCmd("session-port"); }, 2000);
+        setInterval(() => { this.WSStream("sandbox-states"); }, 1000);
     }
 
     restartAwait = false;
@@ -114,7 +128,6 @@ export class BRIDGE {
             this.OutputCh.appendLine('Spawn error: ' + err.message);
         });
     }
-
     kill(): void {
         if (this.Process && !this.Process.killed) {
             this.Process.kill();
@@ -141,20 +154,14 @@ export class BRIDGE {
 
         if (request !== undefined) {
             this.OutputCh.show();
-            this.transmit(request);
+            this.StdIO(request);
         }
         setTimeout(() => { this.unpause(); }, 1000);
     };
 
-    jsonRpc(method: string, params: object = {}, id: number = Date.now()): void {
-        this.transmit(JSON.stringify({ jsonrpc: "2.0", method, params, id }));
-    }
-    stdIoRpc(cmd: string, ...args: string[]): void {
-        this.transmit(`> ${cmd} ${args.join(" ")}`);
-    }
-    private transmit(request: string): void {
+    StdIOCmd(cmd: string, ...args: string[]): void { this.StdIO(`> ${cmd} ${args.join(" ")}`); }
+    private StdIO(request: string): void {
         if (this.Paused) { return; }
-
         request = request + "\n";
         if (this.Process && !this.Process.killed) {
             if (this.Process.stdin.destroyed) {
@@ -175,6 +182,19 @@ export class BRIDGE {
         } else {
             this.OutputCh.appendLine(request);
             this.OutputCh.appendLine('- process not ready for writing');
+        }
+    }
+
+    WSStream(method: string, params: object = {}, id: number = Date.now()): void {
+        if (!this.WS || this.WS.readyState !== WebSocket.OPEN) {
+            console.warn(`WebSocket not open. Dropping message for method: ${method}`);
+            return;
+        }
+        try {
+            const message = JSON.stringify({ jsonrpc: "2.0", method, params, id });
+            this.WS.send(message);
+        } catch (err) {
+            console.error("Failed to send message over WebSocket:", err);
         }
     }
 }

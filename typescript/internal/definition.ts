@@ -19,13 +19,14 @@ export class DEFINITION {
         document: vscode.TextDocument,
         position: vscode.Position
     ): Promise<vscode.Definition | vscode.LocationLink[] | undefined> {
-        if (!this.Server.WorkspaceFolder || !(this.Server.isFileTargetedFile() || this.Server.isCssTargetedFile())) { return undefined; }
+        const local = this.Server.GetLocal(document);
+        if (!local || !this.Server.WorkspaceFolder) { return undefined; }
 
-        const attachables = this.Server.getAttachables();
+        const attachables = local.getSymclasses(true);
 
         const wordRange = document.getWordRangeAtPosition(position, this.Server.SymClassRgx);
-        const atValPair = this.Server.getTagAtValPairRanges().some(r => r.valRange.contains(position)) || !wordRange;
-        const isWordInTrackedRange = this.Server.isCssTargetedFile() || atValPair;
+        const atValPair = local.getTagAttrValPairRanges().some(r => r.valRange.contains(position)) || !wordRange;
+        const isWordInTrackedRange = atValPair;
         if (!isWordInTrackedRange) { return undefined; }
 
         const word = document.getText(wordRange);

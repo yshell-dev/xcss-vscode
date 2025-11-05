@@ -11,11 +11,20 @@ export class FILELOCAL {
     manifest!: t_ManifestLocal;
 
     constructor(core: ExtensionManager) {
+        this.reset();
         this.Server = core;
-
     }
 
-    getTagAtValPairRanges(tracks = true, comments = true, compose = true): t_TrackRange[] {
+    reset() {
+        this.manifest = {
+            assignable: [],
+            attachable: [],
+            diagnostics: [],
+            symclasses: {},
+        };
+    }
+
+    getTagAttrValPairRanges(tracks = true, comments = true, compose = true): t_TrackRange[] {
         const acc: t_TrackRange[] = [];
         for (const I of this.tagranges) {
             if (tracks) {
@@ -56,13 +65,13 @@ export class FILELOCAL {
         return metadata.markdown;
     }
 
-    getSymclasses(onlyattachable: boolean) {
+    getSymclasses(onlyassignable = false) {
         const r: Record<string, m_Metadata> = {};
         const m = this.manifest;
         for (const a of m.attachable) {
             r[a] = m.symclasses[a] || m.symclasses[a];
         }
-        if (!onlyattachable) {
+        if (!onlyassignable) {
             for (const a of m.assignable) {
                 r[a] = m.symclasses[a] || m.symclasses[a];
             }

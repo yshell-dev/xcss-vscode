@@ -228,7 +228,7 @@ export class INTELLISENSE {
                 case t_SnippetType.constant:
                 case t_SnippetType.variable:
                 case t_SnippetType.varfetch: {
-                    const items = Object.keys(this.Server.filterVariables(cursorSnippet.fragment ?? "")) || [];
+                    const items = Object.keys(this.Server.VarFilter(cursorSnippet.fragment ?? "")) || [];
                     for (const item of items) {
                         completions.push(this.createCompletionItem(
                             item,
@@ -262,7 +262,7 @@ export class INTELLISENSE {
         const completions: vscode.CompletionItem[] = [];
 
         if (attributeFragment.endsWith("&")) {
-            const hashrules = this.Server.getHashrules();
+            const hashrules = this.Server.GetHashrules();
             for (const key of Object.keys(hashrules)) {
                 const value = hashrules[key];
                 completions.push(this.createCompletionItem(
@@ -274,7 +274,7 @@ export class INTELLISENSE {
                 ));
             }
         } else if (attributeFragment.endsWith("#")) {
-            const hashrules = this.Server.getHashrules();
+            const hashrules = this.Server.GetHashrules();
             for (const key of Object.keys(hashrules)) {
                 const value = hashrules[key];
                 completions.push(this.createCompletionItem(
@@ -286,7 +286,7 @@ export class INTELLISENSE {
                 ));
             }
         } else if (attributeFragment.endsWith("#{")) {
-            const hashrules = this.Server.getHashrules();
+            const hashrules = this.Server.GetHashrules();
             for (const key of Object.keys(hashrules)) {
                 const value = hashrules[key];
                 completions.push(this.createCompletionItem(
@@ -305,7 +305,7 @@ export class INTELLISENSE {
     handleValueMatch(attributeMatch: string, valueMatch: string, tagScopeVars: Record<string, string>): vscode.CompletionItem[] {
         const completions: vscode.CompletionItem[] = [];
 
-        if (this.Server.getTargetAttributes().includes(attributeMatch)) {
+        if (this.Server.GetTargetAttributes().includes(attributeMatch)) {
             const valuePrefix = valueMatch.match(/[=~][\w/$_-]*$/i)?.[0] || '';
             const isAtStyle = this.testAtrule(valuePrefix || '');
             if (valueMatch[0] === "=" || valueMatch[0] === "~") {
@@ -437,7 +437,7 @@ export class INTELLISENSE {
                 case t_SnippetType.varfetch:
                 case t_SnippetType.variable:
                     {
-                        const temp = { ...tagScopeVars, ...this.Server. ()[attributeMatch]?.variables || {} };
+                        const temp = { ...tagScopeVars, ...this.Server.GetTargetAttributes()[attributeMatch]?.variables || {} };
 
                         for (const key of Object.keys(temp)) {
                             const value = temp[key];
@@ -452,7 +452,7 @@ export class INTELLISENSE {
                     break;
 
                 case t_SnippetType.constant:
-                    for (const item of Object.keys(this.Server.filterVariables(result.fragment))) {
+                    for (const item of Object.keys(this.Server.VarFilter(result.fragment))) {
                         completions.push(this.createCompletionItem(
                             item,
                             item,

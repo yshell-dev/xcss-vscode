@@ -14,9 +14,12 @@ export class FOLDRANGE {
 
     // Folding Range Provider
 
-    public provideFoldingRanges(): vscode.FoldingRange[] {
+    public provideFoldingRanges(document: vscode.TextDocument): vscode.FoldingRange[] {
+        const local = this.Server.GetLocal(document);
+        if (!local) { return []; }
+
         const A: vscode.FoldingRange[] = [];
-        for (const I of this.Server.getTagRanges()) {
+        for (const I of local.tagranges) {
             for (const i of I.cache.composes) {
                 if (i.multiLine) {
                     A.push(new vscode.FoldingRange(i.valRange.start.line, i.valRange.end.line, vscode.FoldingRangeKind.Region));

@@ -2,22 +2,37 @@ import vscode from 'vscode';
 import { ExtensionManager } from '../activate';
 
 export class SANDBOX {
+    public url = "";
     private Server: ExtensionManager;
+    public States: Record<string, string | boolean> = {};
+    public previewPanal: vscode.WebviewPanel | undefined;
 
     constructor(core: ExtensionManager) {
         this.Server = core;
     }
 
-    public previewPanal: vscode.WebviewPanel | undefined;
-    OpenSandbox = async () => {
+    refresh = (force = false) => {
+        const live = Boolean(this.States['live-preview-option-live-cursor']);
+        const editor = vscode.window.activeTextEditor;
 
-        this.Server.RequestManifest(true);
+        if ((live || force) && editor) {
+            const document = editor.document;
+            const filepath = this.Server.GetDocumentPath(editor.document);
+            const wordRange = document.getWordRangeAtPosition(editor.selection.active, this.Server.SymClassRgx);
+            const wordString = document.getText(wordRange);
+            const cursorword = wordString.startsWith("-$") ? wordString.replace("-$", "$") : wordString;
+            this.Server.W_BRIDGE.WSStream("sandbox-show", { filepath, symclass: cursorword, });
+        }
+    };
+
+    Open = async () => {
+        this.refresh(true);
 
         if (this.previewPanal) {
             this.previewPanal.reveal(vscode.ViewColumn.Active);
-        } else if (this.Server.W_BRIDGE.WebviewPort > 0) {
+        } else if (this.Server.W_BRIDGE.SessionPort > 0) {
             this.previewPanal = vscode.window.createWebviewPanel(
-                this.Server.W_BRIDGE.WebviewUrl,
+                this.url,
                 this.Server.IDCAP + ' Component Sandbox',
                 {
                     viewColumn: vscode.ViewColumn.Beside,
@@ -33,7 +48,7 @@ export class SANDBOX {
             );
 
             vscode.env.asExternalUri(
-                vscode.Uri.parse(this.Server.W_BRIDGE.WebviewUrl)
+                vscode.Uri.parse(this.url)
             );
 
             this.previewPanal.onDidDispose(() => {
@@ -45,7 +60,7 @@ export class SANDBOX {
             <html lang="en">
                 <body style="margin:0;padding:0;">
                     <iframe 
-                    src="${this.Server.W_BRIDGE.WebviewUrl}" 
+                    src="${this.url}" 
                     style="
                         width:100%;
                         height:100%;
