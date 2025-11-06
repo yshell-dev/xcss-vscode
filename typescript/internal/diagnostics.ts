@@ -1,6 +1,7 @@
 import vscode from 'vscode';
 import { ExtensionManager } from '../activate';
 import { t_TrackRange } from '../types';
+import AnalyzeLocation from '../helpers/location';
 
 export class DIAGNOSTICS {
     private Server: ExtensionManager;
@@ -55,42 +56,45 @@ export class DIAGNOSTICS {
         return { filepath, row, col };
     }
 
-    serverDiagnostic(): Record<string, vscode.Diagnostic[]> {
+    serverRefresh() {
+        const workspace_uri = this.Server.WorkspaceUri;
+        if (!workspace_uri) { return; }
+
         const dmap: Record<string, vscode.Diagnostic[]> = {};
-        for (const diagnostic of this.Server.Global.diagnostics) {
-            for (const source of diagnostic.sources) {
-                const parsed = this.parseSource(source);
+        for (const diagnostic of this.Server.Global.diagnostics || []) {
+            for (const source of diagnostic.sources || []) {
+                const parsed = AnalyzeLocation(source);
                 if (!parsed) { continue; }
-                const range = new vscode.Range(parsed.row, parsed.col, parsed.row, parsed.col + 1);
-                if (dmap[parsed.filepath]) {
-                    dmap[parsed.filepath].push(this.createError(range, diagnostic.message));
-                } else {
-                    dmap[parsed.filepath] = [this.createError(range, diagnostic.message)];
-                }
+                
+                const arr = dmap[parsed.filepath] || [];
+                arr.push(this.createError(parsed.definitionRange, diagnostic.message));
+                dmap[parsed.filepath] = arr;
             };
         };
-        return dmap;
+
+        this.serverDiagnostics.clear();
+        for (const p of Object.keys(dmap)) {
+            const fileuri = vscode.Uri.joinPath(workspace_uri, p);
+            this.serverDiagnostics.set(fileuri, dmap[p]);
+        }
     }
 
     // Diagnostics
-    refresh() {
+    clientRefresh() {
         try {
-            if (!this.Server.WorkspaceFolder) { return; }
+            const workspace_uri = this.Server.WorkspaceUri;
+            if (!workspace_uri) { return; }
 
-            const diagnosticMap = this.serverDiagnostic();
-            if (!diagnosticMap[this.Server.filePath]) {
-                diagnosticMap[this.Server.filePath] = [];
-            }
+            const diagnosticMap: Record<string, vscode.Diagnostic[]> = {};
             const hashrules = this.Server.GetHashrules();
 
             for (const editor of vscode.window.visibleTextEditors) {
-                const filepath = editor.document.uri.fsPath;
-                const local = this.Server.Locals[filepath];
+                const ref = this.Server.ReferDocument(editor.document);
 
-                const thisDiags: vscode.Diagnostic[] = diagnosticMap[this.Server.filePath];
-                const assignables = local.getSymclasses(true);
-                const attachables = local.getSymclasses(false);
-                for (const tag of local.tagranges) {
+                const thisDiags: vscode.Diagnostic[] = [];
+                const assignables = ref.local.assignables;
+                const attachables = ref.local.attachables;
+                for (const tag of ref.local.tagranges) {
                     for (const i of tag.cache.hashrules) {
                         if (!hashrules[i.attr]) {
                             thisDiags.push(this.createWaring(i.attrRange, "Invalid Hashrule."));
@@ -109,7 +113,7 @@ export class DIAGNOSTICS {
                             thisDiags.push(this.createWaring(i.attrRange, "Definitions in multiple locations."));
                         }
                         if (assignables[i.attr]) {
-                            thisDiags.push(this.createWaring(i.attrRange, "Assignable rule cannot be reused for declaration."));
+                            thisDiags.push(this.createWaring(i.attrRange, "Assignable cannot be reused for declaration."));
                         }
                         if (i.attr.includes("$---")) {
                             thisDiags.push(this.createWaring(i.attrRange, "Symclass identifier shoundn't start with '---'."));
@@ -124,9 +128,13 @@ export class DIAGNOSTICS {
                         }
                     };
                 }
+
+                if (thisDiags.length) {
+                    diagnosticMap[ref.relpath] = thisDiags;
+                }
             }
 
-            const workspace_uri = this.Server.WorkspaceFolder.uri;
+            this.clientDiagnostics.clear();
             for (const p of Object.keys(diagnosticMap)) {
                 const fileuri = vscode.Uri.joinPath(workspace_uri, p);
                 this.clientDiagnostics.set(fileuri, diagnosticMap[p]);

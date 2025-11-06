@@ -13,7 +13,6 @@ export class PALETTE {
         this.Server = Server;
     }
 
-
     dispose() {
         return;
     }

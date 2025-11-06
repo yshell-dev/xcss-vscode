@@ -1,27 +1,24 @@
-import { m_Metadata, t_ManifestLocal, t_TagRange, t_TrackRange, } from './types';
+import { m_Metadata, t_ManifestLocals, t_TagRange, t_TrackRange, } from './types';
 import { ExtensionManager } from './activate';
 import { metadataFormat } from './helpers/metadata';
 
 export class FILELOCAL {
-    // Ranges Saved on Parse
-    public filePath = "";
-    public fileExtn = "";
     private Server: ExtensionManager;
-    tagranges!: t_TagRange[];
-    manifest!: t_ManifestLocal;
+    manifest: t_ManifestLocals;
+
+    attributes: string[] = [];
+    tagranges: t_TagRange[] = [];
+    attachables: Record<string, m_Metadata> = {};
+    assignables: Record<string, m_Metadata> = {};
 
     constructor(core: ExtensionManager) {
-        this.reset();
         this.Server = core;
-    }
-
-    reset() {
         this.manifest = {
             assignable: [],
             attachable: [],
-            diagnostics: [],
             symclasses: {},
         };
+        this.updateManifest();
     }
 
     getTagAttrValPairRanges(tracks = true, comments = true, compose = true): t_TrackRange[] {
@@ -49,34 +46,41 @@ export class FILELOCAL {
     }
 
     getMarkdown(symclass: string) {
-        let r = "";
+        let h = symclass + ":";
         const metadata = this.getMetadata(symclass);
 
         if (!metadata) {
             return "";
         } else if (!metadata.markdown) {
-            if (this.manifest.assignable.includes(symclass)) { r += "Assignable"; }
+            if (this.manifest.assignable.includes(symclass)) { h += " Assignable"; }
             if (this.manifest.attachable.includes(symclass)) {
-                r += r.length == 0 ? "Attachable" : " & Attachable";
+                h += h.length == 0 ? " Attachable" : " & Attachable";
             }
-            metadata.markdown = metadataFormat(r, metadata);
+            metadata.markdown = metadataFormat(h, metadata);
         }
 
         return metadata.markdown;
     }
 
-    getSymclasses(onlyassignable = false) {
-        const r: Record<string, m_Metadata> = {};
-        const m = this.manifest;
-        for (const a of m.attachable) {
-            r[a] = m.symclasses[a] || m.symclasses[a];
-        }
-        if (!onlyassignable) {
-            for (const a of m.assignable) {
-                r[a] = m.symclasses[a] || m.symclasses[a];
+
+    updateManifest(manifest: t_ManifestLocals = this.manifest) {
+        this.manifest = manifest;
+
+        const l = this.manifest.symclasses;
+        const g = this.Server.Global.symclasses;
+
+        const as: Record<string, m_Metadata> = {};
+        const at: Record<string, m_Metadata> = {};
+        for (const a of this.manifest.assignable) { as[a] = l[a] || g[a]; }
+        for (const a of this.manifest.attachable) { at[a] = l[a] || g[a]; }
+        this.assignables = as;
+        this.attachables = at;
+
+        for (const s of Object.keys(manifest.symclasses)) {
+            if (this.Server.Global.symclasses[s]) {
+                this.Server.Global.symclasses[s] = manifest.symclasses[s];
             }
         }
-        return r;
     }
 
     findSymclass(symclass: string) {

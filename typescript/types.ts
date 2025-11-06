@@ -95,25 +95,35 @@ export interface t_JsonRPCResponse {
 }
 
 export interface t_ManifestGlobal {
-    fileAttrs: Record<string,string[]>,
+    fileToAttributes: Record<string, string[]>,
     environment: string,
     customtags: string[],
     switchmap: Record<string, string>,
     hashrules: Record<string, string>,
     constants: Record<string, string>,
     symclasses: Record<string, m_Metadata>,
-    attributemap: Record<string, Record<string, string[]>>,
     diagnostics: m_Diagnostic[],
 }
 
-export interface t_ManifestLocal {
+export interface t_ManifestLocals {
     assignable: string[],
     attachable: string[],
-    diagnostics: m_Diagnostic[],
     symclasses: Record<string, m_Metadata>,
 }
 
-export interface t_ManifestMixed {
+export interface t_FileContent {
+    abspath: string;
+    relpath: string;
+    content: string;
+};
+
+export interface r_Manifest_Mixed {
+    filepath: string,
+    symclass: string,
+    filemap: t_FileContent,
+}
+
+export interface t_Manifest_Mixed {
     global: t_ManifestGlobal,
-    locals: Record<string, t_ManifestLocal>,
+    locals: Record<string, t_ManifestLocals>,
 }

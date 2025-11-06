@@ -18,20 +18,19 @@ export class SUMMON {
     SummonStructure = async () => {
         const editor = vscode.window.activeTextEditor;
         if (!editor) { return; }
-        const document = editor.document;
-        const local = this.Server.GetLocal(editor.document);
-        if (!local) { return; }
+        const ref = this.Server.ReferDocument(editor.document);
+        if (!ref) { return; }
 
-        const attachables = local.getSymclasses();
         const selection = editor.selection;
         const wordRange = !selection.isEmpty ? selection
-            : document.getWordRangeAtPosition(selection.active, this.Server.SymClassRgx);
-        const fragment = document.getText(wordRange);
+            : editor.document.getWordRangeAtPosition(selection.active, this.Server.SymClassRgx);
+        const fragment = editor.document.getText(wordRange);
 
         if (!wordRange) { return; }
-        const tagRange = local.getTagRanges().find(r => r.range.contains(wordRange));
+        const tagRange = ref.local.getTagRanges().find(r => r.range.contains(wordRange));
         if (!tagRange) { return; }
 
+        const attachables = ref.local.attachables;
         if (attachables[fragment]?.summon) {
             await editor.edit(editBuilder => {
                 editBuilder.insert(tagRange.range.end, '\n' + attachables[fragment].summon);

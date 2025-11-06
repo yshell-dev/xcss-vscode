@@ -11,22 +11,28 @@ export class SANDBOX {
         this.Server = core;
     }
 
+    filepath = "";
+    symclass = "";
     refresh = (force = false) => {
         const live = Boolean(this.States['live-preview-option-live-cursor']);
         const editor = vscode.window.activeTextEditor;
 
         if ((live || force) && editor) {
-            const document = editor.document;
-            const filepath = this.Server.GetDocumentPath(editor.document);
-            const wordRange = document.getWordRangeAtPosition(editor.selection.active, this.Server.SymClassRgx);
-            const wordString = document.getText(wordRange);
+            const doc = editor.document;
+            const ref = this.Server.ReferDocument(editor.document);
+            const wordRange = doc.getWordRangeAtPosition(editor.selection.active, this.Server.SymClassRgx);
+            const wordString = doc.getText(wordRange);
             const cursorword = wordString.startsWith("-$") ? wordString.replace("-$", "$") : wordString;
-            this.Server.W_BRIDGE.WSStream("sandbox-show", { filepath, symclass: cursorword, });
+            this.symclass = cursorword;
+            this.filepath = ref.relpath;
         }
+
+        return { filepath: this.filepath, symclass: this.symclass };
     };
 
     Open = async () => {
         this.refresh(true);
+        this.Server.RequestManifest();
 
         if (this.previewPanal) {
             this.previewPanal.reveal(vscode.ViewColumn.Active);
@@ -42,7 +48,7 @@ export class SANDBOX {
                     enableScripts: true,
                     localResourceRoots: [
                         this.Server.Context.extensionUri,
-                        this.Server.WorkspaceFolder?.uri || this.Server.Context.extensionUri,
+                        this.Server.WorkspaceUri || this.Server.Context.extensionUri,
                     ]
                 }
             );

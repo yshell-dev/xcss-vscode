@@ -19,27 +19,25 @@ export class DEFINITION {
         document: vscode.TextDocument,
         position: vscode.Position
     ): Promise<vscode.Definition | vscode.LocationLink[] | undefined> {
-        const local = this.Server.GetLocal(document);
-        if (!local || !this.Server.WorkspaceFolder) { return undefined; }
+        if (!this.Server.WorkspaceUri) { return; }
+        const ref = this.Server.ReferDocument(document);
 
-        const attachables = local.getSymclasses(true);
+        const range = document.getWordRangeAtPosition(position, this.Server.SymClassRgx);
+        const word = document.getText(range);
+        const isWordInTrackedRange = ref.local.getTagAttrValPairRanges().some(r => r.valRange.contains(position));
 
-        const wordRange = document.getWordRangeAtPosition(position, this.Server.SymClassRgx);
-        const atValPair = local.getTagAttrValPairRanges().some(r => r.valRange.contains(position)) || !wordRange;
-        const isWordInTrackedRange = atValPair;
         if (!isWordInTrackedRange) { return undefined; }
-
-        const word = document.getText(wordRange);
+        const symclasses = ref.local.attachables;
         console.log(`Looking for definition of: ${word}`);
 
-        if (attachables[word]?.declarations) {
-            const declaration = attachables[word].declarations[0];
+        if (symclasses[word]?.declarations) {
+            const declaration = symclasses[word].declarations[0];
             if (typeof declaration !== "string") { return undefined; }
             const location = AnalyzeLocation(declaration);
             if (location === undefined) { return undefined; }
 
             const definitionLocation = new vscode.Location(
-                vscode.Uri.joinPath(vscode.Uri.file(this.Server.WorkspaceFolder.uri.fsPath), location.filepath),
+                vscode.Uri.joinPath(vscode.Uri.file(this.Server.WorkspaceUri.fsPath), location.filepath),
                 location.definitionRange,
             );
             return definitionLocation;

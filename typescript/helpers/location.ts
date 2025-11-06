@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 
 export default function AnalyzeLocation(filepathlocation: string)  {
 
-    const match = filepathlocation.match(/(.*):(\d+):(\d+):(\d+):(\d+)/);
+    const match = filepathlocation.match(/(.*):(\d+):(\d+)::(\d+):(\d+)$/);
     if (!match) { return; }
 
     const filepath = match[1];

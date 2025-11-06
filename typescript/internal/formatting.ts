@@ -23,12 +23,12 @@ export class FORMATTING {
     formatFile = async (): Promise<void> => {
         const editor = vscode.window.activeTextEditor;
         if (!editor) { return; }
-        const document = editor.document;
-        const local = this.Server.GetLocal(document);
-        if (!local) { return; }
+        const doc = editor.document;
+        const ref = this.Server.ReferDocument(doc);
+        if (!ref) { return; }
 
         const attrValPairs: t_TrackRange[] = [];
-        for (const i of local.getTagAttrValPairRanges()) {
+        for (const i of ref.local.getTagAttrValPairRanges()) {
             if (!i.attrRange.intersection(i.valRange)) {
                 attrValPairs.push(i);
             }
@@ -43,9 +43,9 @@ export class FORMATTING {
 
 
                 for (const track of attrValPairs) {
-                    const preAtrribute = document.getText(new vscode.Range(new vscode.Position(track.attrRange.start.line, 0), track.attrRange.start));
-                    const postRange = new vscode.Range(track.valRange.end, document.lineAt(track.valRange.end.line).range.end);
-                    const postValue = document.getText(postRange);
+                    const preAtrribute = doc.getText(new vscode.Range(new vscode.Position(track.attrRange.start.line, 0), track.attrRange.start));
+                    const postRange = new vscode.Range(track.valRange.end, doc.lineAt(track.valRange.end.line).range.end);
+                    const postValue = doc.getText(postRange);
                     const valIntent = `${preAtrribute.match(/^[\t\s]*/)}`;
                     const valBreak = `\n${valIntent}`;
                     const valFormatted = formatBlock(track.val.slice(1, -1) || '', valBreak);

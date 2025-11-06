@@ -3,7 +3,7 @@ import path from 'path';
 import vscode from 'vscode';
 
 import { existsSync } from 'fs';
-import { t_ManifestGlobal, t_ManifestLocal, } from './types';
+import { t_Manifest_Mixed, t_ManifestGlobal, t_ManifestLocals, } from './types';
 
 import { BRIDGE } from './bridge';
 import { WIDGET } from './internal/widget';
@@ -13,7 +13,7 @@ import { DEFINITION } from './internal/definition';
 import { FORMATTING } from './internal/formatting';
 import { INTELLISENSE } from './internal/intellisense';
 import { DIAGNOSTICS } from './internal/diagnostics';
-import { DECORATIONS } from './editor';
+import { DECORATIONS } from './decorate';
 import { SANDBOX } from './internal/sandbox';
 import { FILETOGGLE } from './internal/file-toggle';
 import { FOLDRANGE } from './internal/fold-range';
@@ -45,9 +45,8 @@ export class ExtensionManager {
     public W_INTELLISENSE: INTELLISENSE;
 
     // Environment Declared
-    public Local: FILELOCAL | undefined;
     public Context: vscode.ExtensionContext;
-    public WorkspaceFolder: vscode.WorkspaceFolder | undefined;
+    public WorkspaceUri: vscode.Uri | undefined;
 
     // Activity Flags
     private F_ExtnActivated = true;
@@ -59,18 +58,18 @@ export class ExtensionManager {
 
     reset = (): void => {
         this.Global = {
-            fileAttrs: {},
+            fileToAttributes: {},
             environment: "",
             customtags: [],
             switchmap: {},
             hashrules: {},
             constants: {},
             symclasses: {},
-            attributemap: {},
             diagnostics: [],
         };
 
         this.W_DIAGNOSTICS?.clear();
+        this.AwaitRequest = false;
     };
 
     pause = (): void => {
@@ -88,7 +87,7 @@ export class ExtensionManager {
         const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
         if (!workspaceFolder) { return; }
 
-        this.WorkspaceFolder = workspaceFolder;
+        this.WorkspaceUri = workspaceFolder.uri;
         const workpath = workspaceFolder.uri.fsPath;
 
         this.W_BRIDGE.start(workpath, ["server"]);
@@ -168,83 +167,85 @@ export class ExtensionManager {
         );
     }
 
+    AwaitRequest = false;
     RequestManifest = () => {
-        const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-        if (!workspaceFolder || !this.F_ExtnActivated || !this.W_BRIDGE.spawnAlive) { this.reset(); return; }
+        const params = this.RefreshEditors();
+        if (this.AwaitRequest) { return; }
 
-        this.spawn();
-        this.WorkspaceFolder = workspaceFolder;
+        try {
+            this.AwaitRequest = true;
+            const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+            if (!workspaceFolder || !this.F_ExtnActivated || !this.W_BRIDGE.spawnAlive) {
+                this.reset();
+                return;
+            }
 
-        this.W_BRIDGE.WSStream("manifest-global", {});
-        const fileContents = this.RefreshEditors();
-        this.W_BRIDGE.WSStream("manifest-locals", { "filemap": fileContents });
+            this.spawn();
+            this.WorkspaceUri = workspaceFolder.uri;
+
+            // this.W_BRIDGE.WSStream("manifest-mixed", params);
+        } finally {
+            this.AwaitRequest = false;
+        }
     };
 
     RefreshEditors = () => {
-        const fileContents = this.W_DECORATIONS.refresh();
-        this.W_DIAGNOSTICS.refresh();
+        const filemap = this.W_DECORATIONS.refresh();
+        this.W_DIAGNOSTICS.clientRefresh();
+        this.W_DIAGNOSTICS.serverRefresh();
         this.W_WIDGET.refresh();
-        this.W_SANDBOX.refresh();
-        return fileContents;
-    };
-
-    IsServerWatchingEditorFile(document = vscode.window.activeTextEditor?.document) {
-        let watching = false;
-        let extension = "";
-        if (document) {
-            const filepath = this.GetDocumentPath(document);
-            watching = (this.F_ExtnActivated && Boolean(this.Locals[filepath]));
-            extension = path.extname(filepath);
-        }
-        return { watching, extension };
-    }
-
-
-    UpdateLocalManifest = (locals: Record<string, t_ManifestLocal>) => {
-        for (const relpath of Object.keys(locals)) {
-            if (!this.Locals[relpath]) {
-                this.Locals[relpath] = new FILELOCAL(this);
-            }
-            const local = locals[relpath];
-            this.Locals[relpath].manifest = local;
-            for (const s of Object.keys(local.symclasses)) {
-                if (this.Global.symclasses[s]) {
-                    this.Global.symclasses[s] = local.symclasses[s];
-                }
-            }
-        }
-        this.SetLocal();
-        this.RefreshEditors(false);
+        const cursor = this.W_SANDBOX.refresh();
+        return { ...cursor, filemap };
     };
 
     UpdateGlobalManifest = (global: t_ManifestGlobal) => {
         if (global) { this.Global = global; }
     };
 
-    SetLocal() {
-        const local = this.GetLocal();
-        if (local) { this.Local = local; }
-    }
+    UpdateMixedManifest = (m: t_Manifest_Mixed) => {
+        this.UpdateGlobalManifest(m.global);
+        this.UpdateLocalsManifest(m.locals);
+    };
 
-    GetLocal(document: vscode.TextDocument | undefined = vscode.window.activeTextEditor?.document) {
-        if (!document) { return undefined; }
-        return this.Locals[this.GetDocumentPath(document)] || undefined;
+    UpdateLocalsManifest = (locals: Record<string, t_ManifestLocals>) => {
+        for (const relpath of Object.keys(locals)) {
+            if (!this.Locals[relpath]) { this.Locals[relpath] = new FILELOCAL(this); }
+            const manifest = locals[relpath];
+            this.Locals[relpath].updateManifest(manifest);
+        }
+        this.RefreshEditors();
+    };
+
+    ReferDocument(document: vscode.TextDocument | undefined = vscode.window.activeTextEditor?.document) {
+        const abspath = document?.uri.fsPath || "";
+        let relpath = abspath;
+        let attributes: string[] = [];
+        let local = new FILELOCAL(this);
+        let watching = false;
+        let extension = "";
+
+        if (document) {
+            const workspacePath = this.WorkspaceUri?.fsPath || "/";
+            extension = path.extname(abspath);
+            relpath = path.relative(workspacePath, abspath);
+
+            const attrs = this.Global.fileToAttributes[relpath];
+            watching = this.F_ExtnActivated && Boolean(attrs);
+            attributes = attrs || [];
+
+            if (this.Locals[relpath]) {
+                local = this.Locals[relpath];
+            } else {
+                this.Locals[relpath] = local;
+            }
+            local.attributes = attributes;
+        }
+
+        return { relpath, abspath, watching, extension, local, document };
     }
 
     GetHashrules(): Record<string, string> {
         return this.Global.hashrules || {};
-    }
-
-    GetDocumentPath(document: vscode.TextDocument, relative = false) {
-        if (relative) {
-            return document.uri.fsPath.slice((this.WorkspaceFolder?.uri.fsPath.length || 0) + 1);
-        } else {
-            return document.uri.fsPath;
-        }
-    }
-
-    GetTargetAttributes(document: vscode.TextDocument): string[] {
-        return this.Global.fileAttrs[this.GetDocumentPath(document, true)] || [];
     }
 
     VarFilter(snippet: string, additionals: Record<string, string> = {}): Record<string, string> {

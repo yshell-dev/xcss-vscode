@@ -23,16 +23,17 @@ export class FILETOGGLE {
         }
 
         try {
-            let switchpath = this.Server.filePath;
+            const activeDoc = this.Server.ReferDocument();
+            let switchpath = activeDoc.relpath;
 
-            if (this.Server.filePath !== "") {
-                for (const k of Object.keys(this.Server.Global.switchmap)) {
-                    if (this.Server.filePath.startsWith(k)) {
-                        switchpath = this.Server.filePath.replace(k, this.Server.Global.switchmap[k]);
-                    }
+            for (const k of Object.keys(this.Server.Global.switchmap)) {
+                if (switchpath.startsWith(k)) {
+                    switchpath = switchpath.replace(k, this.Server.Global.switchmap[k]);
+                    break;
                 }
-            };
-            const filePath = path.join(this.Server.WorkspaceFolder?.uri.fsPath || '.', (switchpath)) || "";
+            }
+            const filePath = path.join(this.Server.WorkspaceUri?.fsPath || '.', (switchpath)) || "";
+
             if (filePath) {
                 if (await fileExists(filePath)) {
                     const targetUri = vscode.Uri.file(filePath);

@@ -4,7 +4,7 @@ import getBinPath from '../core/execute';
 import { ExtensionManager } from './activate';
 import { WebSocket } from 'ws';
 import { spawn, ChildProcessWithoutNullStreams } from 'child_process';
-import { t_JsonRPCResponse, t_ManifestMixed } from './types';
+import { t_JsonRPCResponse } from './types';
 
 export class BRIDGE {
 
@@ -38,27 +38,17 @@ export class BRIDGE {
                     break;
                 }
 
-                case "manifest-global": {
-                    this.Server.UpdateGlobalManifest(res.result.global);
+                case "sandbox-state-list": {
+                    this.Server.W_SANDBOX.States = res.result as typeof this.Server.W_SANDBOX.States;
                     break;
                 }
 
                 case "manifest-mixed": {
-                    const result = res.result as t_ManifestMixed;
-                    this.Server.UpdateGlobalManifest(result.global);
-                    this.Server.UpdateLocalManifest(result.locals);
+                    this.WSStream('sandbox-view');
+                    this.Server.UpdateMixedManifest(res.result);
                     break;
                 }
 
-                case "manifest-locals": {
-                    this.Server.UpdateLocalManifest(res.result.locals);
-                    break;
-                }
-
-                case "sandbox-states": {
-                    this.Server.W_SANDBOX.States = res.result as typeof this.Server.W_SANDBOX.States;
-                    break;
-                }
             }
         } catch (err) {
             const message = "VSC: " + (err instanceof Error ? err.message : String(err));
@@ -80,17 +70,31 @@ export class BRIDGE {
 
     public RootBinary = "";
     public SessionPort = 0;
+
     public spawnAlive = () => !!this.Process && !this.Process.killed;
 
     constructor(core: ExtensionManager) {
         this.Server = core;
         this.RootBinary = getBinPath(core.DeveloperMode);
         this.OutputCh = vscode.window.createOutputChannel(this.Server.IDCAP + ' Server');
-        setInterval(() => { this.StdIOCmd("websocket-url"); }, 5000);
-        setInterval(() => { this.StdIOCmd("sandbox-url"); }, 2000);
-        setInterval(() => { this.StdIOCmd("session-port"); }, 2000);
-        setInterval(() => { this.WSStream("sandbox-states"); }, 1000);
+        this.periodics();
     }
+
+    periodics = async () => {
+        const preriodics = [
+            "sandbox-url",
+            "session-port",
+            // "websocket-url",
+            // "sandbox-state-list"
+        ];
+        while (true) {
+            for (const cmd of preriodics) {
+                await new Promise(resolve => setTimeout(resolve, 200));
+                this.StdIOCmd(cmd);
+            }
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+    };
 
     restartAwait = false;
     async start(spawnPath: string, args: string[], overide_config = false) {
@@ -114,7 +118,8 @@ export class BRIDGE {
 
         if (this.Process.stdout) {
             this.Process.stdout.on('data', (buffer: Buffer) => {
-                this.receive(buffer.toString());
+                const message = buffer.toString();
+                this.receive(message);
             });
         }
         if (this.Process.stderr) {

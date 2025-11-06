@@ -1,7 +1,6 @@
 import vscode from 'vscode';
 import fileScanner from './helpers/file-scanner';
-import { m_Metadata, } from './types';
-import { FILELOCAL } from './file-local';
+import { m_Metadata, t_FileContent, } from './types';
 import { ExtensionManager } from './activate';
 import { metadataFormat, metamergeFormat } from './helpers/metadata';
 
@@ -103,31 +102,29 @@ export class DECORATIONS {
             unusedLocalTracker[filepath] = true;
         }
 
-        const fileContentMap: Record<string, string> = {};
+        const fileContentMap: t_FileContent[] = [];
 
         for (const editor of vscode.window.visibleTextEditors) {
-            const filepath = editor.document.uri.fsPath;
+            const doc = this.Server.ReferDocument(editor.document);
 
-            if (unusedLocalTracker[filepath]) {
-                unusedLocalTracker[filepath] = false;
-            } else {
-                this.Server.Locals[filepath] = new FILELOCAL(this.Server);
+            if (unusedLocalTracker[doc.relpath]) {
+                unusedLocalTracker[doc.relpath] = false;
             }
 
-            const local = this.Server.Locals[filepath];
+            const local = doc.local;
             const cursorOffset = editor.document.offsetAt(editor.selection.active);
 
             let localhashrules: Record<string, string> = {};
             let localsymclasses: Record<string, m_Metadata> = {};
-            if (this.Server.IsServerWatchingEditorFile(editor.document)) {
+            if (this.Server.ReferDocument(editor.document)) {
                 localhashrules = this.Server.GetHashrules();
-                localsymclasses = local.getSymclasses(false);
+                localsymclasses = local.attachables;
             }
 
             const content = editor.document.getText();
-            const parsed = fileScanner(content, this.Server.GetTargetAttributes(editor.document), cursorOffset);
-            fileContentMap[this.Server.GetDocumentPath(editor.document, true)] = content;
-            local.tagranges = parsed.TagRanges;
+            const parsed = fileScanner(content, doc.local.attributes, cursorOffset);
+            fileContentMap.push({ abspath: doc.abspath, relpath: doc.relpath, content });
+            doc.local.tagranges = parsed.TagRanges;
 
             // Apply decorations
 
@@ -181,7 +178,7 @@ export class DECORATIONS {
                                     Object.assign(tagRange.variables, metadata.variables);
                                 }
                             }
-                            const MetadataMerged = metamergeFormat(track.attr, filepath, Metadatas);
+                            const MetadataMerged = metamergeFormat(track.attr, doc.relpath, Metadatas);
                             attrs_Decos.push({ range: track.attrRange, hoverMessage: MetadataMerged.toolTip });
                             value_Decos.push({ range: track.valRange });
                         }

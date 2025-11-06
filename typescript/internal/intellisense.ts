@@ -5,13 +5,17 @@ import styleScanner from '../helpers/style-scanner';
 import { ExtensionManager } from "../activate";
 import { metadataFormat } from '../helpers/metadata';
 import { m_Metadata, t_CursorSnippet, t_SnippetType } from '../types';
+import { FILELOCAL } from '../file-local';
 
 export class INTELLISENSE {
     private Server: ExtensionManager;
-    readonly triggers = ['@', ' ', '=', '#', '~', '&', '$', '\t', '\n', '/', '_', '(', ')', ':', '{', '}'];
+    triggers: string[] = [];
 
     constructor(core: ExtensionManager) {
         this.Server = core;
+        this.triggers = this.Server.config.get<boolean>("intellisense.mode") ? // true = smart
+            ['@', ' ', '=', '#', '~', '&', '$', '\t', '\n', '/', '_', '(', ')', ':', '{', '}'] :
+            ['@', ' ', '=', '#', '~', '&', '\t', '\n', '/', '_', '(', ')', ':', '{', '}'];
     }
 
     dispose() {
@@ -30,6 +34,7 @@ export class INTELLISENSE {
         detail?: string
     ): vscode.CompletionItem {
         const completion = new vscode.CompletionItem(label, kind);
+        completion.preselect = true;
         completion.sortText = label;
         completion.insertText = insertText;
         completion.documentation = new vscode.MarkdownString(documentation);
@@ -164,39 +169,41 @@ export class INTELLISENSE {
         return completions;
     }
 
-    public AttachableFilter(prefix: string, iconKind: vscode.CompletionItemKind): vscode.CompletionItem[] {
+    public AttachableFilter(prefix: string, iconKind: vscode.CompletionItemKind, local: FILELOCAL): vscode.CompletionItem[] {
         if (this.Server.config.get<boolean>("intellisense.mode")) {
-            return this.SmartSymClassFilter(prefix, iconKind, this.Server.getAttachables());
+            return this.SmartSymClassFilter(prefix, iconKind, local.attachables);
         }
-        return this.SimpleSymClassFilter(prefix, iconKind, this.Server.getAttachables());
+        return this.SimpleSymClassFilter(prefix, iconKind, local.attachables);
     }
 
-    public AssignableFilter(prefix: string, iconKind: vscode.CompletionItemKind): vscode.CompletionItem[] {
+    public AssignableFilter(prefix: string, iconKind: vscode.CompletionItemKind, local: FILELOCAL): vscode.CompletionItem[] {
         if (this.Server.config.get<boolean>("intellisense.mode")) {
-            return this.SmartSymClassFilter(prefix, iconKind, this.Server.getAssignables());
+            return this.SmartSymClassFilter(prefix, iconKind, local.assignables);
         }
-        return this.SimpleSymClassFilter(prefix, iconKind, this.Server.getAssignables());
+        return this.SimpleSymClassFilter(prefix, iconKind, local.assignables);
     }
 
     provideCompletionItems(document: vscode.TextDocument, position: vscode.Position): vscode.CompletionItem[] | undefined {
         try {
             const completions: vscode.CompletionItem[] = [];
             const fileFragment = document.getText(new vscode.Range(new vscode.Position(0, 0), position));
+            const editor = vscode.window.activeTextEditor;
+            const ref = this.Server.ReferDocument(editor?.document);
 
-            if (this.Server.Editor) {
-                if (this.Server.isFileTargetedFile()) {
-                    const parsed = cursorSense(fileFragment, this.Server.Editor.document.offsetAt(this.Server.Editor.selection.active));
+            if (editor && ref.document && ref.watching) {
+                if (ref.extension === ".css") {
+                    completions.push(...this.provideCssCompletions(styleScanner(fileFragment), ref.local));
+                } else {
+                    const parsed = cursorSense(fileFragment, ref.document.offsetAt(editor.selection.active));
                     const valueFragment = parsed.cursorString.slice(parsed.cursorAttribute.length + 2);
-                    const foundTag = this.Server.getTagRanges().find(tag => tag.range.contains(position));
+                    const foundTag = ref.local.getTagRanges().find(tag => tag.range.contains(position));
                     const foundVars = foundTag ? foundTag.variables : {};
 
                     if (parsed.cursorValue.length) {
-                        completions.push(...this.handleValueMatch(parsed.cursorAttribute, valueFragment, foundVars));
+                        completions.push(...this.handleValueMatch(parsed.cursorAttribute, valueFragment, foundVars, ref.local));
                     } else if (parsed.cursorString.length) {
                         completions.push(...this.handleAttributeMatch(parsed.cursorString));
                     }
-                } else if (this.Server.isCssTargetedFile()) {
-                    completions.push(...this.provideCssCompletions(styleScanner(fileFragment)));
                 }
             }
 
@@ -208,7 +215,7 @@ export class INTELLISENSE {
         }
     }
 
-    provideCssCompletions(cursorSnippet: t_CursorSnippet): vscode.CompletionItem[] {
+    provideCssCompletions(cursorSnippet: t_CursorSnippet, local: FILELOCAL): vscode.CompletionItem[] {
         try {
             const isAtStyle = this.testAtrule(cursorSnippet.fragment || '');
             const iconKind = isAtStyle ? vscode.CompletionItemKind.Variable : vscode.CompletionItemKind.Field;
@@ -216,12 +223,12 @@ export class INTELLISENSE {
 
             switch (cursorSnippet.type) {
                 case t_SnippetType.attach: {
-                    const items = cursorSnippet.fragment === undefined ? [] : this.AttachableFilter(cursorSnippet.fragment, iconKind);
+                    const items = cursorSnippet.fragment === undefined ? [] : this.AttachableFilter(cursorSnippet.fragment, iconKind, local);
                     completions.push(...items);
                     break;
                 }
                 case t_SnippetType.assign: {
-                    const items = cursorSnippet.fragment === undefined ? [] : this.AssignableFilter(cursorSnippet.fragment, iconKind);
+                    const items = cursorSnippet.fragment === undefined ? [] : this.AssignableFilter(cursorSnippet.fragment, iconKind, local);
                     completions.push(...items);
                     break;
                 }
@@ -302,15 +309,21 @@ export class INTELLISENSE {
         return completions;
     }
 
-    handleValueMatch(attributeMatch: string, valueMatch: string, tagScopeVars: Record<string, string>): vscode.CompletionItem[] {
+    handleValueMatch(
+        attributeMatch: string,
+        valueMatch: string,
+        tagScopeVars: Record<string, string>,
+        local: FILELOCAL,
+    ): vscode.CompletionItem[] {
+
         const completions: vscode.CompletionItem[] = [];
 
-        if (this.Server.GetTargetAttributes().includes(attributeMatch)) {
+        if (local.attributes.includes(attributeMatch)) {
             const valuePrefix = valueMatch.match(/[=~][\w/$_-]*$/i)?.[0] || '';
             const isAtStyle = this.testAtrule(valuePrefix || '');
             if (valueMatch[0] === "=" || valueMatch[0] === "~") {
                 const iconKind = isAtStyle ? vscode.CompletionItemKind.Variable : vscode.CompletionItemKind.Field;
-                completions.push(...this.AttachableFilter(valuePrefix.slice(1), iconKind));
+                completions.push(...this.AttachableFilter(valuePrefix.slice(1), iconKind, local));
             }
         } else if (
             (attributeMatch.endsWith("&") || /^[\w-]+\$+[\w-]+$/i.test(attributeMatch)) &&
@@ -373,7 +386,7 @@ export class INTELLISENSE {
 
                 case t_SnippetType.property:
                     {
-                        const temp = { ...tagScopeVars, ...this.Server.getAttachables()[attributeMatch]?.variables || {} };
+                        const temp = { ...tagScopeVars, ...local.attachables[attributeMatch]?.variables || {} };
                         for (const key of Object.keys(temp)) {
                             const value = temp[key];
                             completions.push(this.createCompletionItem(
@@ -437,7 +450,7 @@ export class INTELLISENSE {
                 case t_SnippetType.varfetch:
                 case t_SnippetType.variable:
                     {
-                        const temp = { ...tagScopeVars, ...this.Server.GetTargetAttributes()[attributeMatch]?.variables || {} };
+                        const temp = { ...tagScopeVars, ...local.attachables[attributeMatch]?.variables || {} };
 
                         for (const key of Object.keys(temp)) {
                             const value = temp[key];
@@ -463,11 +476,11 @@ export class INTELLISENSE {
                     break;
 
                 case t_SnippetType.attach:
-                    completions.push(...this.AttachableFilter(result.fragment, iconKind));
+                    completions.push(...this.AttachableFilter(result.fragment, iconKind, local));
                     break;
 
                 case t_SnippetType.assign:
-                    completions.push(...this.AssignableFilter(result.fragment, iconKind));
+                    completions.push(...this.AssignableFilter(result.fragment, iconKind, local));
                     break;
             }
         }
