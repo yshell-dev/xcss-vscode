@@ -4,7 +4,7 @@ import styleScanner from '../helpers/style-scanner';
 
 import { ExtensionManager } from "../activate";
 import { metadataFormat } from '../helpers/metadata';
-import { m_Metadata, t_CursorSnippet, t_SnippetType } from '../types';
+import { t_Metadata, t_CursorSnippet, t_SnippetType } from '../types';
 import { FILELOCAL } from '../file-local';
 
 export class INTELLISENSE {
@@ -42,7 +42,7 @@ export class INTELLISENSE {
         return completion;
     }
 
-    public SmartSymClassFilter(prefix: string, iconKind: vscode.CompletionItemKind, stashmap: Record<string, m_Metadata>) {
+    public SmartSymClassFilter(prefix: string, iconKind: vscode.CompletionItemKind, stashmap: Record<string, t_Metadata>) {
 
         const stashKeys = Object.keys(stashmap);
         const slash_end = prefix.lastIndexOf('/');
@@ -152,7 +152,7 @@ export class INTELLISENSE {
         return completions;
     }
 
-    SimpleSymClassFilter(prefix: string, iconKind: vscode.CompletionItemKind, stashmap: Record<string, m_Metadata>): vscode.CompletionItem[] {
+    SimpleSymClassFilter(prefix: string, iconKind: vscode.CompletionItemKind, stashmap: Record<string, t_Metadata>): vscode.CompletionItem[] {
         const completions: vscode.CompletionItem[] = [];
 
         for (const key of Object.keys(stashmap)) {
@@ -234,7 +234,7 @@ export class INTELLISENSE {
                 }
                 case t_SnippetType.constant:
                 case t_SnippetType.variable:
-                case t_SnippetType.varfetch: {
+                case t_SnippetType.varcalls: {
                     const items = Object.keys(this.Server.VarFilter(cursorSnippet.fragment ?? "")) || [];
                     for (const item of items) {
                         completions.push(this.createCompletionItem(
@@ -387,11 +387,12 @@ export class INTELLISENSE {
                 case t_SnippetType.property:
                     {
                         const temp = { ...tagScopeVars, ...local.attachables[attributeMatch]?.variables || {} };
-                        for (const key of Object.keys(temp)) {
+                        const keys = Object.keys(temp).sort();
+                        for (const key of keys) {
                             const value = temp[key];
                             completions.push(this.createCompletionItem(
-                                key,
-                                key,
+                                `${key}: ${value}`,
+                                new vscode.SnippetString(`${key}: \${1:${value}}`),
                                 vscode.CompletionItemKind.Color,
                                 `\`${key}: ${value}\``
                             ));
@@ -447,12 +448,12 @@ export class INTELLISENSE {
                     }
                     break;
 
-                case t_SnippetType.varfetch:
                 case t_SnippetType.variable:
+                case t_SnippetType.varcalls:
                     {
                         const temp = { ...tagScopeVars, ...local.attachables[attributeMatch]?.variables || {} };
-
-                        for (const key of Object.keys(temp)) {
+                        const keys = Object.keys(temp).sort();
+                        for (const key of keys) {
                             const value = temp[key];
                             completions.push(this.createCompletionItem(
                                 key,

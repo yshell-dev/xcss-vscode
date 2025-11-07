@@ -10,7 +10,7 @@ Essential XCSS developer tooling for VSCode, featuring integrated LSP, bundled b
 
 - Import available templates for the `symclass` at the active cursor position, appending them to the current HTML tag.
 
-### Template Import: `[ alt + shift + x ]` 
+### Content Formatting: `[ alt + shift + x ]` 
 
 - Format only XCSS-specific blocks. Use repeatedly to toggle folding for the nearest foldable range.
 
@@ -27,7 +27,7 @@ Essential XCSS developer tooling for VSCode, featuring integrated LSP, bundled b
 ### Statusbar Widget
 
 - Displays file status and error count.
-- Quick access to integrated core binary commands from the status bar.
+- Quick access to integrated core binary commands  .
 
 ### Developer Assistance
 

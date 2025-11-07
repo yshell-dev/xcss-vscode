@@ -1,6 +1,6 @@
 import vscode from 'vscode';
 import fileScanner from './helpers/file-scanner';
-import { m_Metadata, t_FileContent, } from './types';
+import { t_Metadata, t_FileContent, } from './types';
 import { ExtensionManager } from './activate';
 import { metadataFormat, metamergeFormat } from './helpers/metadata';
 
@@ -103,8 +103,9 @@ export class DECORATIONS {
         }
 
         const fileContentMap: t_FileContent[] = [];
-
-        for (const editor of vscode.window.visibleTextEditors) {
+        const editors = vscode.window.visibleTextEditors;
+        
+        for (const editor of editors) {
             const doc = this.Server.ReferDocument(editor.document);
 
             if (unusedLocalTracker[doc.relpath]) {
@@ -115,7 +116,7 @@ export class DECORATIONS {
             const cursorOffset = editor.document.offsetAt(editor.selection.active);
 
             let localhashrules: Record<string, string> = {};
-            let localsymclasses: Record<string, m_Metadata> = {};
+            let localsymclasses: Record<string, t_Metadata> = {};
             if (this.Server.ReferDocument(editor.document)) {
                 localhashrules = this.Server.GetHashrules();
                 localsymclasses = local.attachables;
@@ -170,7 +171,7 @@ export class DECORATIONS {
                 for (const track of tagRange.cache.watchtracks) {
                     try {
                         if (track.attrRange && track.valRange) {
-                            const Metadatas: m_Metadata[] = [];
+                            const Metadatas: t_Metadata[] = [];
                             for (const frag of (track.fragments ?? [])) {
                                 const metadata = local.getMetadata(frag.slice(1));
                                 if (metadata) {

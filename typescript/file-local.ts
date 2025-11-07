@@ -1,4 +1,4 @@
-import { m_Metadata, t_ManifestLocals, t_TagRange, t_TrackRange, } from './types';
+import { t_Metadata, t_ManifestLocals, t_TagRange, t_TrackRange, } from './types';
 import { ExtensionManager } from './activate';
 import { metadataFormat } from './helpers/metadata';
 
@@ -8,8 +8,8 @@ export class FILELOCAL {
 
     attributes: string[] = [];
     tagranges: t_TagRange[] = [];
-    attachables: Record<string, m_Metadata> = {};
-    assignables: Record<string, m_Metadata> = {};
+    attachables: Record<string, t_Metadata> = {};
+    assignables: Record<string, t_Metadata> = {};
 
     constructor(core: ExtensionManager) {
         this.Server = core;
@@ -69,8 +69,8 @@ export class FILELOCAL {
         const l = this.manifest.symclasses;
         const g = this.Server.Global.symclasses;
 
-        const as: Record<string, m_Metadata> = {};
-        const at: Record<string, m_Metadata> = {};
+        const as: Record<string, t_Metadata> = {};
+        const at: Record<string, t_Metadata> = {};
         for (const a of this.manifest.assignable) { as[a] = l[a] || g[a]; }
         for (const a of this.manifest.attachable) { at[a] = l[a] || g[a]; }
         this.assignables = as;

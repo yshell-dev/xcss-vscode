@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { m_Metadata } from '../types';
+import { t_Metadata } from '../types';
 
 interface t_formatting {
     "": string[];
@@ -52,7 +52,7 @@ function objectTreeMd(obj: t_formatting): string[] {
 }
 
 
-export function metadataFormat(selector: string, data: m_Metadata, subhead = ""): string {
+export function metadataFormat(selector: string, data: t_Metadata, subhead = ""): string {
     const lines: string[] = [(subhead.length ? `${subhead}: ` : ``) + `**\`${selector}\`**`, ''];
 
     for (const item of data.info || []) { lines.push(`- ${item}`); }
@@ -96,8 +96,8 @@ function mergeObjects(objects: Record<string, unknown>[]): Record<string, unknow
     return acc;
 }
 
-export function metamergeFormat(heading: string, declaration: string, objects: m_Metadata[]) {
-    const merged: m_Metadata = {
+export function metamergeFormat(heading: string, declaration: string, objects: t_Metadata[]) {
+    const merged: t_Metadata = {
         info: [],
         skeleton: { "": {} },
         declarations: [declaration],

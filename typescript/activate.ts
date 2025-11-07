@@ -146,6 +146,10 @@ export class ExtensionManager {
             vscode.commands.registerCommand(`${this.ID}.action.compview`, this.W_SANDBOX.Open),
             vscode.commands.registerCommand(`${this.ID}.editor.summon`, this.W_SUMMON.SummonStructure),
 
+            vscode.commands.registerCommand(`${this.ID}.server.pause`, this.pause),
+            vscode.commands.registerCommand(`${this.ID}.server.restart`, this.respawn),
+            vscode.commands.registerCommand(`${this.ID}.server.send`, this.W_BRIDGE.interactive),
+
             vscode.window.onDidChangeWindowState(() => { this.RefreshEditors(); }),
             vscode.window.tabGroups.onDidChangeTabs(() => { this.RefreshEditors(); }),
             vscode.window.onDidChangeActiveTextEditor(() => { this.RefreshEditors(); }),
@@ -156,14 +160,6 @@ export class ExtensionManager {
             vscode.workspace.onDidOpenTextDocument(() => { this.RequestManifest(); }),
             vscode.workspace.onDidCloseTextDocument(() => { this.RequestManifest(); }),
             vscode.workspace.onDidChangeTextDocument(() => { this.RequestManifest(); }),
-
-            vscode.workspace.onDidDeleteFiles(() => { this.W_BRIDGE.StdIOCmd("rebuild"); }),
-            vscode.workspace.onDidCreateFiles(() => { this.W_BRIDGE.StdIOCmd("rebuild"); }),
-
-            vscode.commands.registerCommand(`${this.ID}.server.pause`, this.pause),
-            vscode.commands.registerCommand(`${this.ID}.server.restart`, this.respawn),
-            vscode.commands.registerCommand(`${this.ID}.server.send`, this.W_BRIDGE.interactive),
-
         );
     }
 
@@ -183,7 +179,7 @@ export class ExtensionManager {
             this.spawn();
             this.WorkspaceUri = workspaceFolder.uri;
 
-            // this.W_BRIDGE.WSStream("manifest-mixed", params);
+            this.W_BRIDGE.WSStream("manifest-mixed", params);
         } finally {
             this.AwaitRequest = false;
         }

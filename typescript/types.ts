@@ -18,7 +18,7 @@ export enum t_SnippetType {
     attach,
     constant,
     variable,
-    varfetch,
+    varcalls,
 };
 
 export interface t_CursorSnippet {
@@ -63,15 +63,12 @@ export interface t_TrackRange {
     variableSet?: Set<string>
 }
 
-
-// Types of manifest
-
-export interface m_Diagnostic {
+export interface t_Diagnostic {
     message: string,
     sources: string[]
 }
 
-export interface m_Metadata {
+export interface t_Metadata {
     info?: string[],
     skeleton?: Record<string, object>,
     variables?: Record<string, string>,
@@ -101,14 +98,14 @@ export interface t_ManifestGlobal {
     switchmap: Record<string, string>,
     hashrules: Record<string, string>,
     constants: Record<string, string>,
-    symclasses: Record<string, m_Metadata>,
-    diagnostics: m_Diagnostic[],
+    symclasses: Record<string, t_Metadata>,
+    diagnostics: t_Diagnostic[],
 }
 
 export interface t_ManifestLocals {
     assignable: string[],
     attachable: string[],
-    symclasses: Record<string, m_Metadata>,
+    symclasses: Record<string, t_Metadata>,
 }
 
 export interface t_FileContent {

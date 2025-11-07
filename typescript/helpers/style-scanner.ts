@@ -85,7 +85,7 @@ export default function analyzer(content: string): t_CursorSnippet {
         }
     } else if (type === t_SnippetType.value) {
         if (fragment.endsWith('var(')) {
-            type = t_SnippetType.varfetch;
+            type = t_SnippetType.varcalls;
         } else if (fragment.endsWith("---")) {
             type = t_SnippetType.constant;
         } else if (fragment.endsWith("--")) {

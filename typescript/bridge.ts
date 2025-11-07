@@ -44,7 +44,7 @@ export class BRIDGE {
                 }
 
                 case "manifest-mixed": {
-                    this.WSStream('sandbox-view');
+                    this.WSStream("sandbox-view");
                     this.Server.UpdateMixedManifest(res.result);
                     break;
                 }
@@ -84,8 +84,8 @@ export class BRIDGE {
         const preriodics = [
             "sandbox-url",
             "session-port",
-            // "websocket-url",
-            // "sandbox-state-list"
+            "websocket-url",
+            "sandbox-state-list"
         ];
         while (true) {
             for (const cmd of preriodics) {

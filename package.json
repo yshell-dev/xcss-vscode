@@ -169,7 +169,7 @@
       },
       {
         "command": "xcss.server.send",
-        "title": "Interactive Debugging",
+        "title": "Interactive",
         "category": "XCSS Server"
       }
     ],
