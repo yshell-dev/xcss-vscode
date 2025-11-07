@@ -14,8 +14,8 @@ export class INTELLISENSE {
     constructor(core: ExtensionManager) {
         this.Server = core;
         this.triggers = this.Server.config.get<boolean>("intellisense.mode") ? // true = smart
-            ['@', ' ', '=', '#', '~', '&', '$', '\t', '\n', '/', '_', '(', ')', ':', '{', '}'] :
-            ['@', ' ', '=', '#', '~', '&', '\t', '\n', '/', '_', '(', ')', ':', '{', '}'];
+            ['@', '-', ' ', '=', '#', '~', '&', '$', '\t', '\n', '/', '_', '(', ')', ':', '{', '}'] :
+            ['@', '-', ' ', '=', '#', '~', '&', '\t', '\n', '/', '_', '(', ')', ':', '{', '}'];
     }
 
     dispose() {
@@ -321,7 +321,7 @@ export class INTELLISENSE {
         if (local.attributes.includes(attributeMatch)) {
             const valuePrefix = valueMatch.match(/[=~][\w/$_-]*$/i)?.[0] || '';
             const isAtStyle = this.testAtrule(valuePrefix || '');
-            if (valueMatch[0] === "=" || valueMatch[0] === "~") {
+            if (valueMatch[0] === "=" || valueMatch[0] === "~" || valueMatch[0] === "-") {
                 const iconKind = isAtStyle ? vscode.CompletionItemKind.Variable : vscode.CompletionItemKind.Field;
                 completions.push(...this.AttachableFilter(valuePrefix.slice(1), iconKind, local));
             }
