@@ -21,9 +21,11 @@ import { SUMMON } from './internal/summon';
 import { FILELOCAL } from './file-local';
 
 const ID = "xcss";
+const PORT = 1248;
 
 export class ExtensionManager {
     readonly ID = ID;
+    readonly PORT = PORT;
     readonly IDCAP = this.ID.toLocaleUpperCase();
     readonly SymClassRgx = /[\w/$_-]+/i;;
     readonly DeveloperMode: boolean = existsSync(path.resolve(__dirname, "..", "core", "source"));
@@ -90,7 +92,7 @@ export class ExtensionManager {
         this.WorkspaceUri = workspaceFolder.uri;
         const workpath = workspaceFolder.uri.fsPath;
 
-        this.W_BRIDGE.start(workpath, ["server"]);
+        this.W_BRIDGE.start(workpath, ["server", this.PORT.toString()]);
     };
 
     public dispose() {

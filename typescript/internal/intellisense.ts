@@ -316,7 +316,7 @@ export class INTELLISENSE {
         local: FILELOCAL,
     ): vscode.CompletionItem[] {
 
-        const completions: vscode.CompletionItem[] = [];
+        const completions: vscode.CompletionItem[] =[];
 
         if (local.attributes.includes(attributeMatch)) {
             const valuePrefix = valueMatch.match(/[=~][\w/$_-]*$/i)?.[0] || '';
