@@ -37,7 +37,7 @@ jobs:
           echo "packaged_vsix=$packaged_vsix" >> $GITHUB_ENV
           echo "artifact_vsix=$artifact_vsix" >> $GITHUB_ENV
 
-          cp "$artifact_vsix" "$packaged_vsix"
+          cp "$packaged_vsix" "$artifact_vsix"
 
       - name: Publish release (version tag)
         uses: softprops/action-gh-release@v2
