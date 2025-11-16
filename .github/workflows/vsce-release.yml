@@ -15,7 +15,46 @@ jobs:
           node-version: '22'
 
       - run: git submodule update --init ./core
+
       - run: npm run package
+
+      # 
+      - name: Get version from package.json
+        id: artifact
+        run: |
+          echo "pacname=$(jq -r .name package.json)" >> $GITHUB_OUTPUT
+          echo "version=v$(jq -r .version package.json)" >> $GITHUB_OUTPUT
+
+      - name: Prepare artifact name
+        id: prepare_artifact
+        run: |
+          echo "artifact_name=${{ steps.artifact.outputs.pacname }}-vsce_${{ steps.artifact.outputs.version }}.vsix" >> $GITHUB_OUTPUT
+
+      - name: Upload artifact for release
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ steps.artifact.outputs.artifact_name }}
+          path: ${{ steps.artifact.outputs.artifact_name }}
+
+      - name: Publish release (version tag)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.artifact.outputs.version }}
+          name: Release ${{ steps.artifact.outputs.version }}
+          body_path: ./release.md
+          files: ${{ steps.prepare_artifact.outputs.artifact_name }}
+          overwrite_files: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Publish release (latest tag)
+        uses: softprops/action-gh-release@v2
+        with:  
+          tag_name: latest
+          name: Release latest
+          body_path: ./release.md
+          files: ${{ steps.prepare_artifact.outputs.artifact_name }}
+          overwrite_files: true
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish VSCode Extension
         uses: lannonbr/vsce-action@4.0.0

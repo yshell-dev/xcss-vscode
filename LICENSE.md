@@ -8,4 +8,4 @@ This software is provided to the public under a Temporary Beta License for evalu
 - **No Warranty:** This software is provided “as is” without any warranty, express or implied.
 - **License Changes:** The license terms may be updated or replaced after the beta period.
 
-By using this software, you agree to these terms. For questions, contact connect@yshell.dev.
+By using this software, you agree to these terms. For questions, contact xcss@yshell.dev.
