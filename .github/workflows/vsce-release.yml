@@ -37,8 +37,9 @@ jobs:
           echo "packaged_vsix=$packaged_vsix" >> $GITHUB_ENV
           echo "artifact_vsix=$artifact_vsix" >> $GITHUB_ENV
 
-          cp "$packaged_vsix" "$artifact_vsix"
-          ls
+          mkdir -p artifacts
+          cp "$packaged_vsix" "artifacts/$artifact_vsix"
+          ls -l artifacts
 
       - name: Publish release (version tag)
         uses: softprops/action-gh-release@v2
@@ -46,7 +47,7 @@ jobs:
           tag_name: v${{ env.version }}
           name: Release v${{ env.version }}
           body_path: ./release.md
-          files: ./${{ env.packaged_vsix }}
+          files: artifacts
           overwrite_files: true
           token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -56,7 +57,7 @@ jobs:
           tag_name: latest
           name: Release latest
           body_path: ./release.md
-          files: ./${{ env.packaged_vsix }}
+          files: artifacts
           overwrite_files: true
           token: ${{ secrets.GITHUB_TOKEN }}
 
