@@ -2,7 +2,16 @@
 
 Essential XCSS developer tooling for VSCode, featuring integrated LSP, bundled binary, and focused support for XCSS workflows.
 
-![Extension Demo](./preview.png)
+## Preview 
+
+### Input 
+![Preview Input](./preview/input.png)
+
+### Sandbox
+![Preview Sandbox](./preview/input.png)
+
+### Output
+![Preview Output](./preview/input.png)
 
 ## Shortcuts
 
