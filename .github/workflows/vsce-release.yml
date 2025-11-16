@@ -25,12 +25,19 @@ jobs:
           version=$(jq -r .version package.json)
           echo "pacname=$pacname" >> $GITHUB_ENV
           echo "version=$version" >> $GITHUB_ENV
-
+          
       - name: Prepare artifact name
         id: vsix_name
         run: |
-          echo "packaged_vsix=${pacname}-${version}.vsix" >> $GITHUB_ENV
-          echo "artifact_vsix=${pacname}-vsce_v${version}.vsix" >> $GITHUB_ENV
+          pacname=${{ env.pacname }}  # If pacname was set in previous step to env, else define here
+          version=${{ env.version }}  # Same for version
+          artifact_vsix="${pacname}-vsce_v${version}.vsix"
+          packaged_vsix="${pacname}-${version}.vsix"
+
+          echo "packaged_vsix=$packaged_vsix" >> $GITHUB_ENV
+          echo "artifact_vsix=$artifact_vsix" >> $GITHUB_ENV
+
+          cp "$artifact_vsix" "$packaged_vsix"
 
       - name: Publish release (version tag)
         uses: softprops/action-gh-release@v2
