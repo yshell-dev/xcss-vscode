@@ -18,32 +18,33 @@ jobs:
 
       - run: npm run package
 
-      #
       - name: Get version from package.json
         id: artifact
         run: |
-          echo "pacname=$(jq -r .name package.json)" >> $GITHUB_OUTPUT
-          echo "version=v$(jq -r .version package.json)" >> $GITHUB_OUTPUT
+          pacname=$(jq -r .name package.json)
+          version=$(jq -r .version package.json)
+          echo "pacname=$pacname" >> $GITHUB_ENV
+          echo "version=$version" >> $GITHUB_ENV
 
       - name: Prepare artifact name
         id: vsix_name
         run: |
-          echo "packaged_vsix=${{ steps.artifact.outputs.pacname }}-${{ steps.artifact.outputs.version }}.vsix" >> $GITHUB_OUTPUT
-          echo "artifact_vsix=${{ steps.artifact.outputs.pacname }}-vsce_${{ steps.artifact.outputs.version }}.vsix" >> $GITHUB_OUTPUT
+          echo "packaged_vsix=${pacname}-v${version}.vsix" >> $GITHUB_ENV
+          echo "artifact_vsix=${pacname}-vsce_${version}.vsix" >> $GITHUB_ENV
 
       - name: Upload artifact for release
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.vsix_name.outputs.artifact_vsix }}
-          path: ${{ steps.vsix_name.outputs.packaged_vsix }}
+          name: ${{ env.artifact_vsix }}
+          path: ${{ env.packaged_vsix }}
 
       - name: Publish release (version tag)
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.artifact.outputs.version }}
-          name: Release ${{ steps.artifact.outputs.version }}
+          tag_name: v${{ steps.artifact.outputs.version }}
+          name: Release v${{ steps.artifact.outputs.version }}
           body_path: ./release.md
-          files: ${{ steps.vsix_name.outputs.packaged_vsix }}
+          files: ${{ env.packaged_vsix }}
           overwrite_files: true
           token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -53,7 +54,7 @@ jobs:
           tag_name: latest
           name: Release latest
           body_path: ./release.md
-          files: ${{ steps.vsix_name.outputs.packaged_vsix }}
+          files: ${{ env.packaged_vsix }}
           overwrite_files: true
           token: ${{ secrets.GITHUB_TOKEN }}
 
