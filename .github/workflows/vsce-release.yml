@@ -49,7 +49,6 @@ jobs:
           body_path: ./release.md
           files: artifacts/**
           overwrite_files: true
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish release (latest tag)
         uses: softprops/action-gh-release@v2
