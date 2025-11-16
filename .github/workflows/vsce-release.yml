@@ -30,7 +30,7 @@ jobs:
         id: vsix_name
         run: |
           echo "packaged_vsix=${pacname}-${version}.vsix" >> $GITHUB_ENV
-          echo "artifact_vsix=${pacname}-vsce_${version}.vsix" >> $GITHUB_ENV
+          echo "artifact_vsix=${pacname}-vsce_v${version}.vsix" >> $GITHUB_ENV
 
       - name: Upload artifact for release
         uses: actions/upload-artifact@v4
