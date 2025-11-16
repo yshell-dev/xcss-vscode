@@ -32,17 +32,11 @@ jobs:
           echo "packaged_vsix=${pacname}-${version}.vsix" >> $GITHUB_ENV
           echo "artifact_vsix=${pacname}-vsce_v${version}.vsix" >> $GITHUB_ENV
 
-      - name: Upload artifact for release
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.artifact_vsix }}
-          path: ${{ env.packaged_vsix }}
-
       - name: Publish release (version tag)
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ steps.artifact.outputs.version }}
-          name: Release v${{ steps.artifact.outputs.version }}
+          tag_name: v${{ env.version }}
+          name: Release v${{ env.version }}
           body_path: ./release.md
           files: ${{ env.packaged_vsix }}
           overwrite_files: true
