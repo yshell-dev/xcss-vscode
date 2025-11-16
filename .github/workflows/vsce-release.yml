@@ -26,15 +26,16 @@ jobs:
           echo "version=v$(jq -r .version package.json)" >> $GITHUB_OUTPUT
 
       - name: Prepare artifact name
-        id: prepare_artifact
+        id: vsix_name
         run: |
-          echo "artifact_name=${{ steps.artifact.outputs.pacname }}-vsce_${{ steps.artifact.outputs.version }}.vsix" >> $GITHUB_OUTPUT
+          echo "packaged_vsix=${{ steps.artifact.outputs.pacname }}-${{ steps.artifact.outputs.version }}.vsix" >> $GITHUB_OUTPUT
+          echo "artifact_vsix=${{ steps.artifact.outputs.pacname }}-vsce_${{ steps.artifact.outputs.version }}.vsix" >> $GITHUB_OUTPUT
 
       - name: Upload artifact for release
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.artifact.outputs.artifact_name }}
-          path: ${{ steps.artifact.outputs.artifact_name }}
+          name: ${{ steps.vsix_name.outputs.artifact_vsix }}
+          path: ${{ steps.vsix_name.outputs.packaged_vsix }}
 
       - name: Publish release (version tag)
         uses: softprops/action-gh-release@v2
@@ -42,7 +43,7 @@ jobs:
           tag_name: ${{ steps.artifact.outputs.version }}
           name: Release ${{ steps.artifact.outputs.version }}
           body_path: ./release.md
-          files: ${{ steps.prepare_artifact.outputs.artifact_name }}
+          files: ${{ steps.vsix_name.outputs.packaged_vsix }}
           overwrite_files: true
           token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -52,7 +53,7 @@ jobs:
           tag_name: latest
           name: Release latest
           body_path: ./release.md
-          files: ${{ steps.prepare_artifact.outputs.artifact_name }}
+          files: ${{ steps.vsix_name.outputs.packaged_vsix }}
           overwrite_files: true
           token: ${{ secrets.GITHUB_TOKEN }}
 
