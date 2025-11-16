@@ -47,7 +47,7 @@ jobs:
           tag_name: v${{ env.version }}
           name: Release v${{ env.version }}
           body_path: ./release.md
-          files: artifacts
+          files: artifacts/**
           overwrite_files: true
           token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -57,7 +57,7 @@ jobs:
           tag_name: latest
           name: Release latest
           body_path: ./release.md
-          files: artifacts
+          files: artifacts/**
           overwrite_files: true
           token: ${{ secrets.GITHUB_TOKEN }}
 
