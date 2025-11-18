@@ -9,8 +9,7 @@
 			"args": [
 				"--log-level",
 				"trace",
-				"--extensionDevelopmentPath",
-				"${workspaceFolder}"
+				"--extensionDevelopmentPath=${workspaceFolder}"
 			],
 			"outFiles": [
 				"${workspaceFolder}/extension/**/*.js"

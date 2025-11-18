@@ -41,9 +41,8 @@ export class DECORATIONS {
             rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed
         });
         this.symclass_Style = vscode.window.createTextEditorDecorationType({
-            fontWeight: "700",
-            fontStyle: "italic",
-            rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
+            backgroundColor: "#77777733",
+            rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed
         });
 
         this.comProp_Style = vscode.window.createTextEditorDecorationType({

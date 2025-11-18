@@ -20,7 +20,6 @@
     "lint": "eslint ./typescript --ext .ts",
     "init": "npm install -g typescript @vscode/vsce && npm install",
     "tsbuild": "npx tsc -p ./typescript",
-    "esbuild": "node build.js",
     "package": "npm run init && npm run tsbuild && npm install --omit=dev && vsce package"
   },
   "devDependencies": {

@@ -52,10 +52,10 @@ export class FILELOCAL {
         if (!metadata) {
             return "";
         } else if (!metadata.markdown) {
-            if (this.manifest.assignable.includes(symclass)) { h += " Assignable"; }
-            if (this.manifest.attachable.includes(symclass)) {
-                h += h.length == 0 ? " Attachable" : " & Attachable";
-            }
+            const mods: string[] = [];
+            if (this.manifest.assignable.includes(symclass)) { mods.push(" Assignable "); }
+            if (this.manifest.attachable.includes(symclass)) { mods.push(" Attachable "); }
+            h += mods.join("&");
             metadata.markdown = metadataFormat(h, metadata);
         }
 
