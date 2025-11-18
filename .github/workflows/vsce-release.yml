@@ -16,7 +16,7 @@ jobs:
         with:
           node-version: "22"
 
-      - run: git submodule update --init ./core
+      - run: git submodule update --init ./package
 
       - run: npm run package
 
