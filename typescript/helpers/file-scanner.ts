@@ -105,7 +105,7 @@ function valScanner(
         }
 
         if (!halt) {
-            if (/[\\\w\d$_/:=-]/i.test(ch)) {
+            if (/[\\\w\d$_/:=~-]/i.test(ch)) {
                 snippet += ch;
                 endPos = new vscode.Position(rowMarker, colMarker);
             } else if (snippet.length > 0) {
