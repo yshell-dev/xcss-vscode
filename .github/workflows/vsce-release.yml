@@ -1,6 +1,8 @@
 name: Publish VSCode
 
 on:
+  repository_dispatch:
+    types: [trigger-publish]
   workflow_dispatch:
 
 jobs:
