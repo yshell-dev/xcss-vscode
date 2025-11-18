@@ -23,7 +23,7 @@ interface ScannerStash {
 }
 
 
-function hashScanner(
+function hashruleScanner(
     content: string,
     cursorStart: number,
     cursorEnd: number,
@@ -77,13 +77,14 @@ function hashScanner(
     } while (++marker <= cursorEnd);
 }
 
-function valScanner(
+function valueScanner(
     content: string,
     cursorStart: number,
     cursorEnd: number,
     rowMarker: number,
     colMarker: number,
     tagCache: t_TagCache,
+    val0_wat1: boolean
 ): string[] {
     const kind: vscode.FoldingRangeKind = vscode.FoldingRangeKind.Comment;
     const fragments: string[] = [];
@@ -112,7 +113,7 @@ function valScanner(
                 end = marker;
                 fragments.push(snippet);
                 const blockRange = new vscode.Range(startPos, endPos);
-                tagCache.valuefrags.push({
+                const tr = {
                     kind,
                     blockRange,
                     valRange: blockRange,
@@ -124,7 +125,9 @@ function valScanner(
                     attr: snippet,
                     val: snippet,
                     multiLine: false
-                });
+                };
+                if (val0_wat1) { tagCache.watchfrags.push(tr); }
+                else { tagCache.valuefrags.push(tr); }
                 snippet = "";
             }
         }
@@ -164,6 +167,7 @@ function tagScanner(
     const tagCache: t_TagCache = {
         hashrules: [],
         watchtracks: [],
+        watchfrags: [],
         comments: [],
         composes: [],
         valuefrags: [],
@@ -232,57 +236,14 @@ function tagScanner(
                 const blockRange = new vscode.Range(attrStartPos, valEndPos);
 
                 if (attr === "&") {
-                    tagCache.comments.push({
-                        kind,
-                        attrRange,
-                        valRange,
-                        blockRange,
-                        valStart,
-                        valEnd,
-                        attrStart,
-                        attrEnd,
-                        attr,
-                        val,
-                        multiLine
-                    });
-                }
-                else if (attr.endsWith("&") || /^[\w-_]+\$+[\w-]+$/i.test(attr)) {
-                    hashScanner(content, attrStart, attrEnd + 1, attrStartPos.line, attrStartPos.character, tagCache);
-                    const fragments = valScanner(content, valStart, fileCursor.active.marker, valStartPos.line, valStartPos.character, tagCache);
-                    tagCache.composes.push({
-                        kind,
-                        attrRange,
-                        valRange,
-                        blockRange,
-                        valStart,
-                        valEnd,
-                        attrStart,
-                        attrEnd,
-                        attr,
-                        val,
-                        multiLine,
-                        fragments,
-                        variableSet
-                    });
-
-                }
-                else if (classProps.includes(attr)) {
-                    const fragments = valScanner(content, valStart, fileCursor.active.marker, valStartPos.line, valStartPos.character, tagCache);
-                    tagCache.watchtracks.push({
-                        kind,
-                        attrRange,
-                        valRange,
-                        blockRange,
-                        valStart,
-                        valEnd,
-                        attrStart,
-                        attrEnd,
-                        attr,
-                        val,
-                        multiLine,
-                        fragments,
-                        variableSet
-                    });
+                    tagCache.comments.push({ kind, attrRange, valRange, blockRange, valStart, valEnd, attrStart, attrEnd, attr, val, multiLine });
+                } else if (attr.endsWith("&") || /^[\w-_]+\$+[\w-]+$/i.test(attr)) {
+                    hashruleScanner(content, attrStart, attrEnd + 1, attrStartPos.line, attrStartPos.character, tagCache);
+                    const fragments = valueScanner(content, valStart, fileCursor.active.marker, valStartPos.line, valStartPos.character, tagCache, false);
+                    tagCache.composes.push({ kind, attrRange, valRange, blockRange, valStart, valEnd, attrStart, attrEnd, attr, val, multiLine, fragments, variableSet });
+                } else if (classProps.includes(attr)) {
+                    const fragments = valueScanner(content, valStart, fileCursor.active.marker, valStartPos.line, valStartPos.character, tagCache, true);
+                    tagCache.watchtracks.push({ kind, attrRange, valRange, blockRange, valStart, valEnd, attrStart, attrEnd, attr, val, multiLine, fragments, variableSet });
                 }
             }
 

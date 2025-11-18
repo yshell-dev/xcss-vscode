@@ -172,6 +172,7 @@ export class DECORATIONS {
                         if (track.attrRange && track.valRange) {
                             const Metadatas: t_Metadata[] = [];
                             for (const frag of (track.fragments ?? [])) {
+                                if (frag[0] != "~" && frag[0] != "=") { continue; }
                                 const metadata = local.getMetadata(frag.slice(1));
                                 if (metadata) {
                                     Metadatas.push(metadata);
@@ -201,10 +202,21 @@ export class DECORATIONS {
                                 });
                             }
                         } else {
-                            const tr_val = (track.val.startsWith("=") || track.val.startsWith("~")) ? track.val.slice(1) : track.val;
-                            if (localsymclasses[tr_val]) {
-                                symclass_Decos.push({ range: track.valRange, hoverMessage: local.getMarkdown(tr_val) });
+                            if (localsymclasses[track.val]) {
+                                symclass_Decos.push({ range: track.valRange, hoverMessage: local.getMarkdown(track.val) });
                             }
+                        }
+                    } catch (error) {
+                        console.error('Error processing Ranges:', error);
+                    }
+                }
+
+                for (const track of tagRange.cache.watchfrags) {
+                    try {
+                        if (track.val[0] != "~" && track.val[0] != "=") { continue; }
+                        const tr_val =track.val.slice(1);
+                        if (localsymclasses[tr_val]) { 
+                            symclass_Decos.push({ range: track.valRange, hoverMessage: local.getMarkdown(tr_val) });
                         }
                     } catch (error) {
                         console.error('Error processing Ranges:', error);
