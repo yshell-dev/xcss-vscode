@@ -5,9 +5,7 @@
         "lib": [
             "ES2020"
         ],
-        "types": [
-            "node"
-        ],
+        "types": [],
         "typeRoots": [
             "./node_modules/@types"
         ],
