@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - uses: actions/setup-node@v3
         with:
@@ -32,8 +32,8 @@ jobs:
       - name: Prepare artifact name
         id: vsix_name
         run: |
-          pacname=${{ env.pacname }}  # If pacname was set in previous step to env, else define here
-          version=${{ env.version }}  # Same for version
+          pacname=${{ env.pacname }}
+          version=${{ env.version }}
           latest_vsix="${pacname}-vsce_latest.vsix"
           version_vsix="${pacname}-vsce_v${version}.vsix"
           packaged_vsix="${pacname}-${version}.vsix"
@@ -56,6 +56,7 @@ jobs:
           body_path: ./release.md
           files: version/**
           overwrite_files: true
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish release (latest tag)
         uses: softprops/action-gh-release@v2
@@ -68,12 +69,12 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
   vsce-publish:
+    needs: github-release
     name: Publish on VS Code Marketplace
     runs-on: ubuntu-latest
 
     steps:
-
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - uses: actions/setup-node@v3
         with:
