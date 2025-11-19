@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  releases:
+  github-release:
     name: Repository Release
     runs-on: ubuntu-latest
 
@@ -67,11 +67,20 @@ jobs:
           overwrite_files: true
           token: ${{ secrets.GITHUB_TOKEN }}
 
-  publish:
+  vsce-publish:
     name: Publish on VS Code Marketplace
     runs-on: ubuntu-latest
 
     steps:
+
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "22"
+
+      - run: git submodule update --init ./package
+
       - name: Publish VSCode Extension
         uses: lannonbr/vsce-action@4.0.0
         with:
