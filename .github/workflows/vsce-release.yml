@@ -67,9 +67,8 @@ jobs:
           files: latest/**
           overwrite_files: true
           token: ${{ secrets.GITHUB_TOKEN }}
-          
+
   vsce-publish:
-    needs: github-release
     name: Publish on VS Code Marketplace
     runs-on: ubuntu-latest
     continue-on-error: true
