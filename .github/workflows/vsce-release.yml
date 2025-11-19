@@ -33,15 +33,19 @@ jobs:
         run: |
           pacname=${{ env.pacname }}  # If pacname was set in previous step to env, else define here
           version=${{ env.version }}  # Same for version
-          artifact_vsix="${pacname}-vsce_v${version}.vsix"
+          latest_vsix="${pacname}-vsce_v${version}.vsix"
+          version_vsix="${pacname}-vsce_v${version}.vsix"
           packaged_vsix="${pacname}-${version}.vsix"
 
           echo "packaged_vsix=$packaged_vsix" >> $GITHUB_ENV
-          echo "artifact_vsix=$artifact_vsix" >> $GITHUB_ENV
+          echo "version_vsix=$version_vsix" >> $GITHUB_ENV
+          echo "latest_vsix=$latest_vsix" >> $GITHUB_ENV
 
-          mkdir -p artifacts
-          cp "$packaged_vsix" "artifacts/$artifact_vsix"
-          ls -l artifacts
+          mkdir -p version
+          cp "$packaged_vsix" "version/$version_vsix"
+
+          mkdir -p latest
+          cp "$packaged_vsix" "latest/$latest_vsix"
 
       - name: Publish release (version tag)
         uses: softprops/action-gh-release@v2
@@ -49,7 +53,7 @@ jobs:
           tag_name: v${{ env.version }}
           name: Release v${{ env.version }}
           body_path: ./release.md
-          files: artifacts/**
+          files: version/**
           overwrite_files: true
 
       - name: Publish release (latest tag)
@@ -58,7 +62,7 @@ jobs:
           tag_name: latest
           name: Release latest
           body_path: ./release.md
-          files: artifacts/**
+          files: latest/**
           overwrite_files: true
           token: ${{ secrets.GITHUB_TOKEN }}
 
