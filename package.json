@@ -5,7 +5,7 @@
   "version": "0.0.8",
   "publisher": "yshell-dev",
   "author": {
-    "name": "Yshell.dev",
+    "name": "Vyshnav Prasad",
     "email": "official@yshell.dev"
   },
   "homepage": "https://www.xcss.io/",
@@ -63,7 +63,6 @@
     "xcss",
     "toolkit",
     "stylesheet",
-    "vscode",
     "intellisense",
     "autocomplete",
     "formatting",
@@ -199,5 +198,8 @@
         "./css.json"
       ]
     }
-  }
+  },
+  "files": [
+    "preview/**/*"
+  ]
 }
