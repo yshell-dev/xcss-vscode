@@ -7,8 +7,9 @@ import { metadataFormat, metamergeFormat } from './helpers/metadata';
 export class DECORATIONS {
     private Server: ExtensionManager;
 
-    attrs_Style: vscode.TextEditorDecorationType | undefined;
     value_Style: vscode.TextEditorDecorationType | undefined;
+    attrs_Style: vscode.TextEditorDecorationType | undefined;
+    watch_Style: vscode.TextEditorDecorationType | undefined;
     hashrule_Style: vscode.TextEditorDecorationType | undefined;
     symclass_Style: vscode.TextEditorDecorationType | undefined;
     comProp_Style: vscode.TextEditorDecorationType | undefined;
@@ -30,6 +31,18 @@ export class DECORATIONS {
         this.attrs_Style = vscode.window.createTextEditorDecorationType({
             color: c_attribute,
             rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed
+        });
+        this.watch_Style = vscode.window.createTextEditorDecorationType({
+            color: c_attribute,
+            rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
+            before: {
+                contentText: '(',
+                color: 'gray',
+            },
+            after: {
+                contentText: ')',
+                color: 'gray',
+            },
         });
         this.value_Style = vscode.window.createTextEditorDecorationType({
             color: c_value,
@@ -79,6 +92,7 @@ export class DECORATIONS {
 
         for (const editor of editors) {
             if (this.attrs_Style) { editor.setDecorations(this.attrs_Style, []); }
+            if (this.watch_Style) { editor.setDecorations(this.watch_Style, []); }
             if (this.value_Style) { editor.setDecorations(this.value_Style, []); }
             if (this.comProp_Style) { editor.setDecorations(this.comProp_Style, []); }
             if (this.compVal_Style) { editor.setDecorations(this.compVal_Style, []); }
@@ -103,7 +117,7 @@ export class DECORATIONS {
 
         const fileContentMap: t_FileContent[] = [];
         const editors = vscode.window.visibleTextEditors;
-        
+
         for (const editor of editors) {
             const doc = this.Server.ReferDocument(editor.document);
 
@@ -131,6 +145,7 @@ export class DECORATIONS {
             const comment_Decos: vscode.DecorationOptions[] = [];
             const hashrule_Decos: vscode.DecorationOptions[] = [];
             const value_Decos: vscode.DecorationOptions[] = [];
+            const watch_Decos: vscode.DecorationOptions[] = [];
             const attrs_Decos: vscode.DecorationOptions[] = [];
             const compVal_Decos: vscode.DecorationOptions[] = [];
             const symclass_Decos: vscode.DecorationOptions[] = [];
@@ -170,18 +185,35 @@ export class DECORATIONS {
                 for (const track of tagRange.cache.watchtracks) {
                     try {
                         if (track.attrRange && track.valRange) {
-                            const Metadatas: t_Metadata[] = [];
+                            const tildas: t_Metadata[] = [], equals: t_Metadata[] = [], imptnt: t_Metadata[] = [];
                             for (const frag of (track.fragments ?? [])) {
-                                if (frag[0] != "~" && frag[0] != "=") { continue; }
+                                if (frag[0] != "~" && frag[0] != "=" && frag[0] != "!") { continue; }
                                 const metadata = local.getMetadata(frag.slice(1));
                                 if (metadata) {
-                                    Metadatas.push(metadata);
+                                    switch(frag[0]){
+                                        case '~': tildas.push(metadata); break;
+                                        case '=': equals.push(metadata); break;
+                                        case '!': imptnt.push(metadata); break;
+                                    }
                                     Object.assign(tagRange.variables, metadata.variables);
                                 }
                             }
+                            const Metadatas: t_Metadata[] = [...tildas, ...equals, ...imptnt];
                             const MetadataMerged = metamergeFormat(track.attr, doc.relpath, Metadatas);
-                            attrs_Decos.push({ range: track.attrRange, hoverMessage: MetadataMerged.toolTip });
-                            value_Decos.push({ range: track.valRange });
+                            watch_Decos.push({ range: track.attrRange, hoverMessage: MetadataMerged.toolTip });
+                            // value_Decos.push({ range: track.valRange });
+                        }
+                    } catch (error) {
+                        console.error('Error processing Ranges:', error);
+                    }
+                }
+
+                for (const track of tagRange.cache.watchfrags) {
+                    try {
+                        if (track.val[0] != "~" && track.val[0] != "=" && track.val[0] != "!") { continue; }
+                        const tr_val = track.val.slice(1);
+                        if (localsymclasses[tr_val]) {
+                            symclass_Decos.push({ range: track.valRange, hoverMessage: local.getMarkdown(tr_val) });
                         }
                     } catch (error) {
                         console.error('Error processing Ranges:', error);
@@ -211,18 +243,6 @@ export class DECORATIONS {
                     }
                 }
 
-                for (const track of tagRange.cache.watchfrags) {
-                    try {
-                        if (track.val[0] != "~" && track.val[0] != "=") { continue; }
-                        const tr_val =track.val.slice(1);
-                        if (localsymclasses[tr_val]) { 
-                            symclass_Decos.push({ range: track.valRange, hoverMessage: local.getMarkdown(tr_val) });
-                        }
-                    } catch (error) {
-                        console.error('Error processing Ranges:', error);
-                    }
-                }
-
                 for (const track of tagRange.cache.hashrules) {
                     try {
                         if (track.valRange) {
@@ -240,6 +260,7 @@ export class DECORATIONS {
             }
 
             if (this.attrs_Style) { editor.setDecorations(this.attrs_Style, attrs_Decos); }
+            if (this.watch_Style) { editor.setDecorations(this.watch_Style, watch_Decos); }
             if (this.value_Style) { editor.setDecorations(this.value_Style, value_Decos); }
             if (this.comProp_Style) { editor.setDecorations(this.comProp_Style, comProp_Decos); }
             if (this.compVal_Style) { editor.setDecorations(this.compVal_Style, compVal_Decos); }
