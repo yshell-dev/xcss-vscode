@@ -1,6 +1,6 @@
 import fs from 'fs';
 import vscode from 'vscode';
-import getBinPath from '../package/execute';
+import getBinPath from '../package/package';
 import { ExtensionManager } from './activate';
 import { WebSocket } from 'ws';
 import { spawn, ChildProcessWithoutNullStreams } from 'child_process';

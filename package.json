@@ -38,9 +38,6 @@
     "ws": "^8.18.3"
   },
   "license": "LICENSE.md",
-  "betaLicense": {
-    "summary": "Temporary Public-Beta License for evaluation and testing only. Not for production use or redistribution. Beta period ends when public version is updated to major version 1.0.0. Terms may change after beta."
-  },
   "type": "commonjs",
   "main": "./extension/activate.js",
   "icon": "./logo.png",

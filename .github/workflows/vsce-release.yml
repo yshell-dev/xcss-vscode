@@ -63,7 +63,7 @@ jobs:
         with:
           tag_name: latest
           name: Release latest
-          body_path: ./release.md
+          body_path: ./RELEASE.md
           files: latest/**
           overwrite_files: true
           token: ${{ secrets.GITHUB_TOKEN }}
