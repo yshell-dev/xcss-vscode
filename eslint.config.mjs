@@ -12,10 +12,9 @@ export default tseslint.config(
 	{
 		ignores: [
 			'.vscode-test',
-			'core/',
-			'build.js',
+			'package/**/*',
+			'esbuild.js',
 			'extension',
-			'core/execute.js'
 		]
 	},
 	js.configs.recommended,

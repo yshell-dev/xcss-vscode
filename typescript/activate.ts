@@ -27,7 +27,7 @@ export class ExtensionManager {
     readonly ID = ID;
     readonly PORT = PORT;
     readonly IDCAP = this.ID.toLocaleUpperCase();
-    readonly SymClassRgx = /[\w/$_-]+/i;;
+    readonly SymClassRgx = /[\w/$_-]+/i;
     readonly DeveloperMode: boolean = existsSync(path.resolve(__dirname, "..", "package", "source"));
     get config(): vscode.WorkspaceConfiguration { return vscode.workspace.getConfiguration(this.ID); };
 

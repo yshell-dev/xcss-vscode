@@ -14,8 +14,8 @@ export class INTELLISENSE {
     constructor(core: ExtensionManager) {
         this.Server = core;
         this.triggers = this.Server.config.get<boolean>("intellisense.mode") ? // true = smart
-            ['@', '-', ' ', '=', '#', '~', '&', '$', '\t', '\n', '/', '_', '(', ')', ':', '{', '}'] :
-            ['@', '-', ' ', '=', '#', '~', '&', '\t', '\n', '/', '_', '(', ')', ':', '{', '}'];
+            ['!', '@', '-', ' ', '=', '#', '~', '&', '\t', '\n', '/', '_', '(', ')', ':', '{', '}', '$'] :
+            ['!', '@', '-', ' ', '=', '#', '~', '&', '\t', '\n', '/', '_', '(', ')', ':', '{', '}'];
     }
 
     dispose() {
@@ -318,15 +318,8 @@ export class INTELLISENSE {
 
         const completions: vscode.CompletionItem[] =[];
 
-        if (local.attributes.includes(attributeMatch)) {
-            const valuePrefix = valueMatch.match(/[=~][\w/$_-]*$/i)?.[0] || '';
-            const isAtStyle = this.testAtrule(valuePrefix || '');
-            if (valueMatch[0] === "=" || valueMatch[0] === "~" || valueMatch[0] === "-") {
-                const iconKind = isAtStyle ? vscode.CompletionItemKind.Variable : vscode.CompletionItemKind.Field;
-                completions.push(...this.AttachableFilter(valuePrefix.slice(1), iconKind, local));
-            }
-        } else if (
-            (attributeMatch.endsWith("&") || /^[\w-]+\$+[\w-]+$/i.test(attributeMatch)) &&
+        if (
+            (attributeMatch.endsWith("&") || /^[\w-_]+\$+[\w-]+$/i.test(attributeMatch)) &&
             (!valueMatch.endsWith("~") && !valueMatch.endsWith("="))
         ) {
             const result = styleScanner(valueMatch);
@@ -483,6 +476,13 @@ export class INTELLISENSE {
                 case t_SnippetType.assign:
                     completions.push(...this.AssignableFilter(result.fragment, iconKind, local));
                     break;
+            }
+        } else {
+            const valuePrefix = valueMatch.match(/[=~!][\w/$_-]*$/i)?.[0] || '';
+            const isAtStyle = this.testAtrule(valuePrefix || '');
+            if (valuePrefix[0] === "=" || valuePrefix[0] === "~" || valuePrefix[0] === "!") {
+                const iconKind = isAtStyle ? vscode.CompletionItemKind.Variable : vscode.CompletionItemKind.Field;
+                completions.push(...this.AttachableFilter(valuePrefix.slice(1), iconKind, local));
             }
         }
         return completions;

@@ -9,7 +9,7 @@ interface Position {
     colFallback: number,
 }
 
-export default class Cursor {
+export default class Reader {
     content: string;
     active: Position;
     fallback: Position;

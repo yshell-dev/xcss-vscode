@@ -1,5 +1,5 @@
 import vscode from 'vscode';
-import fileScanner from './helpers/file-scanner';
+import fileScanner from './helpers/script-scanner';
 import { t_Metadata, t_FileContent, } from './types';
 import { ExtensionManager } from './activate';
 import { metadataFormat, metamergeFormat } from './helpers/metadata';
@@ -55,6 +55,7 @@ export class DECORATIONS {
         });
         this.symclass_Style = vscode.window.createTextEditorDecorationType({
             backgroundColor: "#77777733",
+            borderRadius: "4px",
             rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed
         });
 
@@ -136,7 +137,8 @@ export class DECORATIONS {
             }
 
             const content = editor.document.getText();
-            const parsed = fileScanner(content, doc.local.attributes, cursorOffset);
+            const watchAttr = doc.local.attributes;
+            const parsed = fileScanner(content, cursorOffset);
             fileContentMap.push({ abspath: doc.abspath, relpath: doc.relpath, content });
             doc.local.tagranges = parsed.TagRanges;
 
@@ -183,6 +185,9 @@ export class DECORATIONS {
 
                 // Class Properties
                 for (const track of tagRange.cache.watchtracks) {
+                    if (!watchAttr.includes(track.attr)) {
+                        continue;
+                    }
                     try {
                         if (track.attrRange && track.valRange) {
                             const tildas: t_Metadata[] = [], equals: t_Metadata[] = [], imptnt: t_Metadata[] = [];
@@ -190,7 +195,7 @@ export class DECORATIONS {
                                 if (frag[0] != "~" && frag[0] != "=" && frag[0] != "!") { continue; }
                                 const metadata = local.getMetadata(frag.slice(1));
                                 if (metadata) {
-                                    switch(frag[0]){
+                                    switch (frag[0]) {
                                         case '~': tildas.push(metadata); break;
                                         case '=': equals.push(metadata); break;
                                         case '!': imptnt.push(metadata); break;
@@ -233,10 +238,8 @@ export class DECORATIONS {
                                     hoverMessage: found.description?.toString()
                                 });
                             }
-                        } else {
-                            if (localsymclasses[track.val]) {
-                                symclass_Decos.push({ range: track.valRange, hoverMessage: local.getMarkdown(track.val) });
-                            }
+                        } else if (localsymclasses[track.val]) {
+                            symclass_Decos.push({ range: track.valRange, hoverMessage: local.getMarkdown(track.val) });
                         }
                     } catch (error) {
                         console.error('Error processing Ranges:', error);

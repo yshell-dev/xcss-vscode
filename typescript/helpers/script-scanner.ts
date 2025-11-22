@@ -1,7 +1,7 @@
 import vscode from 'vscode';
 
 import { t_TagCache, t_TagRange } from '../types';
-import Cursor from './file-cursor';
+import Reader from './file-reader';
 
 
 const bracePair: Record<string, string> = {
@@ -94,7 +94,6 @@ function valueScanner(
     let marker = cursorStart, snippet = '', ch = content[marker];
     let start: number = marker, end: number = marker, halt = false;
 
-
     do {
         ch = content[marker];
 
@@ -153,8 +152,7 @@ function valueScanner(
 function tagScanner(
     cursor: number,
     content: string,
-    fileCursor: Cursor,
-    classProps: string[],
+    fileCursor: Reader,
 ) {
 
     const stash: ScannerStash = {
@@ -241,9 +239,9 @@ function tagScanner(
                     hashruleScanner(content, attrStart, attrEnd + 1, attrStartPos.line, attrStartPos.character, tagCache);
                     const fragments = valueScanner(content, valStart, fileCursor.active.marker, valStartPos.line, valStartPos.character, tagCache, false);
                     tagCache.composes.push({ kind, attrRange, valRange, blockRange, valStart, valEnd, attrStart, attrEnd, attr, val, multiLine, fragments, variableSet });
-                } else if (classProps.includes(attr)) {
+                } else {
                     const fragments = valueScanner(content, valStart, fileCursor.active.marker, valStartPos.line, valStartPos.character, tagCache, true);
-                    tagCache.watchtracks.push({ kind, attrRange, valRange, blockRange, valStart, valEnd, attrStart, attrEnd, attr, val, multiLine, fragments, variableSet });
+                        tagCache.watchtracks.push({ kind, attrRange, valRange, blockRange, valStart, valEnd, attrStart, attrEnd, attr, val, multiLine, fragments, variableSet });
                 }
             }
 
@@ -311,7 +309,7 @@ function cursorSave(mainStash: ScannerStash, subStash: ScannerStash) {
     });
 }
 
-export default function scanner(content: string, classProps: string[] = [], cursor = 0): ScannerStash {
+export default function scriptScanner(content: string, cursor = 0): ScannerStash {
     const stash: ScannerStash = {
         cursorString: '',
         cursorAttribute: '',
@@ -319,7 +317,7 @@ export default function scanner(content: string, classProps: string[] = [], curs
         TagRanges: []
     };
     try {
-        const fileCursor = new Cursor(content);
+        const fileCursor = new Reader(content);
 
         do {
             const char = fileCursor.active.char;
@@ -330,7 +328,7 @@ export default function scanner(content: string, classProps: string[] = [], curs
                 && (/[/\d\w-]/i.test(content[fileCursor.active.marker + 1]))
             ) {
                 const tagStartPos = new vscode.Position(fileCursor.active.rowMarker, fileCursor.active.colMarker);
-                const response = tagScanner(cursor, content, fileCursor, classProps);
+                const response = tagScanner(cursor, content, fileCursor);
                 if (response.ok) {
                     const tagEndPos = new vscode.Position(fileCursor.active.rowMarker, fileCursor.active.colMarker);
                     cursorSave(stash, response.stash);

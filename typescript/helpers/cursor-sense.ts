@@ -1,5 +1,5 @@
 import { t_FileCursor } from '../types';
-import Cursor from './file-cursor';
+import Reader from './file-reader';
 
 
 const bracePair: Record<string, string> = {
@@ -22,7 +22,7 @@ interface ScannerStash {
 function tagScanner(
     cursor: number,
     content: string,
-    fileCursor: Cursor,
+    fileCursor: Reader,
     stash: ScannerStash,
 ) {
     let val = "",
@@ -93,7 +93,7 @@ export default function scanner(content: string, cursor = 0): ScannerStash {
         cursorValue: ''
     };
     try {
-        const fileCursor = new Cursor(content);
+        const fileCursor = new Reader(content);
 
         do {
             const char = fileCursor.active.char;
@@ -101,7 +101,7 @@ export default function scanner(content: string, cursor = 0): ScannerStash {
             if (
                 (content[fileCursor.active.marker - 1] !== "\\")
                 && (char === "<")
-                && (/[/\d\w-]/i.test(content[fileCursor.active.marker + 1]))
+                && (/[!/\d\w-]/i.test(content[fileCursor.active.marker + 1]))
             ) {
                 const ok = tagScanner(cursor, content, fileCursor, stash);
                 if (ok) { fileCursor.increment(); }

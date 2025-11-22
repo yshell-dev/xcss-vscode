@@ -200,6 +200,21 @@
     }
   },
   "files": [
-    "preview/**/*"
+    "extension/**/*",
+    "package/**/*",
+    "preview/**/*",
+    "typescript/**/*",
+    ".gitmodules",
+    ".gitignore",
+    ".npmignore",
+    "esbuild.js",
+    "eslint.config.mjs",
+    "LICENSE.md",
+    "logo.png",
+    "package-lock.json",
+    "package.json",
+    "README.md",
+    "release.md",
+    "tsconfig.build.json"
   ]
 }

@@ -1,6 +1,6 @@
 import vscode from 'vscode';
 import colorSense from '../helpers/color-sense';
-import fileScanner from '../helpers/file-scanner';
+import fileScanner from '../helpers/script-scanner';
 
 import { SwitchRGB } from "../helpers/color-swap";
 import { ExtensionManager } from '../activate';
