@@ -12,8 +12,9 @@ const bracePair: Record<string, string> = {
     "`": "`",
     '"': '"',
 };
-const openBraces = ["[", "{", "(", "'", '"', "`"];
 const closeBraces = ["]", "}", ")"];
+const openBraces = ["[", "{", "(", "'", '"', "`"];
+const symclasDeclarationRegex = /^[\w-_]+\$+[\w-]+$/i;
 
 interface ScannerStash {
     cursorString: string;
@@ -235,7 +236,7 @@ function tagScanner(
 
                 if (attr === "&") {
                     tagCache.comments.push({ kind, attrRange, valRange, blockRange, valStart, valEnd, attrStart, attrEnd, attr, val, multiLine });
-                } else if (attr.endsWith("&") || /^[\w-_]+\$+[\w-]+$/i.test(attr)) {
+                } else if (attr.endsWith("&") || symclasDeclarationRegex.test(attr)) {
                     hashruleScanner(content, attrStart, attrEnd + 1, attrStartPos.line, attrStartPos.character, tagCache);
                     const fragments = valueScanner(content, valStart, fileCursor.active.marker, valStartPos.line, valStartPos.character, tagCache, false);
                     tagCache.composes.push({ kind, attrRange, valRange, blockRange, valStart, valEnd, attrStart, attrEnd, attr, val, multiLine, fragments, variableSet });
@@ -309,7 +310,7 @@ function cursorSave(mainStash: ScannerStash, subStash: ScannerStash) {
     });
 }
 
-export default function scriptScanner(content: string, cursor = 0): ScannerStash {
+export default function ScanScriptRanges(content: string, cursor = 0): ScannerStash {
     const stash: ScannerStash = {
         cursorString: '',
         cursorAttribute: '',

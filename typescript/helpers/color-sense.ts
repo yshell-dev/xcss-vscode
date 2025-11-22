@@ -13,22 +13,22 @@ const bracePair: Record<string, string> = {
 const openBraces = ["[", "{", "(", "'", '"', "`"];
 const closeBraces = ["]", "}", ")"];
 const hexints: Record<string, number> = {
-    0: 0,
-    1: 1,
-    2: 2,
-    3: 3,
-    4: 4,
-    5: 5,
-    6: 6,
-    7: 7,
-    8: 8,
-    9: 9,
-    a: 10,
-    b: 11,
-    c: 12,
-    d: 13,
-    e: 14,
-    f: 15,
+    "0": 0,
+    "1": 1,
+    "2": 2,
+    "3": 3,
+    "4": 4,
+    "5": 5,
+    "6": 6,
+    "7": 7,
+    "8": 8,
+    "9": 9,
+    "a": 10,
+    "b": 11,
+    "c": 12,
+    "d": 13,
+    "e": 14,
+    "f": 15,
 };
 
 function hexScanner(
@@ -71,7 +71,7 @@ function hexScanner(
 function stdScanner(
     content: string,
     fileCursor: t_FileCursor,
-    palette: string
+    palette: string,
 ): number[] {
     const values: number[] = [], braceTrack: string[] = [];
     let value = "", awaitBrace = "", ok = true, deviance = 0, ch = content[fileCursor.marker];

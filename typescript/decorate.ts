@@ -1,5 +1,5 @@
 import vscode from 'vscode';
-import fileScanner from './helpers/script-scanner';
+import fileScanner from './helpers/script-ranges';
 import { t_Metadata, t_FileContent, } from './types';
 import { ExtensionManager } from './activate';
 import { metadataFormat, metamergeFormat } from './helpers/metadata';

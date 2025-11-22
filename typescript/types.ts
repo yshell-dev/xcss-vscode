@@ -104,6 +104,7 @@ export interface t_ManifestGlobal {
 }
 
 export interface t_ManifestLocals {
+    hashes: string[],
     assignable: string[],
     attachable: string[],
     symclasses: Record<string, t_Metadata>,
