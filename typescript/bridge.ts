@@ -75,7 +75,7 @@ export class BRIDGE {
 
     constructor(core: ExtensionManager) {
         this.Server = core;
-        this.RootBinary = getBinPath(core.DeveloperMode);
+        this.RootBinary = getBinPath();
         this.OutputCh = vscode.window.createOutputChannel(this.Server.IDCAP + ' Server');
         this.periodics();
     }

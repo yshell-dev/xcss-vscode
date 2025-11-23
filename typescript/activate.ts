@@ -2,8 +2,11 @@
 import path from 'path';
 import vscode from 'vscode';
 
-import { existsSync } from 'fs';
-import { t_Manifest_Mixed, t_ManifestGlobal, t_ManifestLocals, } from './types';
+import { 
+    t_Manifest_Mixed, 
+    t_ManifestGlobal, 
+    t_ManifestLocals, 
+} from './types';
 
 import { BRIDGE } from './bridge';
 import { WIDGET } from './internal/widget';
@@ -28,7 +31,6 @@ export class ExtensionManager {
     readonly PORT = PORT;
     readonly IDCAP = this.ID.toLocaleUpperCase();
     readonly SymClassRgx = /[\w/$_-]+/i;
-    readonly DeveloperMode: boolean = existsSync(path.resolve(__dirname, "..", "package", "source"));
     get config(): vscode.WorkspaceConfiguration { return vscode.workspace.getConfiguration(this.ID); };
 
     // External Workers

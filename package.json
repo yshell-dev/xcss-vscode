@@ -37,7 +37,7 @@
     "vscode-css-languageservice": "^6.3.5",
     "ws": "^8.18.3"
   },
-  "license": "LICENSE.md",
+  "license": "MIT",
   "type": "commonjs",
   "main": "./extension/activate.js",
   "icon": "./logo.png",

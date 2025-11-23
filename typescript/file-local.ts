@@ -14,6 +14,7 @@ export class FILELOCAL {
     constructor(core: ExtensionManager) {
         this.Server = core;
         this.manifest = {
+            hashes: [],
             assignable: [],
             attachable: [],
             symclasses: {},
