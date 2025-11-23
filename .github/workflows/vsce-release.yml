@@ -53,7 +53,7 @@ jobs:
         with:
           tag_name: v${{ env.version }}
           name: Release v${{ env.version }}
-          body_path: ./release.md
+          body_path: ./RELEASE.md
           files: version/**
           overwrite_files: true
           token: ${{ secrets.GITHUB_TOKEN }}
