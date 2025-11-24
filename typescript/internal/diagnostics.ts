@@ -65,7 +65,7 @@ export class DIAGNOSTICS {
             for (const source of diagnostic.sources || []) {
                 const parsed = AnalyzeLocation(source);
                 if (!parsed) { continue; }
-                
+
                 const arr = dmap[parsed.filepath] || [];
                 arr.push(this.createError(parsed.definitionRange, diagnostic.message));
                 dmap[parsed.filepath] = arr;
@@ -101,7 +101,7 @@ export class DIAGNOSTICS {
                         }
                     }
                     const symclasses: t_TrackRange[] = [];
-                    for (const i of tag.cache.composes) {
+                    for (const i of tag.cache.composerRanges) {
                         if (!i.attr.endsWith('&')) {
                             symclasses.push(i);
                         }
@@ -120,7 +120,7 @@ export class DIAGNOSTICS {
                         }
                     }
 
-                    if (symclasses.length === 0 && tag.cache.composes.length) {
+                    if (symclasses.length === 0 && tag.cache.composerRanges.length) {
                         thisDiags.push(this.createError(tag.range, "Symclass missing in declaration scope."));
                     } else if (symclasses.length > 1) {
                         for (const i of symclasses) {

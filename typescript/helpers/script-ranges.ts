@@ -154,10 +154,10 @@ function tagScanner(
     };
 
     const tagCache: t_TagCache = {
-        comments: [],
-        composes: [],
         hashrules: [],
-        watchtracks: [],
+        commentsRanges: [],
+        composerRanges: [],
+        watchingRanges: [],
         defaultValFrags: [],
         watcherValFrags: [],
         composeValFrags: [],
@@ -226,17 +226,17 @@ function tagScanner(
                 const blockRange = new vscode.Range(attrStartPos, valEndPos);
 
                 if (attr === "&") {
-                    tagCache.comments.push({ kind, attrRange, valRange, blockRange, valStart, valEnd, attrStart, attrEnd, attr, val, multiLine });
+                    tagCache.commentsRanges.push({ kind, attrRange, valRange, blockRange, valStart, valEnd, attrStart, attrEnd, attr, val, multiLine });
                 } else if (attr.endsWith("&") || symclasDeclarationRegex.test(attr)) {
                     hashruleScanner(content, attrStart, attrEnd + 1, attrStartPos.line, attrStartPos.character, tagCache);
                     const fragments = fargScanner(content, valStart, fileCursor.active.marker, valStartPos.line, valStartPos.character, tagCache.composeValFrags);
-                    tagCache.composes.push({ kind, attrRange, valRange, blockRange, valStart, valEnd, attrStart, attrEnd, attr, val, multiLine, fragments, variableSet });
+                    tagCache.composerRanges.push({ kind, attrRange, valRange, blockRange, valStart, valEnd, attrStart, attrEnd, attr, val, multiLine, fragments, variableSet });
                 } else if (watching.includes(attr)) {
                     const fragments = fargScanner(content, valStart, fileCursor.active.marker, valStartPos.line, valStartPos.character, tagCache.watcherValFrags);
-                    tagCache.watchtracks.push({ kind, attrRange, valRange, blockRange, valStart, valEnd, attrStart, attrEnd, attr, val, multiLine, fragments, variableSet });
+                    tagCache.watchingRanges.push({ kind, attrRange, valRange, blockRange, valStart, valEnd, attrStart, attrEnd, attr, val, multiLine, fragments, variableSet });
                 } else {
                     const fragments = fargScanner(content, valStart, fileCursor.active.marker, valStartPos.line, valStartPos.character, tagCache.defaultValFrags);
-                    tagCache.watchtracks.push({ kind, attrRange, valRange, blockRange, valStart, valEnd, attrStart, attrEnd, attr, val, multiLine, fragments, variableSet });
+                    tagCache.watchingRanges.push({ kind, attrRange, valRange, blockRange, valStart, valEnd, attrStart, attrEnd, attr, val, multiLine, fragments, variableSet });
                 }
             }
 

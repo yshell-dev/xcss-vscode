@@ -19,17 +19,17 @@ export class FOLDRANGE {
 
         const A: vscode.FoldingRange[] = [];
         for (const I of ref.local.tagranges) {
-            for (const i of I.cache.composes) {
+            for (const i of I.cache.composerRanges) {
                 if (i.multiLine) {
                     A.push(new vscode.FoldingRange(i.valRange.start.line, i.valRange.end.line, vscode.FoldingRangeKind.Region));
                 }
             }
-            for (const i of I.cache.watchtracks) {
+            for (const i of I.cache.watchingRanges) {
                 if (i.multiLine) {
                     A.push(new vscode.FoldingRange(i.valRange.start.line, i.valRange.end.line, vscode.FoldingRangeKind.Region));
                 }
             }
-            for (const i of I.cache.comments) {
+            for (const i of I.cache.commentsRanges) {
                 if (i.multiLine) {
                     A.push(new vscode.FoldingRange(i.valRange.start.line, i.valRange.end.line, vscode.FoldingRangeKind.Region));
                 }

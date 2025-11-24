@@ -178,7 +178,7 @@ export class DECORATIONS {
 
             for (const tagRange of parsed.TagRanges) {
 
-                for (const track of tagRange.cache.comments) {
+                for (const track of tagRange.cache.commentsRanges) {
                     try {
                         if (track.attrRange && track.valRange) {
                             attrs_Decos.push({ range: track.attrRange });
@@ -189,7 +189,7 @@ export class DECORATIONS {
                     }
                 }
 
-                for (const track of tagRange.cache.composes) {
+                for (const track of tagRange.cache.composerRanges) {
                     try {
                         if (track.attrRange && track.valRange) {
                             const f = track.attr.replace(/^[-_]\$/, "$");
@@ -207,7 +207,7 @@ export class DECORATIONS {
                 }
 
                 // Watching Attributes
-                for (const track of tagRange.cache.watchtracks) {
+                for (const track of tagRange.cache.watchingRanges) {
                     if (!watchAttr.includes(track.attr)) {
                         continue;
                     }

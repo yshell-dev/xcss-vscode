@@ -22,17 +22,17 @@ export class FILELOCAL {
         this.updateManifest();
     }
 
-    getTagAttrValPairRanges(tracks = true, comments = true, compose = true): t_TrackRange[] {
+    RangeFilter(watching = true, comments = true, compose = true): t_TrackRange[] {
         const acc: t_TrackRange[] = [];
         for (const I of this.tagranges) {
-            if (tracks) {
-                for (const i of I.cache.watchtracks) { acc.push(i); }
+            if (watching) {
+                for (const i of I.cache.watchingRanges) { acc.push(i); }
             }
             if (comments) {
-                for (const i of I.cache.comments) { acc.push(i); }
+                for (const i of I.cache.commentsRanges) { acc.push(i); }
             }
             if (compose) {
-                for (const i of I.cache.composes) { acc.push(i); }
+                for (const i of I.cache.composerRanges) { acc.push(i); }
             }
         }
         return acc;

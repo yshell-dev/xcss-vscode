@@ -24,7 +24,7 @@ export class DEFINITION {
 
         const range = document.getWordRangeAtPosition(position, this.Server.SymClassRgx);
         const word = document.getText(range);
-        const isWordInTrackedRange = ref.local.getTagAttrValPairRanges().some(r => r.valRange.contains(position));
+        const isWordInTrackedRange = ref.local.RangeFilter().some(r => r.valRange.contains(position));
 
         if (!isWordInTrackedRange) { return undefined; }
         const symclasses = ref.local.attachables;

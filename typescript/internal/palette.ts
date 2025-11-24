@@ -92,7 +92,7 @@ export class PALETTE {
             colors.push(...this.readColorData(document.getText(), 0, new vscode.Position(0, 0)));
         } else {
             for (const range of fileScanner(document.getText()).TagRanges) {
-                for (const r of range.cache.composes) {
+                for (const r of range.cache.composerRanges) {
                     if (!r.val) { continue; }
                     colors.push(...this.readColorData(r.val, 0, r.valRange.start));
                 }

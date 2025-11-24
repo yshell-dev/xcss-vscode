@@ -28,7 +28,7 @@ export class FORMATTING {
         if (!ref) { return; }
 
         const attrValPairs: t_TrackRange[] = [];
-        for (const i of ref.local.getTagAttrValPairRanges()) {
+        for (const i of ref.local.RangeFilter(false, false, true)) {
             if (!i.attrRange.intersection(i.valRange)) {
                 attrValPairs.push(i);
             }
