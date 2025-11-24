@@ -25,7 +25,6 @@ export class INTELLISENSE {
     testAtrule(string: string) {
         return /^_|\$_/.test(string);
     }
-
     createCompletionItem(
         label: string,
         insertText: string | vscode.SnippetString,
@@ -35,7 +34,8 @@ export class INTELLISENSE {
     ): vscode.CompletionItem {
         const completion = new vscode.CompletionItem(label, kind);
         completion.preselect = true;
-        completion.sortText = label;
+        // Prefix with null char to sort items before others
+        completion.sortText = "\0" + label;
         completion.insertText = insertText;
         completion.documentation = new vscode.MarkdownString(documentation);
         if (detail) { completion.detail = detail; }
@@ -64,7 +64,7 @@ export class INTELLISENSE {
                     completions.push(this.createCompletionItem(
                         `[/${lib}/]`,
                         lib,
-                        iconKind,
+                        vscode.CompletionItemKind.Struct,
                         `External Artifact`,
                     ));
                 }
@@ -103,7 +103,7 @@ export class INTELLISENSE {
                     completions.push(this.createCompletionItem(
                         `[${lib}$]`,
                         lib,
-                        iconKind,
+                        vscode.CompletionItemKind.Struct,
                         `External Cluster`,
                     ));
                 }
@@ -142,7 +142,7 @@ export class INTELLISENSE {
                     completions.push(this.createCompletionItem(
                         `[${lib}$]`,
                         lib,
-                        iconKind,
+                        vscode.CompletionItemKind.Struct,
                         `Native Cluster`,
                     ));
                 }
@@ -173,6 +173,7 @@ export class INTELLISENSE {
         if (this.Server.config.get<boolean>("intellisense.mode")) {
             return this.SmartSymClassFilter(prefix, iconKind, local.attachables);
         }
+        if (prefix.length) { return []; }
         return this.SimpleSymClassFilter(prefix, iconKind, local.attachables);
     }
 
@@ -180,6 +181,7 @@ export class INTELLISENSE {
         if (this.Server.config.get<boolean>("intellisense.mode")) {
             return this.SmartSymClassFilter(prefix, iconKind, local.assignables);
         }
+        if (prefix.length) {return [];}
         return this.SimpleSymClassFilter(prefix, iconKind, local.assignables);
     }
 
@@ -203,6 +205,8 @@ export class INTELLISENSE {
                         completions.push(...this.handleValueMatch(parsed.cursorAttribute, valueFragment, foundVars, ref.local));
                     } else if (parsed.cursorString.length) {
                         completions.push(...this.handleAttributeMatch(parsed.cursorString));
+                    } else {
+                        completions.push(...this.handleValueMatch("", fileFragment, {}, ref.local));
                     }
                 }
             }
@@ -316,7 +320,7 @@ export class INTELLISENSE {
         local: FILELOCAL,
     ): vscode.CompletionItem[] {
 
-        const completions: vscode.CompletionItem[] =[];
+        const completions: vscode.CompletionItem[] = [];
 
         if (
             (attributeMatch.endsWith("&") || /^[\w-_]+\$+[\w-]+$/i.test(attributeMatch)) &&
@@ -478,11 +482,27 @@ export class INTELLISENSE {
                     break;
             }
         } else {
-            const valuePrefix = valueMatch.match(/[=~!][\w/$_-]*$/i)?.[0] || '';
-            const isAtStyle = this.testAtrule(valuePrefix || '');
-            if (valuePrefix[0] === "=" || valuePrefix[0] === "~" || valuePrefix[0] === "!") {
-                const iconKind = isAtStyle ? vscode.CompletionItemKind.Variable : vscode.CompletionItemKind.Field;
-                completions.push(...this.AttachableFilter(valuePrefix.slice(1), iconKind, local));
+            if (local.watchingAttributes.includes(attributeMatch)) {
+                const valuePrefix = valueMatch.match(/[=~!][\w/$_-]*$/i)?.[0] || '';
+                const isAtStyle = this.testAtrule(valuePrefix || '');
+                if (valuePrefix[0] === "=" || valuePrefix[0] === "~" || valuePrefix[0] === "!") {
+                    const iconKind = isAtStyle ? vscode.CompletionItemKind.Variable : vscode.CompletionItemKind.Field;
+                    completions.push(...this.AttachableFilter(valuePrefix.slice(1), iconKind, local));
+                }
+            } else {
+                const valuePrefix = valueMatch.match(/\\[#=~!][\w/$_-]*$/i)?.[0] || '';
+                const isAtStyle = this.testAtrule(valuePrefix || '');
+                if (valuePrefix[1] === "=" || valuePrefix[1] === "~" || valuePrefix[1] === "!") {
+                    const iconKind = isAtStyle ? vscode.CompletionItemKind.Variable : vscode.CompletionItemKind.Field;
+                    completions.push(...this.AttachableFilter(valuePrefix.slice(2), iconKind, local));
+                } else if (valuePrefix[1] == "#") {
+                    for (const hash of local.manifest.hashes) {
+                        completions.push(this.createCompletionItem(
+                            hash, hash, vscode.CompletionItemKind.Field,
+                            "Registered Local Hash",
+                        ));
+                    }
+                }
             }
         }
         return completions;

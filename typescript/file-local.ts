@@ -6,7 +6,7 @@ export class FILELOCAL {
     private Server: ExtensionManager;
     manifest: t_ManifestLocals;
 
-    attributes: string[] = [];
+    watchingAttributes: string[] = [];
     tagranges: t_TagRange[] = [];
     attachables: Record<string, t_Metadata> = {};
     assignables: Record<string, t_Metadata> = {};

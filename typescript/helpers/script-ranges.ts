@@ -1,6 +1,6 @@
 import vscode from 'vscode';
 
-import { t_TagCache, t_TagRange } from '../types';
+import { t_TagCache, t_TagRange, t_TrackRange } from '../types';
 import Reader from './file-reader';
 
 
@@ -15,12 +15,14 @@ const bracePair: Record<string, string> = {
 const closeBraces = ["]", "}", ")"];
 const openBraces = ["[", "{", "(", "'", '"', "`"];
 const symclasDeclarationRegex = /^[\w-_]+\$+[\w-]+$/i;
+const fragRegex = /[\\#\w\d$_/:=~!-]/i;
 
 interface ScannerStash {
     cursorString: string;
     cursorAttribute: string;
     cursorValue: string;
     TagRanges: t_TagRange[]
+    outsideTagfrags: t_TrackRange[];
 }
 
 
@@ -78,14 +80,13 @@ function hashruleScanner(
     } while (++marker <= cursorEnd);
 }
 
-function valueScanner(
+function fargScanner(
     content: string,
     cursorStart: number,
     cursorEnd: number,
     rowMarker: number,
     colMarker: number,
-    tagCache: t_TagCache,
-    val0_wat1: boolean
+    fragDump: t_TrackRange[],
 ): string[] {
     const kind: vscode.FoldingRangeKind = vscode.FoldingRangeKind.Comment;
     const fragments: string[] = [];
@@ -93,7 +94,7 @@ function valueScanner(
     let startPos = new vscode.Position(rowMarker, colMarker);
     let endPos = new vscode.Position(rowMarker, colMarker);
     let marker = cursorStart, snippet = '', ch = content[marker];
-    let start: number = marker, end: number = marker, halt = false;
+    let start: number = marker, end: number = marker;
 
     do {
         ch = content[marker];
@@ -105,40 +106,28 @@ function valueScanner(
             colMarker++;
         }
 
-        if (!halt) {
-            if (/[\\\w\d$_/:=~!-]/i.test(ch)) {
-                snippet += ch;
-                endPos = new vscode.Position(rowMarker, colMarker);
-            } else if (snippet.length > 0) {
-                end = marker;
-                fragments.push(snippet);
-                const blockRange = new vscode.Range(startPos, endPos);
-                const tr = {
-                    kind,
-                    blockRange,
-                    valRange: blockRange,
-                    attrRange: blockRange,
-                    valStart: start,
-                    valEnd: end,
-                    attrStart: start,
-                    attrEnd: end,
-                    attr: snippet,
-                    val: snippet,
-                    multiLine: false
-                };
-                if (val0_wat1) { tagCache.watchfrags.push(tr); }
-                else { tagCache.valuefrags.push(tr); }
-                snippet = "";
-            }
-        }
-
-        switch (ch) {
-            case "&":
-            case "@":
-            case ":": halt = true; break;
-            case "{":
-            case "}":
-            case ";": halt = false; break;
+        if (fragRegex.test(ch)) {
+            snippet += ch;
+            endPos = new vscode.Position(rowMarker, colMarker);
+        } else if (snippet.length > 0) {
+            end = marker;
+            fragments.push(snippet);
+            const blockRange = new vscode.Range(startPos, endPos);
+            const tr = {
+                kind,
+                blockRange,
+                valRange: blockRange,
+                attrRange: blockRange,
+                valStart: start,
+                valEnd: end,
+                attrStart: start,
+                attrEnd: end,
+                attr: snippet,
+                val: snippet,
+                multiLine: false
+            };
+            fragDump.push(tr);
+            snippet = "";
         }
 
         if (snippet.length === 0) {
@@ -154,22 +143,24 @@ function tagScanner(
     cursor: number,
     content: string,
     fileCursor: Reader,
+    watching: string[],
 ) {
-
     const stash: ScannerStash = {
         cursorString: '',
         cursorAttribute: '',
         cursorValue: '',
-        TagRanges: []
+        TagRanges: [],
+        outsideTagfrags: []
     };
 
     const tagCache: t_TagCache = {
-        hashrules: [],
-        watchtracks: [],
-        watchfrags: [],
         comments: [],
         composes: [],
-        valuefrags: [],
+        hashrules: [],
+        watchtracks: [],
+        defaultValFrags: [],
+        watcherValFrags: [],
+        composeValFrags: [],
     };
 
     const variableSet = new Set<string>();
@@ -238,11 +229,14 @@ function tagScanner(
                     tagCache.comments.push({ kind, attrRange, valRange, blockRange, valStart, valEnd, attrStart, attrEnd, attr, val, multiLine });
                 } else if (attr.endsWith("&") || symclasDeclarationRegex.test(attr)) {
                     hashruleScanner(content, attrStart, attrEnd + 1, attrStartPos.line, attrStartPos.character, tagCache);
-                    const fragments = valueScanner(content, valStart, fileCursor.active.marker, valStartPos.line, valStartPos.character, tagCache, false);
+                    const fragments = fargScanner(content, valStart, fileCursor.active.marker, valStartPos.line, valStartPos.character, tagCache.composeValFrags);
                     tagCache.composes.push({ kind, attrRange, valRange, blockRange, valStart, valEnd, attrStart, attrEnd, attr, val, multiLine, fragments, variableSet });
+                } else if (watching.includes(attr)) {
+                    const fragments = fargScanner(content, valStart, fileCursor.active.marker, valStartPos.line, valStartPos.character, tagCache.watcherValFrags);
+                    tagCache.watchtracks.push({ kind, attrRange, valRange, blockRange, valStart, valEnd, attrStart, attrEnd, attr, val, multiLine, fragments, variableSet });
                 } else {
-                    const fragments = valueScanner(content, valStart, fileCursor.active.marker, valStartPos.line, valStartPos.character, tagCache, true);
-                        tagCache.watchtracks.push({ kind, attrRange, valRange, blockRange, valStart, valEnd, attrStart, attrEnd, attr, val, multiLine, fragments, variableSet });
+                    const fragments = fargScanner(content, valStart, fileCursor.active.marker, valStartPos.line, valStartPos.character, tagCache.defaultValFrags);
+                    tagCache.watchtracks.push({ kind, attrRange, valRange, blockRange, valStart, valEnd, attrStart, attrEnd, attr, val, multiLine, fragments, variableSet });
                 }
             }
 
@@ -310,26 +304,58 @@ function cursorSave(mainStash: ScannerStash, subStash: ScannerStash) {
     });
 }
 
-export default function ScanScriptRanges(content: string, cursor = 0): ScannerStash {
+export default function ScanScriptRanges(content: string, watching: string[] = [], cursor = 0): ScannerStash {
     const stash: ScannerStash = {
         cursorString: '',
         cursorAttribute: '',
         cursorValue: '',
-        TagRanges: []
+        TagRanges: [],
+        outsideTagfrags: [],
     };
+    let snippet = "", start = 0, end = 0;
+    let startPos = new vscode.Position(0, 0), endPos = new vscode.Position(0, 0);
     try {
         const fileCursor = new Reader(content);
 
         do {
-            const char = fileCursor.active.char;
+            const ch = fileCursor.active.char;
+            let inc = true;
+
+
+            if (ch && fragRegex.test(ch)) {
+                snippet += ch;
+                endPos = new vscode.Position(fileCursor.active.rowMarker, fileCursor.active.colMarker);
+            } else if (snippet.length > 0) {
+                end = fileCursor.active.marker;
+                const blockRange = new vscode.Range(startPos, endPos);
+                const tr = {
+                    kind: vscode.FoldingRangeKind.Comment,
+                    blockRange,
+                    valRange: blockRange,
+                    attrRange: blockRange,
+                    valStart: start,
+                    valEnd: end,
+                    attrStart: start,
+                    attrEnd: end,
+                    attr: snippet,
+                    val: snippet,
+                    multiLine: false
+                };
+                stash.outsideTagfrags.push(tr);
+                snippet = "";
+            }
+            if (snippet.length === 0) {
+                start = fileCursor.active.marker;
+                startPos = new vscode.Position(fileCursor.active.rowMarker, fileCursor.active.colMarker);
+            }
 
             if (
                 (content[fileCursor.active.marker - 1] !== "\\")
-                && (char === "<")
+                && (ch === "<")
                 && (/[/\d\w-]/i.test(content[fileCursor.active.marker + 1]))
             ) {
                 const tagStartPos = new vscode.Position(fileCursor.active.rowMarker, fileCursor.active.colMarker);
-                const response = tagScanner(cursor, content, fileCursor);
+                const response = tagScanner(cursor, content, fileCursor, watching);
                 if (response.ok) {
                     const tagEndPos = new vscode.Position(fileCursor.active.rowMarker, fileCursor.active.colMarker);
                     cursorSave(stash, response.stash);
@@ -338,11 +364,12 @@ export default function ScanScriptRanges(content: string, cursor = 0): ScannerSt
                         variables: {},
                         cache: response.tagCache
                     });
-                    fileCursor.increment();
+                } else {
+                    inc = false;
                 }
-            } else {
-                fileCursor.increment();
             }
+
+            if (inc) { fileCursor.increment(); }
         } while (fileCursor.active.marker < content.length);
 
     } catch (error) {

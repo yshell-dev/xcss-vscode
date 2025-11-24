@@ -102,7 +102,7 @@
         },
         "xcss.decoration.value": {
           "type": "string",
-          "default": "#ffbe88",
+          "default": "#f7b787",
           "description": "Color for tag value. Restart extension to take effect."
         },
         "xcss.providers.palette": {

@@ -10,7 +10,7 @@ export class DECORATIONS {
     value_Style: vscode.TextEditorDecorationType | undefined;
     attrs_Style: vscode.TextEditorDecorationType | undefined;
     watch_Style: vscode.TextEditorDecorationType | undefined;
-    hashrule_Style: vscode.TextEditorDecorationType | undefined;
+    hash_Style: vscode.TextEditorDecorationType | undefined;
     symclass_Style: vscode.TextEditorDecorationType | undefined;
     comProp_Style: vscode.TextEditorDecorationType | undefined;
     compVal_Style: vscode.TextEditorDecorationType | undefined;
@@ -33,7 +33,6 @@ export class DECORATIONS {
             rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed
         });
         this.watch_Style = vscode.window.createTextEditorDecorationType({
-            color: c_attribute,
             rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
             before: {
                 contentText: '(',
@@ -49,7 +48,7 @@ export class DECORATIONS {
             rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed
         });
 
-        this.hashrule_Style = vscode.window.createTextEditorDecorationType({
+        this.hash_Style = vscode.window.createTextEditorDecorationType({
             textDecoration: "underline",
             rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed
         });
@@ -98,7 +97,7 @@ export class DECORATIONS {
             if (this.comProp_Style) { editor.setDecorations(this.comProp_Style, []); }
             if (this.compVal_Style) { editor.setDecorations(this.compVal_Style, []); }
             if (this.comment_Style) { editor.setDecorations(this.comment_Style, []); }
-            if (this.hashrule_Style) { editor.setDecorations(this.hashrule_Style, []); }
+            if (this.hash_Style) { editor.setDecorations(this.hash_Style, []); }
             if (this.symclass_Style) { editor.setDecorations(this.symclass_Style, []); }
         };
 
@@ -129,29 +128,53 @@ export class DECORATIONS {
             const local = doc.local;
             const cursorOffset = editor.document.offsetAt(editor.selection.active);
 
+            let localhashes: string[] = [];
             let localhashrules: Record<string, string> = {};
             let localsymclasses: Record<string, t_Metadata> = {};
             if (this.Server.ReferDocument(editor.document)) {
+                localhashes = local.manifest.hashes;
                 localhashrules = this.Server.GetHashrules();
                 localsymclasses = local.attachables;
             }
 
             const content = editor.document.getText();
-            const watchAttr = doc.local.attributes;
-            const parsed = fileScanner(content, cursorOffset);
+            const watchAttr = doc.local.watchingAttributes;
+            const parsed = fileScanner(content, local.watchingAttributes, cursorOffset);
             fileContentMap.push({ abspath: doc.abspath, relpath: doc.relpath, content });
             doc.local.tagranges = parsed.TagRanges;
 
             // Apply decorations
 
-            const comment_Decos: vscode.DecorationOptions[] = [];
-            const hashrule_Decos: vscode.DecorationOptions[] = [];
+            const cmt_Decos: vscode.DecorationOptions[] = [];
+            const hash_Decos: vscode.DecorationOptions[] = [];
             const value_Decos: vscode.DecorationOptions[] = [];
             const watch_Decos: vscode.DecorationOptions[] = [];
             const attrs_Decos: vscode.DecorationOptions[] = [];
             const compVal_Decos: vscode.DecorationOptions[] = [];
-            const symclass_Decos: vscode.DecorationOptions[] = [];
             const comProp_Decos: vscode.DecorationOptions[] = [];
+            const symclass_Decos: vscode.DecorationOptions[] = [];
+
+            // Snippets with in watching attributes
+            for (const track of parsed.outsideTagfrags) {
+                try {
+                    const val = track.val;
+                    if (val.length > 2 && val[0] == "\\") {
+                        const v1 = val[1];
+                        if (v1 == "~" || v1 == "=" || v1 == "!") {
+                            const tr_val = val.slice(2);
+                            if (localsymclasses[tr_val]) {
+                                symclass_Decos.push({ range: track.valRange, hoverMessage: local.getMarkdown(tr_val) });
+                            }
+                        } else if (val[1] === "#" && localhashes.includes(val.slice(2))) {
+                            hash_Decos.push({ range: track.valRange, hoverMessage: "Registered Local Hash" });
+                        }
+                    } else if (val[0] === "#" && val[1] === "\\" && val[2] === "#" && localhashes.includes(val.slice(3))) {
+                        hash_Decos.push({ range: track.valRange, hoverMessage: "Registered Local Hash" });
+                    }
+                } catch (error) {
+                    console.error('Error processing Ranges:', error);
+                }
+            }
 
             for (const tagRange of parsed.TagRanges) {
 
@@ -159,7 +182,7 @@ export class DECORATIONS {
                     try {
                         if (track.attrRange && track.valRange) {
                             attrs_Decos.push({ range: track.attrRange });
-                            comment_Decos.push({ range: track.valRange });
+                            cmt_Decos.push({ range: track.valRange });
                         }
                     } catch (error) {
                         console.error('Error processing Ranges:', error);
@@ -183,14 +206,14 @@ export class DECORATIONS {
                     }
                 }
 
-                // Class Properties
+                // Watching Attributes
                 for (const track of tagRange.cache.watchtracks) {
                     if (!watchAttr.includes(track.attr)) {
                         continue;
                     }
                     try {
                         if (track.attrRange && track.valRange) {
-                            const tildas: t_Metadata[] = [], equals: t_Metadata[] = [], imptnt: t_Metadata[] = [];
+                            const tildas: t_Metadata[] = [], equals: t_Metadata[] = [], follow: t_Metadata[] = [];
                             for (const frag of (track.fragments ?? [])) {
                                 if (frag[0] != "~" && frag[0] != "=" && frag[0] != "!") { continue; }
                                 const metadata = local.getMetadata(frag.slice(1));
@@ -198,22 +221,22 @@ export class DECORATIONS {
                                     switch (frag[0]) {
                                         case '~': tildas.push(metadata); break;
                                         case '=': equals.push(metadata); break;
-                                        case '!': imptnt.push(metadata); break;
+                                        case '!': follow.push(metadata); break;
                                     }
                                     Object.assign(tagRange.variables, metadata.variables);
                                 }
                             }
-                            const Metadatas: t_Metadata[] = [...tildas, ...equals, ...imptnt];
+                            const Metadatas: t_Metadata[] = [...tildas, ...follow, ...equals];
                             const MetadataMerged = metamergeFormat(track.attr, doc.relpath, Metadatas);
                             watch_Decos.push({ range: track.attrRange, hoverMessage: MetadataMerged.toolTip });
-                            // value_Decos.push({ range: track.valRange });
                         }
                     } catch (error) {
                         console.error('Error processing Ranges:', error);
                     }
                 }
 
-                for (const track of tagRange.cache.watchfrags) {
+                // Snippets with in watching attributes
+                for (const track of tagRange.cache.watcherValFrags) {
                     try {
                         if (track.val[0] != "~" && track.val[0] != "=" && track.val[0] != "!") { continue; }
                         const tr_val = track.val.slice(1);
@@ -225,10 +248,35 @@ export class DECORATIONS {
                     }
                 }
 
-                for (const track of tagRange.cache.valuefrags) {
+                // Snippets with in watching attributes
+                for (const track of tagRange.cache.defaultValFrags) {
                     try {
+                        const val = track.val;
+                        if (val.length > 2 && val[0] == "\\") {
+                            const v1 = val[1];
+                            if (v1 == "~" || v1 == "=" || v1 == "!") {
+                                const tr_val = val.slice(2);
+                                if (localsymclasses[tr_val]) {
+                                    symclass_Decos.push({ range: track.valRange, hoverMessage: local.getMarkdown(tr_val) });
+                                }
+                            } else if (val[1] === "#" && localhashes.includes(val.slice(2))) {
+                                hash_Decos.push({ range: track.valRange, hoverMessage: "Registered Local Hash" });
+                            }
+                        } else if (val[0] === "#" && val[1] === "\\" && val[2] === "#" && localhashes.includes(val.slice(3))) {
+                            hash_Decos.push({ range: track.valRange, hoverMessage: "Registered Local Hash" });
+                        }
+                    } catch (error) {
+                        console.error('Error processing Ranges:', error);
+                    }
+                }
+
+
+                // Value from compositoin attributes
+                for (const track of tagRange.cache.composeValFrags) {
+                    try {
+                        const val = track.val;
                         if (track.val.endsWith(":")) {
-                            const tr_val = track.val.slice(0, -1);
+                            const tr_val = val.slice(0, -1);
                             const found = this.Server.W_CSSREFERENCE.CSS_Properties.find(prop => {
                                 return prop.name ? (prop.name === tr_val) : false;
                             });
@@ -238,8 +286,13 @@ export class DECORATIONS {
                                     hoverMessage: found.description?.toString()
                                 });
                             }
-                        } else if (localsymclasses[track.val]) {
-                            symclass_Decos.push({ range: track.valRange, hoverMessage: local.getMarkdown(track.val) });
+                        } else if (localsymclasses[val]) {
+                            symclass_Decos.push({ range: track.valRange, hoverMessage: local.getMarkdown(val) });
+                        } else if (
+                            (val[0] === "\\" && val[1] === "#" && localhashes.includes(val.slice(2))) ||
+                            (val[0] === "#" && val[1] === "\\" && val[2] === "#" && localhashes.includes(val.slice(3)))
+                        ) {
+                            hash_Decos.push({ range: track.valRange, hoverMessage: "Registered Local Hash" });
                         }
                     } catch (error) {
                         console.error('Error processing Ranges:', error);
@@ -250,7 +303,7 @@ export class DECORATIONS {
                     try {
                         if (track.valRange) {
                             if (localhashrules[track.val]) {
-                                hashrule_Decos.push({
+                                hash_Decos.push({
                                     range: track.valRange,
                                     hoverMessage: `Hashrule: \`${localhashrules[track.val]}\``
                                 });
@@ -267,8 +320,8 @@ export class DECORATIONS {
             if (this.value_Style) { editor.setDecorations(this.value_Style, value_Decos); }
             if (this.comProp_Style) { editor.setDecorations(this.comProp_Style, comProp_Decos); }
             if (this.compVal_Style) { editor.setDecorations(this.compVal_Style, compVal_Decos); }
-            if (this.comment_Style) { editor.setDecorations(this.comment_Style, comment_Decos); }
-            if (this.hashrule_Style) { editor.setDecorations(this.hashrule_Style, hashrule_Decos); }
+            if (this.comment_Style) { editor.setDecorations(this.comment_Style, cmt_Decos); }
+            if (this.hash_Style) { editor.setDecorations(this.hash_Style, hash_Decos); }
             if (this.symclass_Style) { editor.setDecorations(this.symclass_Style, symclass_Decos); }
         }
 

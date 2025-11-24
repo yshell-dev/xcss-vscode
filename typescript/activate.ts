@@ -2,10 +2,10 @@
 import path from 'path';
 import vscode from 'vscode';
 
-import { 
-    t_Manifest_Mixed, 
-    t_ManifestGlobal, 
-    t_ManifestLocals, 
+import {
+    t_Manifest_Mixed,
+    t_ManifestGlobal,
+    t_ManifestLocals,
 } from './types';
 
 import { BRIDGE } from './bridge';
@@ -238,7 +238,7 @@ export class ExtensionManager {
             } else {
                 this.Locals[relpath] = local;
             }
-            local.attributes = attributes;
+            local.watchingAttributes = attributes;
         }
 
         return { relpath, abspath, watching, extension, local, document };
