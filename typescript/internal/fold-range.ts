@@ -38,7 +38,6 @@ export class FOLDRANGE {
         return A;
     }
 
-
     dispose() {
         this.previewPanal?.dispose();
     }

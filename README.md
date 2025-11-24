@@ -4,14 +4,7 @@ Essential XCSS developer tooling for VSCode, featuring integrated LSP, bundled b
 
 ## Preview 
 
-### Input 
-![Preview Input](./preview/input.png)
-
-### Sandbox
-![Preview Sandbox](./preview/sandbox.png)
-
-### Output
-![Preview Output](./preview/output.png)
+![Preview Output](./preview.png)
 
 ## Shortcuts
 
