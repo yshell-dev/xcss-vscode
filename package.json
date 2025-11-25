@@ -2,7 +2,7 @@
   "name": "xcss",
   "displayName": "XCSS Client",
   "description": "Extension bundle for XCSS",
-  "version": "0.0.8",
+  "version": "0.1.0",
   "publisher": "yshell-dev",
   "author": {
     "name": "Vyshnav Prasad",
@@ -195,23 +195,5 @@
         "./css.json"
       ]
     }
-  },
-  "files": [
-    "extension/**/*",
-    "package/**/*",
-    "preview/**/*",
-    "typescript/**/*",
-    ".gitmodules",
-    ".gitignore",
-    ".npmignore",
-    "esbuild.js",
-    "eslint.config.mjs",
-    "LICENSE.md",
-    "logo.png",
-    "package-lock.json",
-    "package.json",
-    "README.md",
-    "RELEASE.md",
-    "tsconfig.build.json"
-  ]
+  }
 }
