@@ -82,6 +82,8 @@ jobs:
 
       - run: git submodule update --init ./package
 
+      - run: npm run package
+
       - name: Publish VSCode Extension
         uses: lannonbr/vsce-action@4.0.0
         with:
