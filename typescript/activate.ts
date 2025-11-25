@@ -182,10 +182,12 @@ export class ExtensionManager {
 
             this.spawn();
             this.WorkspaceUri = workspaceFolder.uri;
-
             this.W_BRIDGE.WSStream("manifest-mixed", params);
         } finally {
-            this.AwaitRequest = false;
+            const interval = Math.max(this.config.get<number>("request.interval", 100), 100);
+            setTimeout(() => {
+                this.AwaitRequest = false;
+            }, interval);
         }
     };
 

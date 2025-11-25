@@ -75,6 +75,11 @@
     "configuration": {
       "title": "xcss",
       "properties": {
+        "xcss.request.interval": {
+          "type": "number",
+          "default": 250,
+          "description": "Interval between manifest-request to server."
+        },
         "xcss.decoration.attribute": {
           "type": "string",
           "default": "#f57970",
