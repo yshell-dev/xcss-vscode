@@ -44,7 +44,6 @@ export class BRIDGE {
                 }
 
                 case "manifest-mixed": {
-                    this.WSStream("sandbox-view");
                     this.Server.UpdateMixedManifest(res.result);
                     break;
                 }
@@ -89,10 +88,9 @@ export class BRIDGE {
         ];
         while (true) {
             for (const cmd of preriodics) {
-                await new Promise(resolve => setTimeout(resolve, 200));
+                await new Promise(resolve => setTimeout(resolve, 250));
                 this.StdIOCmd(cmd);
             }
-            await new Promise(resolve => setTimeout(resolve, 1000));
         }
     };
 

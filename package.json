@@ -2,7 +2,7 @@
   "name": "xcss",
   "displayName": "XCSS Client",
   "description": "Extension bundle for XCSS",
-  "version": "0.1.1",
+  "version": "0.1.3",
   "publisher": "yshell-dev",
   "author": {
     "name": "Vyshnav Prasad",
@@ -77,8 +77,8 @@
       "properties": {
         "xcss.request.interval": {
           "type": "number",
-          "default": 250,
-          "description": "Interval between manifest-request to server."
+          "default": 400,
+          "description": "Increase Request Interval in Case of Performance issues, (min 200)."
         },
         "xcss.decoration.attribute": {
           "type": "string",
