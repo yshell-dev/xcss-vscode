@@ -3,8 +3,8 @@ import cursorSense from '../helpers/cursor-sense';
 import styleScanner from '../helpers/style-scanner';
 
 import { ExtensionManager } from "../activate";
-import { metadataFormat } from '../helpers/metadata';
-import { t_Metadata, t_CursorSnippet, t_SnippetType } from '../types';
+import { generateAttributeMap, metadataFormat } from '../helpers/metadata';
+import { t_Metadata, t_CursorSnippet, t_SnippetType, t_TagRange } from '../types';
 import { FILELOCAL } from '../file-local';
 
 export class INTELLISENSE {
@@ -14,8 +14,8 @@ export class INTELLISENSE {
     constructor(core: ExtensionManager) {
         this.Server = core;
         this.triggers = this.Server.config.get<boolean>("intellisense.mode") ? // true = smart
-            ['!', '@', '-', ' ', '=', '#', '~', '&', '\t', '\n', '/', '_', '(', ')', ':', '{', '}', '$'] :
-            ['!', '@', '-', ' ', '=', '#', '~', '&', '\t', '\n', '/', '_', '(', ')', ':', '{', '}'];
+            ['\\', '!', '@', ' ', '=', '#', '~', '&', '\t', '\n', '/', '_', '(', ')', ':', '{', '}', '$'] :
+            ['\\', '!', '@', ' ', '=', '#', '~', '&', '\t', '\n', '/', '_', '(', ')', ':', '{', '}'];
     }
 
     dispose() {
@@ -25,6 +25,7 @@ export class INTELLISENSE {
     testAtrule(string: string) {
         return /^_|\$_/.test(string);
     }
+
     createCompletionItem(
         label: string,
         insertText: string | vscode.SnippetString,
@@ -181,7 +182,7 @@ export class INTELLISENSE {
         if (this.Server.config.get<boolean>("intellisense.mode")) {
             return this.SmartSymClassFilter(prefix, iconKind, local.assignables);
         }
-        if (prefix.length) {return [];}
+        if (prefix.length) { return []; }
         return this.SimpleSymClassFilter(prefix, iconKind, local.assignables);
     }
 
@@ -199,14 +200,18 @@ export class INTELLISENSE {
                     const parsed = cursorSense(fileFragment, ref.document.offsetAt(editor.selection.active));
                     const valueFragment = parsed.cursorString.slice(parsed.cursorAttribute.length + 2);
                     const foundTag = ref.local.getTagRanges().find(tag => tag.range.contains(position));
-                    const foundVars = foundTag ? foundTag.variables : {};
 
-                    if (parsed.cursorValue.length) {
-                        completions.push(...this.handleValueMatch(parsed.cursorAttribute, valueFragment, foundVars, ref.local));
-                    } else if (parsed.cursorString.length) {
-                        completions.push(...this.handleAttributeMatch(parsed.cursorString));
+                    if (parsed.intag) {
+                        const attributeMap: Record<string, string[]> = {};
+                        if (foundTag) { Object.assign(attributeMap, generateAttributeMap(foundTag.metadatas)); }
+
+                        if (parsed.cursorValue.length) {
+                            completions.push(...this.handleValueMatch(parsed.cursorAttribute, valueFragment, ref.local, foundTag));
+                        } else if (!(parsed.cursorString.endsWith("=") && parsed.cursorValue == "")) {
+                            completions.push(...this.handleAttributeMatch(parsed.cursorString, attributeMap));
+                        }
                     } else {
-                        completions.push(...this.handleValueMatch("", fileFragment, {}, ref.local));
+                        completions.push(...this.escapeMatch(fileFragment, ref.local));
                     }
                 }
             }
@@ -269,7 +274,7 @@ export class INTELLISENSE {
         }
     }
 
-    handleAttributeMatch(attributeFragment: string): vscode.CompletionItem[] {
+    handleAttributeMatch(attributeFragment: string, attributeMap: Record<string, string[]>): vscode.CompletionItem[] {
         const completions: vscode.CompletionItem[] = [];
 
         if (attributeFragment.endsWith("&")) {
@@ -308,6 +313,22 @@ export class INTELLISENSE {
                     `: ${value}`
                 ));
             }
+        } else {
+            for (let key of Object.keys(attributeMap)) {
+                for (const val of attributeMap[key]) {
+                    if (!key.startsWith(attributeFragment)) { continue; }
+
+                    key = key.slice(attributeFragment.length);
+                    const ins = val === "" ? key : `${key}=${val}`;
+                    completions.push(this.createCompletionItem(
+                        ins,
+                        new vscode.SnippetString(ins),
+                        vscode.CompletionItemKind.Function,
+                        `${key}\n \`${val}\``,
+                        `: ${val}`
+                    ));
+                }
+            }
         }
 
         return completions;
@@ -316,10 +337,10 @@ export class INTELLISENSE {
     handleValueMatch(
         attributeMatch: string,
         valueMatch: string,
-        tagScopeVars: Record<string, string>,
         local: FILELOCAL,
+        tagData?: t_TagRange,
     ): vscode.CompletionItem[] {
-
+        const tagScopeVars = tagData?.variables || {};
         const completions: vscode.CompletionItem[] = [];
 
         if (
@@ -481,28 +502,32 @@ export class INTELLISENSE {
                     completions.push(...this.AssignableFilter(result.fragment, iconKind, local));
                     break;
             }
+        } else if (local.watchingAttributes.includes(attributeMatch)) {
+            const valuePrefix = valueMatch.match(/[=~!][\w/$_-]*$/i)?.[0] || '';
+            const isAtStyle = this.testAtrule(valuePrefix || '');
+            if (valuePrefix[0] === "=" || valuePrefix[0] === "~" || valuePrefix[0] === "!") {
+                const iconKind = isAtStyle ? vscode.CompletionItemKind.Variable : vscode.CompletionItemKind.Field;
+                completions.push(...this.AttachableFilter(valuePrefix.slice(1), iconKind, local));
+            }
         } else {
-            if (local.watchingAttributes.includes(attributeMatch)) {
-                const valuePrefix = valueMatch.match(/[=~!][\w/$_-]*$/i)?.[0] || '';
-                const isAtStyle = this.testAtrule(valuePrefix || '');
-                if (valuePrefix[0] === "=" || valuePrefix[0] === "~" || valuePrefix[0] === "!") {
-                    const iconKind = isAtStyle ? vscode.CompletionItemKind.Variable : vscode.CompletionItemKind.Field;
-                    completions.push(...this.AttachableFilter(valuePrefix.slice(1), iconKind, local));
-                }
-            } else {
-                const valuePrefix = valueMatch.match(/\\[#=~!][\w/$_-]*$/i)?.[0] || '';
-                const isAtStyle = this.testAtrule(valuePrefix || '');
-                if (valuePrefix[1] === "=" || valuePrefix[1] === "~" || valuePrefix[1] === "!") {
-                    const iconKind = isAtStyle ? vscode.CompletionItemKind.Variable : vscode.CompletionItemKind.Field;
-                    completions.push(...this.AttachableFilter(valuePrefix.slice(2), iconKind, local));
-                } else if (valuePrefix[1] == "#") {
-                    for (const hash of local.manifest.hashes) {
-                        completions.push(this.createCompletionItem(
-                            hash, hash, vscode.CompletionItemKind.Field,
-                            "Registered Local Hash",
-                        ));
-                    }
-                }
+            completions.push(...this.escapeMatch(valueMatch, local));
+        }
+        return completions;
+    }
+
+    escapeMatch(valueMatch: string, local: FILELOCAL): vscode.CompletionItem[] {
+        const completions: vscode.CompletionItem[] = [];
+        const valuePrefix = valueMatch.match(/\\[#=~!][\w/$_-]*$/i)?.[0] || '';
+        const isAtStyle = this.testAtrule(valuePrefix || '');
+        if (valuePrefix[1] === "=" || valuePrefix[1] === "~" || valuePrefix[1] === "!") {
+            const iconKind = isAtStyle ? vscode.CompletionItemKind.Variable : vscode.CompletionItemKind.Field;
+            completions.push(...this.AttachableFilter(valuePrefix.slice(2), iconKind, local));
+        } else if (valuePrefix[1] == "#") {
+            for (const hash of local.manifest.hashes) {
+                completions.push(this.createCompletionItem(
+                    hash, hash, vscode.CompletionItemKind.Field,
+                    "Registered Local Hash",
+                ));
             }
         }
         return completions;

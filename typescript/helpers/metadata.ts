@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { t_Metadata } from '../types';
+import { t_Metadata, t_Skeleton } from '../types';
 
 interface t_formatting {
     "": string[];
@@ -111,6 +111,65 @@ export function metamergeFormat(heading: string, declaration: string, objects: t
         merged.skeleton = mergeObjects([(merged.skeleton || {}), (object.skeleton || {})]) as Record<string, object>;
     }
 
-    return { toolTip: metadataFormat(heading, merged), effectiveXtyle: merged };
+    return { toolTip: metadataFormat(heading, merged), effectiveMeta: merged };
 }
 
+
+function attributeMapFlatten(skeleton: t_Skeleton, first = true): string[] {
+    const r: string[] = [];
+    for (let k of Object.keys(skeleton)) {
+        if (k.startsWith("&[")) {
+            const v = skeleton[k] as string | object;
+            const c2 = amparsandSuffixLen(k) * 2;
+            if ((2 + c2) < k.length) {
+                if (!first) { k = k.slice(2); }
+                r.push(k);
+                if (typeof v === "object") {
+                    k = k.slice(0, -c2);
+                    for (const kk of attributeMapFlatten(v as t_Skeleton, false)) {
+                        r.push(k + kk);
+                    }
+                }
+            }
+        }
+    }
+    return r;
+}
+
+const attributeRgx = /\[([^=\]]+)(?:=([^\]]*))?\]/;
+export function generateAttributeMap(metadatas: t_Metadata[]): Record<string, string[]> {
+    const o: Record<string, string[]> = {};
+    const sk = metamergeFormat("", "", metadatas).effectiveMeta.skeleton;
+    if (!sk) { return o; }
+
+    const am = attributeMapFlatten(sk["[]"] as t_Skeleton);
+    for (const av of am) {
+        const r = av.match(attributeRgx);
+        if (!r) { continue; }
+
+        const key = r[1];
+        const value = r[2] || '';
+
+        if (key) {
+            if (!o[key]) {
+                o[key] = [];
+            }
+            o[key].push(value);
+        }
+    }
+
+    return o;
+}
+
+
+function amparsandSuffixLen(str: string) {
+    let count = 0;
+    for (let i = str.length - 1; i >= 0; i--) {
+        if (str[i] === '&' || str[i] === '*') {
+            count++;
+        } else {
+            break;
+        }
+    }
+    return count;
+}

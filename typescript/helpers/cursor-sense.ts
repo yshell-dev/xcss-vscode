@@ -17,6 +17,7 @@ interface ScannerStash {
     cursorString: string;
     cursorAttribute: string;
     cursorValue: string;
+    intag: boolean;
 }
 
 function tagScanner(
@@ -90,19 +91,22 @@ export default function scanner(content: string, cursor = 0): ScannerStash {
     const stash: ScannerStash = {
         cursorString: '',
         cursorAttribute: '',
-        cursorValue: ''
+        cursorValue: '',
+        intag: false
     };
     try {
         const fileCursor = new Reader(content);
 
         do {
+            stash.intag = false;
             const char = fileCursor.active.char;
-
+            
             if (
                 (content[fileCursor.active.marker - 1] !== "\\")
                 && (char === "<")
                 && (/[!/\d\w-]/i.test(content[fileCursor.active.marker + 1]))
             ) {
+                stash.intag = true;
                 const ok = tagScanner(cursor, content, fileCursor, stash);
                 if (ok) { fileCursor.increment(); }
             } else {

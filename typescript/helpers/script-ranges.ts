@@ -354,15 +354,19 @@ export default function ScanScriptRanges(content: string, watching: string[] = [
                 && (ch === "<")
                 && (/[/\d\w-]/i.test(content[fileCursor.active.marker + 1]))
             ) {
+                const tagStartMarker = fileCursor.active.marker;
                 const tagStartPos = new vscode.Position(fileCursor.active.rowMarker, fileCursor.active.colMarker);
                 const response = tagScanner(cursor, content, fileCursor, watching);
                 if (response.ok) {
+                    const tagEndMarker = fileCursor.active.marker;
                     const tagEndPos = new vscode.Position(fileCursor.active.rowMarker, fileCursor.active.colMarker);
                     cursorSave(stash, response.stash);
                     stash.TagRanges.push({
                         range: new vscode.Range(tagStartPos, tagEndPos),
                         variables: {},
-                        cache: response.tagCache
+                        metadatas: [],
+                        cache: response.tagCache,
+                        active: (tagStartMarker < cursor) && (cursor < tagEndMarker),
                     });
                 } else {
                     inc = false;

@@ -40,7 +40,9 @@ export interface t_TagCache {
 export interface t_TagRange {
     range: vscode.Range;
     variables: Record<string, string>;
-    cache: t_TagCache
+    metadatas: t_Metadata[],
+    cache: t_TagCache,
+    active?: boolean
 }
 
 export interface t_Diagnostic {
@@ -70,9 +72,11 @@ export interface t_Diagnostic {
     sources: string[]
 }
 
+export type t_Skeleton = Record<string, object |string >;
+
 export interface t_Metadata {
     info?: string[],
-    skeleton?: Record<string, object>,
+    skeleton?: t_Skeleton,
     variables?: Record<string, string>,
     declarations?: string[],
     summon?: string,

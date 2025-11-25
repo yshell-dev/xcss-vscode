@@ -117,7 +117,6 @@ export class DECORATIONS {
 
         const fileContentMap: t_FileContent[] = [];
         const editors = vscode.window.visibleTextEditors;
-
         for (const editor of editors) {
             const doc = this.Server.ReferDocument(editor.document);
 
@@ -177,6 +176,7 @@ export class DECORATIONS {
             }
 
             for (const tagRange of parsed.TagRanges) {
+                const tildas: t_Metadata[] = [], equals: t_Metadata[] = [], follow: t_Metadata[] = [];
 
                 for (const track of tagRange.cache.commentsRanges) {
                     try {
@@ -193,7 +193,7 @@ export class DECORATIONS {
                     try {
                         if (track.attrRange && track.valRange) {
                             const f = track.attr.replace(/^[-_]\$/, "$");
-                            const metadata = local.getMetadata(f);
+                            const metadata = localsymclasses[f];
                             if (metadata) {
                                 Object.assign(tagRange.variables, metadata.variables);
                             }
@@ -213,10 +213,9 @@ export class DECORATIONS {
                     }
                     try {
                         if (track.attrRange && track.valRange) {
-                            const tildas: t_Metadata[] = [], equals: t_Metadata[] = [], follow: t_Metadata[] = [];
                             for (const frag of (track.fragments ?? [])) {
                                 if (frag[0] != "~" && frag[0] != "=" && frag[0] != "!") { continue; }
-                                const metadata = local.getMetadata(frag.slice(1));
+                                const metadata = localsymclasses[frag.slice(1)];
                                 if (metadata) {
                                     switch (frag[0]) {
                                         case '~': tildas.push(metadata); break;
@@ -258,6 +257,15 @@ export class DECORATIONS {
                                 const tr_val = val.slice(2);
                                 if (localsymclasses[tr_val]) {
                                     symclass_Decos.push({ range: track.valRange, hoverMessage: local.getMarkdown(tr_val) });
+                                }
+                                const metadata = localsymclasses[tr_val];
+                                if (metadata) {
+                                    switch (v1) {
+                                        case '~': tildas.push(metadata); break;
+                                        case '=': equals.push(metadata); break;
+                                        case '!': follow.push(metadata); break;
+                                    }
+                                    Object.assign(tagRange.variables, metadata.variables);
                                 }
                             } else if (val[1] === "#" && localhashes.includes(val.slice(2))) {
                                 hash_Decos.push({ range: track.valRange, hoverMessage: "Registered Local Hash" });
@@ -313,6 +321,8 @@ export class DECORATIONS {
                         console.error('Error processing Ranges:', error);
                     }
                 }
+
+                tagRange.metadatas = [...tildas, ...follow, ...equals];
             }
 
             if (this.attrs_Style) { editor.setDecorations(this.attrs_Style, attrs_Decos); }
