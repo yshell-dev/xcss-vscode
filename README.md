@@ -2,6 +2,14 @@
 
 Essential XCSS developer tooling for VSCode, featuring integrated LSP, bundled binary, and focused support for XCSS workflows.
 
+## End-User License Agreement (EULA)
+
+By using this software, you agree to the terms and conditions outlined in the [End-User License Agreement](./EULA.md).
+
+For details, please read the full EULA document provided in this repository.
+
+---
+
 ## Preview 
 
 ![Preview Output](./preview.png)

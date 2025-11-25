@@ -38,7 +38,7 @@ export class BRIDGE {
                     break;
                 }
 
-                case "sandbox-state-list": {
+                case "server-state-list": {
                     this.Server.W_SANDBOX.States = res.result as typeof this.Server.W_SANDBOX.States;
                     break;
                 }
@@ -85,7 +85,7 @@ export class BRIDGE {
             "sandbox-url",
             "session-port",
             "websocket-url",
-            "sandbox-state-list"
+            "server-state-list"
         ];
         while (true) {
             for (const cmd of preriodics) {
@@ -138,7 +138,7 @@ export class BRIDGE {
             this.Process.kill();
             this.Process = null;
         }
-        const message = "💐💐💐 RIP: Process Died!!!";
+        const message = "💐💐💐 RIP: Death by Ignorance!!!";
         this.OutputCh.appendLine(message);
         console.error(message);
         this.Server.reset();
