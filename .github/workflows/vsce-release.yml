@@ -71,7 +71,6 @@ jobs:
   vsce-publish:
     name: Publish on VS Code Marketplace
     runs-on: ubuntu-latest
-    continue-on-error: true
 
     steps:
       - uses: actions/checkout@v3
