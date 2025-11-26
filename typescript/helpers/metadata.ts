@@ -140,7 +140,7 @@ const attributeRgx = /\[([^=\]]+)(?:=([^\]]*))?\]/;
 export function generateAttributeMap(metadatas: t_Metadata[]): Record<string, string[]> {
     const o: Record<string, string[]> = {};
     const sk = metamergeFormat("", "", metadatas).effectiveMeta.skeleton;
-    if (!sk) { return o; }
+    if (!sk?.["[]"]) { return o; }
 
     const am = attributeMapFlatten(sk["[]"] as t_Skeleton);
     for (const av of am) {

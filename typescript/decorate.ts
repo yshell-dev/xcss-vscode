@@ -195,9 +195,10 @@ export class DECORATIONS {
                             const f = track.attr.replace(/^[-_]\$/, "$");
                             const metadata = localsymclasses[f];
                             if (metadata) {
+                                tagRange.metadatas.push(metadata);
                                 Object.assign(tagRange.variables, metadata.variables);
                             }
-                            const tooltip = metadata ? metadata.markdown || metadataFormat(`${track.attr} -> ${f} `, metadata) : `${this.Server.IDCAP} Definition.`;
+                            const tooltip = metadata ? metadataFormat(`${track.attr} -> ${f} `, metadata) : `${this.Server.IDCAP} Definition.`;
                             attrs_Decos.push({ range: track.attrRange, hoverMessage: tooltip });
                             compVal_Decos.push({ range: track.valRange });
                         }
@@ -322,7 +323,7 @@ export class DECORATIONS {
                     }
                 }
 
-                tagRange.metadatas = [...tildas, ...follow, ...equals];
+                tagRange.metadatas = [...tagRange.metadatas, ...tildas, ...follow, ...equals];
             }
 
             if (this.attrs_Style) { editor.setDecorations(this.attrs_Style, attrs_Decos); }

@@ -203,7 +203,7 @@ export class INTELLISENSE {
 
                     if (parsed.intag) {
                         const attributeMap: Record<string, string[]> = {};
-                        if (foundTag) { Object.assign(attributeMap, generateAttributeMap(foundTag.metadatas)); }
+                        if (foundTag) { Object.assign(attributeMap, generateAttributeMap(foundTag.metadatas || [])); }
 
                         if (parsed.cursorValue.length) {
                             completions.push(...this.handleValueMatch(parsed.cursorAttribute, valueFragment, ref.local, foundTag));
