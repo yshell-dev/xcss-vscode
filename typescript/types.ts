@@ -72,7 +72,7 @@ export interface t_Diagnostic {
     sources: string[]
 }
 
-export type t_Skeleton = Record<string, object |string >;
+export type t_Skeleton = Record<string, object | string>;
 
 export interface t_Metadata {
     info?: string[],
@@ -94,6 +94,7 @@ export interface t_JsonRPCResponse {
     id: any,
     method: string,
     result: any,
+    duration: number,
     error: any,
 }
 
