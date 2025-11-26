@@ -3,7 +3,7 @@
   "displayName": "XCSS Client",
   "description": "Extension bundle for XCSS",
   "version": "0.1.6",
-  "publisher": "yshell-dev",
+  "publisher": "yshelldev",
   "author": {
     "name": "Vyshnav Prasad",
     "email": "official@yshell.dev"
@@ -11,10 +11,10 @@
   "homepage": "https://www.xcss.io/",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yshell-dev/xcss-vscode"
+    "url": "https://github.com/yshelldev/xcss-vscode"
   },
   "bugs": {
-    "url": "https://github.com/yshell-dev/xcss-vscode/issues"
+    "url": "https://github.com/yshelldev/xcss-vscode/issues"
   },
   "scripts": {
     "lint": "eslint ./typescript --ext .ts",
