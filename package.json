@@ -2,7 +2,7 @@
   "name": "xcss",
   "displayName": "XCSS Client",
   "description": "Extension bundle for XCSS",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "publisher": "yshelldev",
   "author": {
     "name": "Vyshnav Prasad",
@@ -16,6 +16,7 @@
   "bugs": {
     "url": "https://github.com/yshelldev/xcss-vscode/issues"
   },
+  "contributing": "https://github.com/yshelldev/xcss-vscode/blob/main/CONTRIBUTING.md",
   "scripts": {
     "lint": "eslint ./typescript --ext .ts",
     "init": "npm install -g typescript @vscode/vsce && npm install && node package/package.js",
