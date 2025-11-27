@@ -6,21 +6,23 @@ on:
   workflow_dispatch:
 
 jobs:
-  github-release:
-    name: Repository Release
+  build:
+    name: Build Extension
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v3
-
       - uses: actions/setup-node@v3
         with:
           node-version: "22"
 
       - run: git submodule update --init ./package
-
       - run: npm run package
 
+  releases:
+    name: Repository Releases
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
       - name: Get version from package.json
         id: artifact
         run: |
@@ -71,21 +73,19 @@ jobs:
   vsce-publish:
     name: Publish on VS Code Marketplace
     runs-on: ubuntu-latest
+    needs: build
 
     steps:
-      - uses: actions/checkout@v3
-
-      - uses: actions/setup-node@v3
-        with:
-          node-version: "22"
-
-      - run: git submodule update --init ./package
-
-      - run: npm run package
-
-      - name: Publish VSCode Extension
-        uses: lannonbr/vsce-action@4.0.0
+      - uses: lannonbr/vsce-action@4.0.0
         with:
           args: publish -p ${{ secrets.VSCE_TOKEN }}
-        env:
-          VSCE_TOKEN: ${{ secrets.VSCE_TOKEN }}
+
+  ovsx-publish:
+    name: Publish on Open VSX Registry
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - uses: lannonbr/vsce-action@4.0.0
+        with:
+          args: publish --registry https://open-vsx.org/vscode-api -p ${{ secrets.XCSS_OVSX }}
