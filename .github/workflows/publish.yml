@@ -1,4 +1,4 @@
-name: Publish VSCode
+name: Publish
 
 on:
   repository_dispatch:
