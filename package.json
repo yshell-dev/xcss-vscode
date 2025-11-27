@@ -1,8 +1,8 @@
 {
-  "name": "xcss",
+  "name": "xcss-client",
   "displayName": "XCSS Client",
   "description": "Extension bundle for XCSS",
-  "version": "0.1.7",
+  "version": "0.0.1",
   "publisher": "yshelldev",
   "author": {
     "name": "Vyshnav Prasad",
