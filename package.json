@@ -19,7 +19,7 @@
   "contributing": "https://github.com/yshelldev/xcss-vscode/blob/main/CONTRIBUTING.md",
   "scripts": {
     "lint": "eslint ./typescript --ext .ts",
-    "init": "npm install -g typescript @vscode/vsce && npm install && node package/package.js",
+    "init": "npm install -g typescript @vscode/vsce ovsx && node package/package.js && npm install",
     "tsbuild": "npx tsc -p ./typescript",
     "package": "npm run init && npm run tsbuild && npm install --omit=dev && vsce package"
   },
@@ -114,7 +114,7 @@
         "xcss.providers.palette": {
           "type": "boolean",
           "default": false,
-          "description": "Color provider scope. (Targeted: false, Global: true)",
+          "description": "Color provider scope. (Compose Only: false, Scope Global: true)",
           "tags": [
             "experimental"
           ]

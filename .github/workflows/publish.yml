@@ -65,14 +65,14 @@ jobs:
           overwrite_files: true
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: lannonbr/vsce-action@4.0.0
-        name: Publish on VS Code Marketplace
+      - name: Publish on Open VSX Registry
+        uses: HaaLeo/publish-vscode-extension@v2
         with:
-          args: publish -p ${{ secrets.VSCE_TOKEN }}
-        continue-on-error: true
+          pat: ${{ secrets.XCSS_OVSX }}
+          extensionFile: ${{ env.packaged_vsix }}
 
-      - uses: lannonbr/vsce-action@4.0.0
-        name: Publish on Open VSX Registry
+      - name: Publish on VS Code Marketplace
+        uses: HaaLeo/publish-vscode-extension@v2
         with:
-          args: publish --registry https://open-vsx.org/vscode-api -p ${{ secrets.XCSS_OVSX }}
-        continue-on-error: true
+          pat: ${{ secrets.VSCE_TOKEN }}
+          extensionFile: ${{ env.packaged_vsix }}
