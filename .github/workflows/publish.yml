@@ -66,13 +66,25 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish on Open VSX Registry
+        id: ovsx
         uses: HaaLeo/publish-vscode-extension@v2
         with:
           pat: ${{ secrets.XCSS_OVSX }}
           extensionFile: ${{ env.packaged_vsix }}
+        continue-on-error: true
 
       - name: Publish on VS Code Marketplace
+        id: vsce
         uses: HaaLeo/publish-vscode-extension@v2
         with:
           pat: ${{ secrets.VSCE_TOKEN }}
+          registryUrl: https://marketplace.visualstudio.com
           extensionFile: ${{ env.packaged_vsix }}
+        continue-on-error: true
+
+      - name: Check if any step failed
+        run: |
+          if [[ "${{ steps.ovsx.outcome }}" == "failure" || "${{ steps.vsce.outcome }}" == "failure" ]]; then
+            echo "Some steps failed."
+            exit 1
+          fi
