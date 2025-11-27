@@ -1,4 +1,4 @@
-# XCSS Extension for VS Code
+# [XCSS Extension for VS Code](https://marketplace.visualstudio.com/items?itemName=yshell-dev.xcss)
 
 Essential XCSS developer tooling for VSCode, featuring integrated LSP, bundled binary, and focused support for XCSS workflows.
 
