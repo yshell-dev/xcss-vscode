@@ -1,7 +1,7 @@
 import fs from 'fs';
 import vscode from 'vscode';
-import getBinPath from '../package/package';
 import { ExtensionManager } from './activate';
+import { GetBinPath } from '../package/execute';
 import { WebSocket } from 'ws';
 import { spawn, ChildProcessWithoutNullStreams } from 'child_process';
 import { t_JsonRPCResponse } from './types';
@@ -67,14 +67,14 @@ export class BRIDGE {
     private dopause = () => this.Paused = true;
     private unpause = () => this.Paused = false;
 
-    public RootBinary = "";
+    public EmbbedBinary = "";
     public SessionPort = 0;
 
     public spawnAlive = () => !!this.Process && !this.Process.killed;
 
     constructor(core: ExtensionManager) {
         this.Server = core;
-        this.RootBinary = getBinPath();
+        this.EmbbedBinary = GetBinPath();
         this.OutputCh = vscode.window.createOutputChannel(this.Server.IDCAP + ' Server');
         this.periodics();
     }
@@ -96,7 +96,7 @@ export class BRIDGE {
 
     restartAwait = false;
     async start(spawnPath: string, args: string[], overide_config = false) {
-        if ((this.Process && this.spawnAlive()) || !fs.existsSync(this.RootBinary)) { return; }
+        if ((this.Process && this.spawnAlive()) || !fs.existsSync(this.EmbbedBinary)) { return; }
         if (this.restartAwait) { return; }
 
         this.restartAwait = true;
@@ -107,7 +107,7 @@ export class BRIDGE {
         this.dopause();
         this.WS?.close();
         this.WS = null;
-        this.Process = spawn(this.RootBinary, args, {
+        this.Process = spawn(this.EmbbedBinary, args, {
             cwd: spawnPath,
             stdio: ['pipe', 'pipe', 'pipe'],
             env: process.env,

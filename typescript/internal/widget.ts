@@ -16,7 +16,7 @@ export class WIDGET {
         this.statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
         this.statusBar.command = `${this.Server.ID}.action.command`;
 
-        this.bin = this.Server.W_BRIDGE.RootBinary;
+        this.bin = this.Server.W_BRIDGE.EmbbedBinary;
         this.options = [
             { label: 'Docs', script: "" },
             { label: 'Watch', script: 'preview -w' },

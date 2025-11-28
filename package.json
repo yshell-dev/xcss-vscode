@@ -39,6 +39,7 @@
     "ws": "^8.18.3"
   },
   "license": "MIT",
+  "licenseFile": "LICENSE",
   "type": "commonjs",
   "main": "./extension/activate.js",
   "icon": "./logo.png",
