@@ -3,3 +3,4 @@ extension
 node_modules
 
 BINPATH
+*.vsix

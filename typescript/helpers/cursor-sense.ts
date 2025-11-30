@@ -104,7 +104,7 @@ export default function scanner(content: string, cursor = 0): ScannerStash {
             if (
                 (content[fileCursor.active.marker - 1] !== "\\")
                 && (char === "<")
-                && (/[!/\d\w-]/i.test(content[fileCursor.active.marker + 1]))
+                && (/[/\d\w-]/i.test(content[fileCursor.active.marker + 1]))
             ) {
                 stash.intag = true;
                 const ok = tagScanner(cursor, content, fileCursor, stash);

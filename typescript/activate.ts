@@ -1,4 +1,5 @@
 
+import fs from 'fs';
 import path from 'path';
 import vscode from 'vscode';
 
@@ -51,6 +52,7 @@ export class ExtensionManager {
     // Environment Declared
     public Context: vscode.ExtensionContext;
     public WorkspaceUri: vscode.Uri | undefined;
+    public Initialized = false;
 
     // Activity Flags
     private F_ExtnActivated = true;
@@ -88,13 +90,9 @@ export class ExtensionManager {
     };
 
     spawn = (): void => {
-        const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-        if (!workspaceFolder) { return; }
+        if (!this.WorkspaceUri || !this.Initialized) { return; }
 
-        this.WorkspaceUri = workspaceFolder.uri;
-        const workpath = workspaceFolder.uri.fsPath;
-
-        this.W_BRIDGE.start(workpath, ["server", this.PORT.toString()]);
+        this.W_BRIDGE.start(this.WorkspaceUri.fsPath, ["server", this.PORT.toString()]);
     };
 
     public dispose() {
@@ -179,9 +177,11 @@ export class ExtensionManager {
                 this.reset();
                 return;
             }
-
-            this.spawn();
             this.WorkspaceUri = workspaceFolder.uri;
+
+            const setup = path.join(this.WorkspaceUri.fsPath, ID);
+            this.Initialized = (fs.existsSync(setup) && fs.lstatSync(setup).isDirectory());
+            this.spawn();
             this.W_BRIDGE.WSStream("manifest-mixed", params);
         } finally {
             const interval = Math.max(this.config.get<number>("request.interval", 100), 100);
