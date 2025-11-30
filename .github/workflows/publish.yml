@@ -19,7 +19,10 @@ jobs:
           node-version: "22"
 
       - run: git submodule update --init ./package
-      - run: git submodule update --init ./package/scaffold
+      - run: |
+          cd package
+          git submodule update --init ./package/scaffold
+          cd ..
       - run: npm run package
 
       - name: Get version from package.json
