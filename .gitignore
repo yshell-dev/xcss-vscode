@@ -2,4 +2,4 @@ coverage
 extension
 node_modules
 
-**/*.vsix
+BINPATH
