@@ -32,14 +32,15 @@ export class SANDBOX {
 
     RefereshFlagActive = true;
     RefreshWebview(go_on = false) {
-        if (vscode.window.activeTextEditor || this.RefereshFlagActive) { return; }
         if (go_on) {
             this.RefereshFlagActive = true;
             setTimeout(() => {
                 this.RefereshFlagActive = false;
             }, 4000);
         }
-        this.Server.W_BRIDGE.WSStream("sandbox-view");
+        if (vscode.window.activeTextEditor || this.RefereshFlagActive) {
+            this.Server.W_BRIDGE.WSStream("sandbox-view");
+        }
     }
 
     Open = async () => {
