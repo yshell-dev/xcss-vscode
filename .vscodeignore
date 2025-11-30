@@ -18,5 +18,5 @@ typescript/**
 **/eslint.config.mjs
 **/tsconfig.build.json
 
-package/source/**
-build.js
+package/compiler/**
+esbuild.js
