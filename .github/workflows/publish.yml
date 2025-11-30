@@ -1,6 +1,8 @@
 name: Publish
 
 on:
+  push:
+    branches: [main]
   repository_dispatch:
     types: [trigger-publish]
   workflow_dispatch:
@@ -9,6 +11,7 @@ jobs:
   build:
     name: Build Extension
     runs-on: ubuntu-latest
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '#Release')) || (github.event_name != 'push')
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3

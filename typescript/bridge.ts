@@ -1,10 +1,12 @@
-import fs from 'fs';
+import fs, { existsSync } from 'fs';
 import vscode from 'vscode';
 import { ExtensionManager } from './activate';
-import { GetBinPath } from '../package/execute';
+import { GetMetadata } from '../package/execute';
 import { WebSocket } from 'ws';
 import { spawn, ChildProcessWithoutNullStreams } from 'child_process';
 import { t_JsonRPCResponse } from './types';
+import path from 'path';
+import { binaryExists as BinaryExists, ReadCmdReturn } from './helpers/bin-assist';
 
 export class BRIDGE {
 
@@ -67,14 +69,32 @@ export class BRIDGE {
     private dopause = () => this.Paused = true;
     private unpause = () => this.Paused = false;
 
-    public EmbbedBinary = "";
     public SessionPort = 0;
 
     public spawnAlive = () => !!this.Process && !this.Process.killed;
 
+    FindBinpath(): string {
+        const Metadata = GetMetadata();
+        const binpathlist: string[] = [];
+
+        if (!Metadata.DevMode && this.Server.WorkspaceUri) {
+            const binPathFile = path.join(this.Server.WorkspaceUri.fsPath, 'node_modules', Metadata.PackageName, 'BINPATH');
+            if (existsSync(binPathFile)) { binpathlist.push(fs.readFileSync(binPathFile, { encoding: 'utf-8' })); }
+
+            binpathlist.push(ReadCmdReturn('xcss', 'binpath'));
+        }
+
+        binpathlist.push(Metadata.binPath);
+        for (const binpath of binpathlist) {
+            if (binpath && (existsSync(binpath) || BinaryExists(binpath))) {
+                return binpath.trim();
+            }
+        }
+        return "";
+    }
+
     constructor(core: ExtensionManager) {
         this.Server = core;
-        this.EmbbedBinary = GetBinPath();
         this.OutputCh = vscode.window.createOutputChannel(this.Server.IDCAP + ' Server');
         this.periodics();
     }
@@ -96,7 +116,8 @@ export class BRIDGE {
 
     restartAwait = false;
     async start(spawnPath: string, args: string[], overide_config = false) {
-        if ((this.Process && this.spawnAlive()) || !fs.existsSync(this.EmbbedBinary)) { return; }
+        const binpath = this.FindBinpath();
+        if ((this.Process && this.spawnAlive()) || !fs.existsSync(binpath)) { return; }
         if (this.restartAwait) { return; }
 
         this.restartAwait = true;
@@ -107,7 +128,7 @@ export class BRIDGE {
         this.dopause();
         this.WS?.close();
         this.WS = null;
-        this.Process = spawn(this.EmbbedBinary, args, {
+        this.Process = spawn(binpath, args, {
             cwd: spawnPath,
             stdio: ['pipe', 'pipe', 'pipe'],
             env: process.env,

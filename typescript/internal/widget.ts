@@ -7,27 +7,22 @@ export class WIDGET {
     private statusIcon: 'debug-stop' | 'debug-pause' | 'eye-watch' | 'eye-closed' | 'warning' = 'debug-stop';
     private options: {
         label: string;
-        script: string;
+        command: () => string;
     }[];
-    private bin: string;
 
     constructor(core: ExtensionManager) {
         this.Server = core;
         this.statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
         this.statusBar.command = `${this.Server.ID}.action.command`;
 
-        this.bin = this.Server.W_BRIDGE.EmbbedBinary;
         this.options = [
-            { label: 'Docs', script: "" },
-            { label: 'Watch', script: 'preview -w' },
-            { label: 'Debug', script: 'debug' },
-            { label: 'Preview', script: 'preview' },
-            { label: 'Init/Verify', script: 'init' },
+            { label: 'Docs', command: () => this.Server.W_BRIDGE.FindBinpath() },
+            { label: 'Watch', command: () => this.Server.W_BRIDGE.FindBinpath() + " " + 'preview -w' },
+            { label: 'Debug', command: () => this.Server.W_BRIDGE.FindBinpath() + " " + 'debug' },
+            { label: 'Preview', command: () => this.Server.W_BRIDGE.FindBinpath() + " " + 'preview' },
+            { label: 'Init/Verify', command: () => this.Server.W_BRIDGE.FindBinpath() + " " + 'init' },
         ];
-        this.options.forEach((s, i) => {
-            s.label = `${i}. Terminal Command: ${s.label}`;
-            s.script = `${this.bin} ${s.script}`;
-        });
+        this.options.forEach((s, i) => { s.label = `${i}. Terminal Command: ${s.label}`; });
 
         this.Server.Context.subscriptions.push(
             vscode.window.onDidChangeActiveTextEditor(() => { this.refresh(); }),
@@ -39,11 +34,11 @@ export class WIDGET {
                 });
                 if (!picked) { return; }
 
-                const script = this.options.find(o => o.label === picked)?.script;
+                const script = this.options.find(o => o.label === picked);
                 if (script) {
                     const terminal = vscode.window.createTerminal({ name: `${this.Server.IDCAP}: ${picked}` });
                     terminal.show();
-                    terminal.sendText(script);
+                    terminal.sendText(script.command());
                 }
             }),
         );
