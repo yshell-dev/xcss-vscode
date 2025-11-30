@@ -7,6 +7,10 @@ import { generateAttributeMap, metadataFormat } from '../helpers/metadata';
 import { t_Metadata, t_CursorSnippet, t_SnippetType, t_TagRange } from '../types';
 import { FILELOCAL } from '../file-local';
 
+function symclassParse(s: string): string {
+    return s.replace(/^[-_]*\$/, "$");
+}
+
 export class INTELLISENSE {
     private Server: ExtensionManager;
     triggers: string[] = [];
@@ -404,7 +408,8 @@ export class INTELLISENSE {
 
                 case t_SnippetType.property:
                     {
-                        const temp = { ...tagScopeVars, ...local.attachables[attributeMatch]?.variables || {} };
+                        const symclass = local.attachables[symclassParse(attributeMatch)];
+                        const temp = { ...tagScopeVars, ...symclass?.variables || {} };
                         const keys = Object.keys(temp).sort();
                         for (const key of keys) {
                             const value = temp[key];
@@ -469,7 +474,7 @@ export class INTELLISENSE {
                 case t_SnippetType.variable:
                 case t_SnippetType.varcalls:
                     {
-                        const temp = { ...tagScopeVars, ...local.attachables[attributeMatch]?.variables || {} };
+                        const temp = { ...tagScopeVars, ...local.attachables[symclassParse(attributeMatch)]?.variables || {} };
                         const keys = Object.keys(temp).sort();
                         for (const key of keys) {
                             const value = temp[key];

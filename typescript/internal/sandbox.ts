@@ -13,7 +13,7 @@ export class SANDBOX {
 
     filepath = "";
     symclass = "";
-    refresh = (force = false) => {
+    RefreshCursor = (force = false) => {
         const live = Boolean(this.States['live-preview-option-live-cursor']);
         const editor = vscode.window.activeTextEditor;
 
@@ -30,8 +30,20 @@ export class SANDBOX {
         return { filepath: this.filepath, symclass: this.symclass };
     };
 
+    RefereshFlagActive = true;
+    RefreshWebview(go_on = false) {
+        if (vscode.window.activeTextEditor || this.RefereshFlagActive) { return; }
+        if (go_on) {
+            this.RefereshFlagActive = true;
+            setTimeout(() => {
+                this.RefereshFlagActive = false;
+            }, 4000);
+        }
+        this.Server.W_BRIDGE.WSStream("sandbox-view");
+    }
+
     Open = async () => {
-        this.refresh(true);
+        this.RefreshCursor(true);
         this.Server.RequestManifest();
 
         if (this.previewPanal) {
@@ -81,6 +93,7 @@ export class SANDBOX {
             </html>
             `;
         }
+        this.RefreshWebview(true);
 
         return;
     };

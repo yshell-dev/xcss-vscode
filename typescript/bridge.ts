@@ -7,7 +7,6 @@ import { spawn, ChildProcessWithoutNullStreams } from 'child_process';
 import { t_JsonRPCResponse } from './types';
 import path from 'path';
 import { binaryExists as BinaryExists, ReadCmdReturn } from './helpers/bin-assist';
-
 export class BRIDGE {
 
     receive = (text: string) => {

@@ -196,7 +196,7 @@ export class ExtensionManager {
         this.W_DIAGNOSTICS.clientRefresh();
         this.W_DIAGNOSTICS.serverRefresh();
         this.W_WIDGET.refresh();
-        const cursor = this.W_SANDBOX.refresh();
+        const cursor = this.W_SANDBOX.RefreshCursor();
         return { ...cursor, filemap };
     };
 
@@ -206,6 +206,7 @@ export class ExtensionManager {
 
     UpdateMixedManifest = (m: t_Manifest_Mixed) => {
         this.UpdateGlobalManifest(m.global);
+        this.W_SANDBOX.RefreshWebview();
         this.UpdateLocalsManifest(m.locals);
     };
 
