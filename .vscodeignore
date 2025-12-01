@@ -18,6 +18,6 @@ typescript/**
 **/eslint.config.mjs
 **/tsconfig.build.json
 
+xcss-scaffold
 package/compiler/**
-esbuild.js
 package/**/node_modules
