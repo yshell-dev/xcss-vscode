@@ -20,3 +20,4 @@ typescript/**
 
 package/compiler/**
 esbuild.js
+package/**/node_modules

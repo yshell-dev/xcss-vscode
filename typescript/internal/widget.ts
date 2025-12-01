@@ -7,7 +7,8 @@ export class WIDGET {
     private statusIcon: 'debug-stop' | 'debug-pause' | 'eye-watch' | 'eye-closed' | 'warning' = 'debug-stop';
     private options: {
         label: string;
-        command: () => string;
+        content: string;
+        type: string;
     }[];
 
     constructor(core: ExtensionManager) {
@@ -16,13 +17,26 @@ export class WIDGET {
         this.statusBar.command = `${this.Server.ID}.action.command`;
 
         this.options = [
-            { label: 'Docs', command: () => this.Server.W_BRIDGE.FindBinpath() },
-            { label: 'Watch', command: () => this.Server.W_BRIDGE.FindBinpath() + " " + 'preview -w' },
-            { label: 'Debug', command: () => this.Server.W_BRIDGE.FindBinpath() + " " + 'debug' },
-            { label: 'Preview', command: () => this.Server.W_BRIDGE.FindBinpath() + " " + 'preview' },
-            { label: 'Init/Verify', command: () => this.Server.W_BRIDGE.FindBinpath() + " " + 'init' },
+            { type: "command", label: 'Docs', content: "" },
+            { type: "command", label: 'Watch', content: 'preview -w' },
+            { type: "command", label: 'Debug', content: 'debug' },
+            { type: "command", label: 'Preview', content: 'preview' },
+            { type: "command", label: 'Init/Verify', content: 'init' },
+            { type: "redirect", label: 'Git Reposiory.', content: "https://github.com/yshelldev/xcss-pacakge" },
+            { type: "redirect", label: 'Spin My Flavour.', content: "https://github.com/yshelldev/xcss-scaffold." },
+            { type: "redirect", label: 'Get a walkthorugh..', content: "https://github.com/yshelldev/xcss-tutorial" },
+            { type: "redirect", label: 'Sponsor Our Project Today.', content: "https://github.com/sponsors/yshelldev/dashboard" },
         ];
-        this.options.forEach((s, i) => { s.label = `${i}. Terminal Command: ${s.label}`; });
+        this.options.forEach((s, i) => {
+            switch (s.type) {
+                case "command":
+                    s.label = `${i}. Run Command: ${s.label}`;
+                    break;
+                case "redirect":
+                    s.label = `${i}. Explore & Support: ${s.label}`;
+                    break;
+            }
+        });
 
         this.Server.Context.subscriptions.push(
             vscode.window.onDidChangeActiveTextEditor(() => { this.refresh(); }),
@@ -33,12 +47,20 @@ export class WIDGET {
                     placeHolder: this.Server.IDCAP + ': Server Command Palette.'
                 });
                 if (!picked) { return; }
+                const option = this.options.find(o => o.label === picked);
 
-                const script = this.options.find(o => o.label === picked);
-                if (script) {
-                    const terminal = vscode.window.createTerminal({ name: `${this.Server.IDCAP}: ${picked}` });
-                    terminal.show();
-                    terminal.sendText(script.command());
+                if (option) {
+                    switch (option.type) {
+                        case "command": {
+                            const terminal = vscode.window.createTerminal({ name: `${this.Server.IDCAP}: ${picked}` });
+                            terminal.show();
+                            terminal.sendText(this.Server.W_BRIDGE.FindBinpath() + " " + option.content);
+                        }; break;
+                        case "redirect": {
+                            const link = vscode.Uri.parse(option.content);
+                            vscode.env.openExternal(link);
+                        }; break;
+                    }
                 }
             }),
         );
