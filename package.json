@@ -19,7 +19,7 @@
   "contributing": "https://github.com/yshelldev/xcss-vscode/blob/main/CONTRIBUTING.md",
   "scripts": {
     "lint": "eslint ./typescript --ext .ts",
-    "init": "npm install -g typescript @vscode/vsce ovsx && node package/execute/index.js && npm install",
+    "init": "npm install -g typescript @vscode/vsce ovsx && node central/execute/index.js && npm install",
     "tsbuild": "npx tsc -p ./typescript",
     "package": "npm run init && npm run tsbuild && npm install --omit=dev && vsce package"
   },
