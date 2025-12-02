@@ -18,9 +18,9 @@ jobs:
         with:
           node-version: "22"
 
-      - run: git submodule update --init ./package
+      - run: git submodule update --init ./central
       - run: |
-          cd package
+          cd central
           git submodule update --init ./scaffold
           cd ..
       - run: npm run package

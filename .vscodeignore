@@ -19,5 +19,5 @@ typescript/**
 **/tsconfig.build.json
 
 xcss-scaffold
-package/compiler/**
-package/**/node_modules
+central/compiler/**
+central/**/node_modules

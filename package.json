@@ -41,6 +41,7 @@
   "licenseFile": "LICENSE",
   "type": "commonjs",
   "main": "./extension/activate.js",
+  "browser": "./extension/activate.js",
   "icon": "./logo.png",
   "galleryBanner": {
     "color": "#171b22",
