@@ -99,7 +99,7 @@
         "xcss.development.staticport": {
           "type": "boolean",
           "default": true,
-          "description": "Enable use of a fixed static port for sandbox WebSocket connections. Disable if issues arise due to static caching."
+          "description": "Use a fixed static port for sandbox WebSocket; disable if static cache issues occur (requires restart)."
         },
         "xcss.decoration.comment": {
           "type": "string",
