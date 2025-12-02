@@ -92,7 +92,7 @@ export class ExtensionManager {
     spawn = (): void => {
         if (!this.WorkspaceUri || !this.Initialized) { return; }
 
-        this.W_BRIDGE.start(this.WorkspaceUri.fsPath, ["server", this.PORT.toString()]);
+        this.W_BRIDGE.start(this.WorkspaceUri.fsPath, ["server", this.config.get<boolean>("development.staticport") ? this.PORT.toString() : "0"]);
     };
 
     public dispose() {

@@ -2,7 +2,7 @@
   "name": "xcss-client",
   "displayName": "XCSS Client",
   "description": "Extension bundle for XCSS",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "publisher": "yshelldev",
   "author": {
     "name": "Vyshnav Prasad",
@@ -95,6 +95,11 @@
           "type": "boolean",
           "default": true,
           "description": "Incase of server faliure, auto-start another instance."
+        },
+        "xcss.development.staticport": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable use of a fixed static port for sandbox WebSocket connections. Disable if issues arise due to static caching."
         },
         "xcss.decoration.comment": {
           "type": "string",
