@@ -36,7 +36,7 @@ export class SANDBOX {
             this.RefereshFlagActive = true;
             setTimeout(() => {
                 this.RefereshFlagActive = false;
-            }, 4000);
+            }, 2000);
         }
         if (vscode.window.activeTextEditor || this.RefereshFlagActive) {
             this.Server.W_BRIDGE.WSStream("sandbox-view");

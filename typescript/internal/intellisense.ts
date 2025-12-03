@@ -17,9 +17,12 @@ export class INTELLISENSE {
 
     constructor(core: ExtensionManager) {
         this.Server = core;
-        this.triggers = this.Server.config.get<boolean>("intellisense.mode") ? // true = smart
-            ['\\', '!', '@', ' ', '=', '#', '~', '&', '\t', '\n', '/', '_', '(', ')', ':', '{', '}', '$'] :
-            ['\\', '!', '@', ' ', '=', '#', '~', '&', '\t', '\n', '/', '_', '(', ')', ':', '{', '}'];
+        this.triggers = ['\\', '!', '@', ' ', '=', '#', '~', '&', '\t', '\n', '/', '_', '(', ')', ':', '{', '}', '$'];
+
+        const smartMode = this.Server.config.get<boolean>("intellisense.mode");
+        if (!smartMode) { // Omit trigger Characters
+            this.triggers = this.triggers.filter(tr => !["$", "/"].includes(tr));
+        }
     }
 
     dispose() {
@@ -30,17 +33,28 @@ export class INTELLISENSE {
         return /^_|\$_/.test(string);
     }
 
+    countPrefixDashes(str = "") {
+        let count = 0;
+        for (const s of str) {
+            if (s === '-') { count++; }
+            else { break; }
+        }
+        return count;
+    }
+
     createCompletionItem(
         label: string,
         insertText: string | vscode.SnippetString,
         kind: vscode.CompletionItemKind,
         documentation: string,
-        detail?: string
+        detail?: string,
+        sortText?: string
     ): vscode.CompletionItem {
         const completion = new vscode.CompletionItem(label, kind);
         completion.preselect = true;
         // Prefix with null char to sort items before others
-        completion.sortText = "\0" + label;
+        completion.sortText = sortText ||
+            `\0${this.countPrefixDashes(typeof insertText === "string" ? insertText : label)}_${label}`;
         completion.insertText = insertText;
         completion.documentation = new vscode.MarkdownString(documentation);
         if (detail) { completion.detail = detail; }
@@ -360,7 +374,7 @@ export class INTELLISENSE {
                 case t_SnippetType.rule:
                     for (const item of ["--attach", "--assign"]) {
                         completions.push(this.createCompletionItem(
-                            item,
+                            "@" + item,
                             item,
                             vscode.CompletionItemKind.Function,
                             `custom AtRule: ${item}`,
@@ -369,39 +383,33 @@ export class INTELLISENSE {
                     }
 
                     for (const rule of this.Server.W_CSSREFERENCE.CSS_AtDirectives) {
-                        if (result.fragment.startsWith("@-") === rule.name.startsWith("@-")) {
-                            completions.push(this.createCompletionItem(
-                                rule.name.slice(1),
-                                rule.name.slice(1),
-                                vscode.CompletionItemKind.Function,
-                                `CSS standared AtRule: ${rule.name}\n---\n${rule.description}`
-                            ));
-                        }
+                        completions.push(this.createCompletionItem(
+                            rule.name,
+                            rule.name.slice(1),
+                            vscode.CompletionItemKind.Function,
+                            `CSS standared AtRule: ${rule.name}\n---\n${rule.description}`
+                        ));
                     }
                     break;
 
                 case t_SnippetType.pseudo:
                     if (valueMatch.endsWith("::")) {
                         for (const pseudo of this.Server.W_CSSREFERENCE.CSS_PseudoElements) {
-                            if (result.fragment.startsWith("::-") === pseudo.name.startsWith("::-")) {
-                                completions.push(this.createCompletionItem(
-                                    `${pseudo.name} (snippet)`,
-                                    pseudo.name.slice(2),
-                                    vscode.CompletionItemKind.Property,
-                                    `CSS Property Snippet: ${pseudo.name}`
-                                ));
-                            }
+                            completions.push(this.createCompletionItem(
+                                `${pseudo.name} (snippet)`,
+                                pseudo.name.slice(2),
+                                vscode.CompletionItemKind.Property,
+                                `CSS Property Snippet: ${pseudo.name}`
+                            ));
                         }
                     } else {
                         for (const pseudo of this.Server.W_CSSREFERENCE.CSS_PseudoClasses) {
-                            if (result.fragment.startsWith(":-") === pseudo.name.startsWith(":-")) {
-                                completions.push(this.createCompletionItem(
-                                    `${pseudo.name} (snippet)`,
-                                    pseudo.name.slice(1),
-                                    vscode.CompletionItemKind.Property,
-                                    `CSS Property Snippet: ${pseudo.name}`
-                                ));
-                            }
+                            completions.push(this.createCompletionItem(
+                                `${pseudo.name} (snippet)`,
+                                pseudo.name.slice(1),
+                                vscode.CompletionItemKind.Property,
+                                `CSS Property Snippet: ${pseudo.name}`
+                            ));
                         }
                     }
                     break;
@@ -423,14 +431,12 @@ export class INTELLISENSE {
                     }
 
                     for (const prop of this.Server.W_CSSREFERENCE.CSS_Properties) {
-                        if (result.fragment.startsWith("-") === prop.name.startsWith("-")) {
-                            completions.push(this.createCompletionItem(
-                                `${prop.name} (snippet)`,
-                                prop.name,
-                                vscode.CompletionItemKind.Property,
-                                `CSS Property Snippet: ${prop.name}`
-                            ));
-                        }
+                        completions.push(this.createCompletionItem(
+                            `${prop.name} (snippet)`,
+                            prop.name,
+                            vscode.CompletionItemKind.Property,
+                            `CSS Property Snippet: ${prop.name}`
+                        ));
                     }
 
                     for (const prop of this.Server.W_CSSREFERENCE.CSS_Properties) {
@@ -440,7 +446,8 @@ export class INTELLISENSE {
                                     `${prop.name} (fragment)`,
                                     new vscode.SnippetString(`${prop.name}: $1 $2 $3 $4;`),
                                     vscode.CompletionItemKind.Snippet,
-                                    `CSS hashrule Property Fragment: ${prop.name}`
+                                    `CSS hashrule Property Fragment: ${prop.name}`,
+                                    "", prop.name,
                                 ));
                             } else if (prop.values?.length) {
                                 for (const value of prop.values) {
@@ -448,7 +455,8 @@ export class INTELLISENSE {
                                         `${prop.name}: ${value.name}`,
                                         new vscode.SnippetString(`${prop.name}: ${value.name};`),
                                         vscode.CompletionItemKind.Value,
-                                        `CSS Property: ${prop.name}, Value: ${value.name}`
+                                        `CSS Property: ${prop.name}, Value: ${value.name}`,
+                                        "", prop.name,
                                     ));
                                 }
                             }
@@ -471,8 +479,21 @@ export class INTELLISENSE {
                     }
                     break;
 
-                case t_SnippetType.variable:
                 case t_SnippetType.varcalls:
+                case t_SnippetType.variable:
+                    if (result.type == t_SnippetType.varcalls) {
+                        const temp = this.Server.Global.constants;
+                        for (const key of Object.keys(temp)) {
+                            const value = temp[key];
+                            completions.push(this.createCompletionItem(
+                                key,
+                                key,
+                                vscode.CompletionItemKind.Color,
+                                `${key}: ${value}`,
+                                ``, `01_${key}`
+                            ));
+                        }
+                    }
                     {
                         const temp = { ...tagScopeVars, ...local.attachables[symclassParse(attributeMatch)]?.variables || {} };
                         const keys = Object.keys(temp).sort();
@@ -482,7 +503,8 @@ export class INTELLISENSE {
                                 key,
                                 key,
                                 vscode.CompletionItemKind.Color,
-                                `\`${key}: ${value}\``
+                                `\`${key}: ${value}\``,
+                                ``, `00_${key}`
                             ));
                         }
                     }

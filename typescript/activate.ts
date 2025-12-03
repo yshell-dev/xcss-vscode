@@ -56,7 +56,7 @@ export class ExtensionManager {
 
     // Activity Flags
     private F_ExtnActivated = true;
-    get ExtentionStatus() { return this.F_ExtnActivated; }
+    get ExtensionStatus() { return this.F_ExtnActivated; }
 
     // Editor Specifics
     public Global!: t_ManifestGlobal;
@@ -92,7 +92,7 @@ export class ExtensionManager {
     spawn = (): void => {
         if (!this.WorkspaceUri || !this.Initialized) { return; }
 
-        this.W_BRIDGE.start(this.WorkspaceUri.fsPath, ["server", this.config.get<boolean>("development.staticport") ? this.PORT.toString() : "0"]);
+        this.W_BRIDGE.start(this.WorkspaceUri.fsPath, ["server", this.config.get<boolean>("server.staticport") ? this.PORT.toString() : "0"]);
     };
 
     public dispose() {

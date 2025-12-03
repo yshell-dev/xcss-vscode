@@ -1,4 +1,4 @@
-# Code of Conduct - XCSS VS Code Extention
+# Code of Conduct - XCSS VS Code Extension
 
 ## Our Pledge
 

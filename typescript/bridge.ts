@@ -122,11 +122,12 @@ export class BRIDGE {
         this.restartAwait = true;
         setTimeout(() => { this.restartAwait = false; }, 1000);
 
-        if (!(this.Server.config.get<boolean>("development.autostart") || overide_config)) { return; }
+        if (!(this.Server.config.get<boolean>("server.autostart") || overide_config)) { return; }
 
         this.dopause();
         this.WS?.close();
         this.WS = null;
+        this.Server.W_SANDBOX.dispose();
         this.Process = spawn(binpath, args, {
             cwd: spawnPath,
             stdio: ['pipe', 'pipe', 'pipe'],

@@ -92,12 +92,12 @@
           "default": true,
           "description": "Symclass suggestions can smart(true) or simple(false)"
         },
-        "xcss.development.autostart": {
+        "xcss.server.autostart": {
           "type": "boolean",
           "default": true,
           "description": "Incase of server faliure, auto-start another instance."
         },
-        "xcss.development.staticport": {
+        "xcss.server.staticport": {
           "type": "boolean",
           "default": true,
           "description": "Use a fixed static port for sandbox WebSocket; disable if static cache issues occur (requires restart)."

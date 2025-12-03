@@ -71,7 +71,7 @@ export class WIDGET {
         if (!this.Server) {
             return;
         }
-        if (this.Server.ExtentionStatus) {
+        if (this.Server.ExtensionStatus) {
             const ref = this.Server.ReferDocument();
             this.statusIcon = ref.watching ? "eye-watch" : "eye-closed";
         } else {
